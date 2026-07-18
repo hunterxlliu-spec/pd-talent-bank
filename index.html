@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PD人才库</title>
+  <title>研发人才库</title>
   <style>
     :root {
       --ink: #1d2733;
@@ -50,7 +50,8 @@
       padding: 24px 18px;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 20px;
+      overflow: hidden;
     }
 
     .brand {
@@ -87,6 +88,124 @@
     .side-stats {
       display: grid;
       gap: 10px;
+    }
+
+    .side-nav-block {
+      display: grid;
+      gap: 10px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .side-nav-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .side-nav-head h3 {
+      margin: 0;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #9db0c3;
+      font-weight: 700;
+    }
+
+    .side-nav-head .btn {
+      min-height: 30px;
+      padding: 0 10px;
+      font-size: 12px;
+      background: rgba(255,255,255,.08);
+      color: #fff;
+      border-color: rgba(255,255,255,.14);
+    }
+
+    .side-nav {
+      display: grid;
+      gap: 6px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .nav-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: transparent;
+      color: #d5e0ec;
+      border: 1px solid transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,.06);
+    }
+
+    .nav-item.active {
+      background: rgba(45, 212, 191, .16);
+      border-color: rgba(45, 212, 191, .28);
+      color: #fff;
+    }
+
+    .nav-item-main {
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+      background: transparent;
+      border: 0;
+      color: inherit;
+      padding: 0;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .nav-item-title {
+      font-size: 14px;
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .nav-item-count {
+      flex: 0 0 auto;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 7px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,.1);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .nav-item-actions {
+      display: none;
+      gap: 4px;
+    }
+
+    .nav-item:hover .nav-item-actions,
+    .nav-item:focus-within .nav-item-actions {
+      display: inline-flex;
+    }
+
+    .nav-item-actions .btn {
+      min-height: 26px;
+      width: 26px;
+      padding: 0;
+      background: rgba(255,255,255,.1);
+      color: #fff;
+      border: 0;
     }
 
     .stat-tile {
@@ -1012,11 +1131,18 @@
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark">P</div>
+        <div class="brand-mark">R</div>
         <div>
-          <h1>PD人才库</h1>
-          <p>Product Development Talent Bank</p>
+          <h1>研发人才库</h1>
+          <p>R&D Talent Bank</p>
         </div>
+      </div>
+      <div class="side-nav-block">
+        <div class="side-nav-head">
+          <h3>研发分类</h3>
+          <button class="btn" type="button" id="addCategoryBtn" title="新增分类">＋</button>
+        </div>
+        <nav class="side-nav" id="categoryNav" aria-label="研发分类"></nav>
       </div>
       <div class="side-stats">
         <div class="stat-tile">
@@ -1041,8 +1167,8 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <h2>人才信息管理</h2>
-          <p>PD人才管理系统 · 工号、学历、产品经验统一管理</p>
+          <h2>研发人才管理</h2>
+          <p>覆盖结构 / 硬件 / 声学等研发部门 · 点击左侧切换分类</p>
         </div>
         <div class="actions">
           <button class="btn" id="importBtn" title="导入 JSON">导入</button>
@@ -1175,8 +1301,12 @@
             <input id="appleStartDate" type="month">
           </div>
           <div class="field">
-            <label for="department">部门</label>
-            <input id="department">
+            <label for="category">所属分类 *</label>
+            <select id="category" required></select>
+          </div>
+          <div class="field">
+            <label for="department">科室 / 小组</label>
+            <input id="department" placeholder="如 NPI、结构一组">
           </div>
           <div class="field">
             <label for="position">岗位</label>
@@ -1230,10 +1360,14 @@
 
   <script>
     const STORAGE_KEY = "talent-bank-records-v1";
+    const CATEGORIES_KEY = "talent-bank-categories-v1";
     // Shared cloud API (Cloudflare Worker + KV)
     const API_BASE = "https://pd-talent-bank-api.pd-talent-hunter.workers.dev";
     const API_URL = `${API_BASE}/talents`;
     const SYNC_INTERVAL_MS = 12000;
+    const DEFAULT_CATEGORIES = ["结构研发", "硬件研发", "声学研发", "软件研发", "NPI/质量"];
+    const ALL_CATEGORY = "__all__";
+    const UNCATEGORIZED = "__uncategorized__";
 
     const seedTalents = [
       {
@@ -1247,6 +1381,7 @@
         major: "机械设计制造及其自动化",
         firstWorkDate: "2018-07",
         appleStartDate: "2020-03",
+        category: "NPI/质量",
         department: "NPI",
         position: "产品工程师",
         skills: ["NPI", "DFM", "夹治具", "良率改善"],
@@ -1282,6 +1417,7 @@
         major: "电子信息工程",
         firstWorkDate: "2019-07",
         appleStartDate: "2021-06",
+        category: "NPI/质量",
         department: "质量",
         position: "SQE",
         skills: ["供应商质量", "8D", "FA", "可靠性测试"],
@@ -1317,6 +1453,7 @@
         major: "工业工程",
         firstWorkDate: "2020-08",
         appleStartDate: "",
+        category: "结构研发",
         department: "制造",
         position: "IE 工程师",
         skills: ["线平衡", "产能规划", "精益生产"],
@@ -1344,6 +1481,8 @@
     ];
 
     let talents = [];
+    let categories = [...DEFAULT_CATEGORIES];
+    let activeCategory = ALL_CATEGORY;
     let selectedId = null;
     let remoteUpdatedAt = null;
     let syncing = false;
@@ -1372,6 +1511,7 @@
       profileBody: document.querySelector("#profileBody"),
       profileTitle: document.querySelector("#profileTitle"),
       photoPreview: document.querySelector("#photoPreview"),
+      categoryNav: document.querySelector("#categoryNav"),
       importFile: document.querySelector("#importFile")
     };
 
@@ -1379,15 +1519,81 @@
       if (els.syncStatus) els.syncStatus.textContent = text;
     }
 
+    function normalizeCategories(list) {
+      const values = Array.isArray(list) ? list : [];
+      const unique = [];
+      values.forEach(item => {
+        const name = String(item || "").trim();
+        if (name && !unique.includes(name)) unique.push(name);
+      });
+      return unique.length ? unique : [...DEFAULT_CATEGORIES];
+    }
+
+    function ensureCategoriesFromTalents(list = talents) {
+      const next = [...categories];
+      list.forEach(person => {
+        const name = String(person.category || "").trim();
+        if (name && !next.includes(name)) next.push(name);
+      });
+      categories = next;
+    }
+
+    function countByCategory(name) {
+      if (name === ALL_CATEGORY) return talents.length;
+      if (name === UNCATEGORIZED) return talents.filter(person => !String(person.category || "").trim()).length;
+      return talents.filter(person => person.category === name).length;
+    }
+
+    function fillCategorySelect(selected = "") {
+      const select = getField("category");
+      if (!select) return;
+      const options = categories.length ? categories : [...DEFAULT_CATEGORIES];
+      select.innerHTML = options.map(name => (
+        `<option value="${escapeHtml(name)}" ${name === selected ? "selected" : ""}>${escapeHtml(name)}</option>`
+      )).join("");
+      if (selected && !options.includes(selected)) {
+        select.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(selected)}" selected>${escapeHtml(selected)}</option>`);
+      }
+    }
+
+    function renderCategoryNav() {
+      if (!els.categoryNav) return;
+      const items = [
+        { id: ALL_CATEGORY, title: "全部人才", editable: false },
+        ...categories.map(name => ({ id: name, title: name, editable: true })),
+        { id: UNCATEGORIZED, title: "未分类", editable: false }
+      ];
+      els.categoryNav.innerHTML = items.map(item => `
+        <div class="nav-item ${activeCategory === item.id ? "active" : ""}" data-category="${escapeHtml(item.id)}">
+          <button class="nav-item-main category-select-btn" type="button" data-category="${escapeHtml(item.id)}">
+            <span class="nav-item-title">${escapeHtml(item.title)}</span>
+          </button>
+          <span class="nav-item-count">${countByCategory(item.id)}</span>
+          ${item.editable ? `
+            <span class="nav-item-actions">
+              <button class="btn rename-category-btn" type="button" title="重命名" data-category="${escapeHtml(item.id)}">✎</button>
+              <button class="btn danger delete-category-btn" type="button" title="删除" data-category="${escapeHtml(item.id)}">×</button>
+            </span>
+          ` : ""}
+        </div>
+      `).join("");
+    }
+
     function normalizeTalentList(list) {
       if (!Array.isArray(list)) return [];
       return list.map(item => ({
         ...item,
         id: item.id || crypto.randomUUID(),
+        category: String(item.category || "").trim(),
         products: Array.isArray(item.products) ? item.products : [],
         skills: Array.isArray(item.skills) ? item.skills : [],
         customFields: Array.isArray(item.customFields) ? item.customFields : []
       }));
+    }
+
+    function persistLocal() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(talents));
+      localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
     }
 
     async function loadTalents() {
@@ -1397,26 +1603,37 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
         remoteUpdatedAt = data.updatedAt || null;
+        categories = normalizeCategories(data.categories);
         let list = normalizeTalentList(data.talents);
         if (!list.length) {
           list = normalizeTalentList(seedTalents);
+          ensureCategoriesFromTalents(list);
           await saveTalents(list, { silent: true });
+        } else {
+          ensureCategoriesFromTalents(list);
         }
         setSyncStatus("已同步");
         return list;
       } catch (error) {
         console.error(error);
         const saved = localStorage.getItem(STORAGE_KEY);
+        const savedCats = localStorage.getItem(CATEGORIES_KEY);
+        if (savedCats) {
+          try { categories = normalizeCategories(JSON.parse(savedCats)); } catch {}
+        }
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed) && parsed.length) {
               setSyncStatus("离线缓存");
-              return normalizeTalentList(parsed);
+              const list = normalizeTalentList(parsed);
+              ensureCategoriesFromTalents(list);
+              return list;
             }
           } catch {}
         }
         setSyncStatus("同步失败");
+        ensureCategoriesFromTalents(seedTalents);
         return normalizeTalentList(seedTalents);
       }
     }
@@ -1429,13 +1646,13 @@
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `照片上传失败 HTTP ${res.status}`);
-      // cache-bust so refreshed image shows immediately
       return `${data.photoUrl}?v=${Date.now()}`;
     }
 
     async function saveTalents(nextTalents = talents, { silent = false } = {}) {
       talents = normalizeTalentList(nextTalents);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(talents));
+      ensureCategoriesFromTalents(talents);
+      persistLocal();
       if (!silent) setSyncStatus("保存中");
       syncing = true;
       suppressPoll = true;
@@ -1443,10 +1660,11 @@
         const res = await fetch(API_URL, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ talents, version: 1 })
+          body: JSON.stringify({ talents, categories, version: 1 })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        if (Array.isArray(data.categories)) categories = normalizeCategories(data.categories);
         remoteUpdatedAt = data.updatedAt || new Date().toISOString();
         if (!silent) setSyncStatus("已同步");
       } catch (error) {
@@ -1467,13 +1685,15 @@
         const data = await res.json();
         if (!force && data.updatedAt && data.updatedAt === remoteUpdatedAt) return;
         remoteUpdatedAt = data.updatedAt || remoteUpdatedAt;
+        if (Array.isArray(data.categories)) categories = normalizeCategories(data.categories);
         const list = normalizeTalentList(data.talents);
         if (!list.length) return;
         talents = list;
+        ensureCategoriesFromTalents(talents);
         if (!talents.find(item => item.id === selectedId)) {
           selectedId = talents[0]?.id || null;
         }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(talents));
+        persistLocal();
         setSyncStatus("已同步");
         render();
       } catch {
@@ -1537,6 +1757,10 @@
       const apple = els.appleFilter.value;
 
       return talents.filter(person => {
+        const category = String(person.category || "").trim();
+        if (activeCategory === UNCATEGORIZED && category) return false;
+        if (activeCategory !== ALL_CATEGORY && activeCategory !== UNCATEGORIZED && category !== activeCategory) return false;
+
         const productText = (person.products || []).map(item => `${item.name} ${item.type} ${item.role}`).join(" ");
         const customText = (person.customFields || []).map(item => `${item.name} ${item.value}`).join(" ");
         const haystack = [
@@ -1544,6 +1768,7 @@
           person.name,
           person.school,
           person.major,
+          person.category,
           person.department,
           person.position,
           (person.skills || []).join(" "),
@@ -1583,7 +1808,7 @@
                 ${avatarHtml(person)}
                 <div>
                   <div class="person-name">${escapeHtml(person.name)}</div>
-                  <div class="subtext">${escapeHtml(person.employeeNo)} · ${escapeHtml(person.position || "-")}</div>
+                  <div class="subtext">${escapeHtml(person.category || "未分类")} · ${escapeHtml(person.employeeNo)} · ${escapeHtml(person.position || "-")}</div>
                 </div>
               </div>
             </td>
@@ -1639,7 +1864,7 @@
       `).join("");
 
       const customItems = (person.customFields || []).map(item => infoItem(item.name || "-", item.value || "-")).join("");
-      const roleLine = [person.department, person.position].filter(Boolean).join(" · ") || "岗位待完善";
+      const roleLine = [person.category, person.department, person.position].filter(Boolean).join(" · ") || "岗位待完善";
 
       els.profileBody.innerHTML = `
         <div class="profile-sheet">
@@ -1674,12 +1899,13 @@
             <section class="profile-card">
               <h4 class="profile-card-title">基础信息</h4>
               <div class="full-info-grid">
-                ${infoItem("电话", person.phone)}
-                ${infoItem("邮箱", person.email)}
-                ${infoItem("部门", person.department)}
+                ${infoItem("所属分类", person.category || "未分类")}
+                ${infoItem("科室 / 小组", person.department)}
                 ${infoItem("岗位", person.position)}
                 ${infoItem("工号", person.employeeNo)}
                 ${infoItem("状态", person.status)}
+                ${infoItem("电话", person.phone)}
+                ${infoItem("邮箱", person.email)}
               </div>
             </section>
 
@@ -1716,6 +1942,7 @@
     }
 
     function render() {
+      renderCategoryNav();
       renderStats();
       renderTable();
     }
@@ -1727,6 +1954,13 @@
     function openDialog(person) {
       const editing = Boolean(person);
       els.dialogTitle.textContent = editing ? "编辑人才" : "新增人才";
+      const defaultCategory = (
+        person?.category
+        || (activeCategory !== ALL_CATEGORY && activeCategory !== UNCATEGORIZED ? activeCategory : "")
+        || categories[0]
+        || DEFAULT_CATEGORIES[0]
+      );
+      fillCategorySelect(defaultCategory);
       getField("talentId").value = person?.id || "";
       getField("employeeNo").value = person?.employeeNo || "";
       getField("name").value = person?.name || "";
@@ -1947,6 +2181,7 @@
           major: getField("major").value.trim(),
           firstWorkDate: getField("firstWorkDate").value,
           appleStartDate: getField("appleStartDate").value,
+          category: getField("category").value.trim(),
           department: getField("department").value.trim(),
           position: getField("position").value.trim(),
           skills: getField("skills").value.split(/[,，]/).map(item => item.trim()).filter(Boolean),
@@ -1973,6 +2208,73 @@
     document.querySelector("#addBtn").addEventListener("click", () => openDialog());
     document.querySelector("#closeDialog").addEventListener("click", () => els.dialog.close());
     document.querySelector("#cancelBtn").addEventListener("click", () => els.dialog.close());
+    document.querySelector("#addCategoryBtn").addEventListener("click", async () => {
+      const name = prompt("请输入新的研发分类名称：", "");
+      const trimmed = (name || "").trim();
+      if (!trimmed) return;
+      if (categories.includes(trimmed)) {
+        alert("该分类已存在。");
+        return;
+      }
+      categories.push(trimmed);
+      activeCategory = trimmed;
+      try {
+        await saveTalents();
+        render();
+      } catch (error) {
+        alert(error?.message || "分类保存失败");
+      }
+    });
+
+    els.categoryNav.addEventListener("click", async event => {
+      const renameBtn = event.target.closest(".rename-category-btn");
+      const deleteBtn = event.target.closest(".delete-category-btn");
+      const selectBtn = event.target.closest(".category-select-btn") || event.target.closest(".nav-item");
+
+      if (renameBtn) {
+        const oldName = renameBtn.dataset.category;
+        const nextName = prompt("重命名分类：", oldName);
+        const trimmed = (nextName || "").trim();
+        if (!trimmed || trimmed === oldName) return;
+        if (categories.includes(trimmed)) {
+          alert("该分类已存在。");
+          return;
+        }
+        categories = categories.map(item => item === oldName ? trimmed : item);
+        talents = talents.map(person => person.category === oldName ? { ...person, category: trimmed } : person);
+        if (activeCategory === oldName) activeCategory = trimmed;
+        try {
+          await saveTalents();
+          render();
+        } catch (error) {
+          alert(error?.message || "分类重命名失败");
+        }
+        return;
+      }
+
+      if (deleteBtn) {
+        const name = deleteBtn.dataset.category;
+        if (!confirm(`删除分类「${name}」？该分类下的人才将变为未分类。`)) return;
+        categories = categories.filter(item => item !== name);
+        talents = talents.map(person => person.category === name ? { ...person, category: "" } : person);
+        if (activeCategory === name) activeCategory = ALL_CATEGORY;
+        try {
+          await saveTalents();
+          render();
+        } catch (error) {
+          alert(error?.message || "分类删除失败");
+        }
+        return;
+      }
+
+      if (selectBtn) {
+        const category = selectBtn.dataset.category || selectBtn.closest("[data-category]")?.dataset.category;
+        if (!category) return;
+        activeCategory = category;
+        render();
+      }
+    });
+
     document.querySelector("#addProductBtn").addEventListener("click", () => {
       addProductRow();
     });
