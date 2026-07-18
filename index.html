@@ -687,13 +687,34 @@
       border-bottom: 0;
       background: linear-gradient(135deg, #115e59 0%, #0f766e 48%, #134e4a 100%);
       color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     .profile-dialog .modal-head h3 {
+      margin: 0;
+      flex: 1;
       font-size: 15px;
       font-weight: 600;
       letter-spacing: 0.02em;
       opacity: .92;
+    }
+
+    .profile-dialog .modal-head-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .profile-dialog .modal-head .btn {
+      background: rgba(255,255,255,.14);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    .profile-dialog .modal-head .btn:hover {
+      background: rgba(255,255,255,.24);
     }
 
     .profile-dialog .modal-head .btn.icon {
@@ -1417,7 +1438,10 @@
   <dialog id="profileDialog" class="profile-dialog">
     <div class="modal-head">
       <h3 id="profileTitle">个人完整档案</h3>
-      <button class="btn icon" type="button" id="closeProfileDialog" aria-label="关闭">×</button>
+      <div class="modal-head-actions">
+        <button class="btn" type="button" id="exportWordBtn" title="导出为 Word 文档">导出 Word</button>
+        <button class="btn icon" type="button" id="closeProfileDialog" aria-label="关闭">×</button>
+      </div>
     </div>
     <div class="modal-body" id="profileBody"></div>
   </dialog>
@@ -1548,6 +1572,7 @@
     let categories = [...DEFAULT_CATEGORIES];
     let activeCategory = ALL_CATEGORY;
     let selectedId = null;
+    let currentProfileId = null;
     let remoteUpdatedAt = null;
     let syncing = false;
     let suppressPoll = false;
@@ -1901,6 +1926,7 @@
             <td><span class="tag warn">${escapeHtml(person.status || "-")}</span></td>
             <td>
               <button class="btn" type="button" title="查看完整档案" data-id="${person.id}" data-action="view">查看</button>
+              <button class="btn" type="button" title="导出 Word" data-id="${person.id}" data-action="export-word">Word</button>
               <button class="btn icon edit-btn" type="button" title="编辑" data-id="${person.id}">✎</button>
               <button class="btn icon danger delete-btn" type="button" title="删除" data-id="${person.id}">×</button>
             </td>
@@ -1919,8 +1945,188 @@
       `;
     }
 
+    function wordSafe(value) {
+      return escapeHtml(value == null || value === "" ? "-" : String(value));
+    }
+
+    function wordRows(pairs) {
+      return pairs.map(([label, value]) => `
+        <tr>
+          <td width="28%" style="padding:8px 10px;border:1px solid #d0d5dd;background:#f8fafc;font-weight:700;color:#344054;">${wordSafe(label)}</td>
+          <td style="padding:8px 10px;border:1px solid #d0d5dd;color:#101828;">${wordSafe(value)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function resolvePhotoDataUrl(photoUrl) {
+      if (!photoUrl) return "";
+      if (photoUrl.startsWith("data:image/")) return photoUrl;
+      try {
+        const res = await fetch(photoUrl, { cache: "no-store" });
+        if (!res.ok) return "";
+        const blob = await res.blob();
+        return await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ""));
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch {
+        return "";
+      }
+    }
+
+    function buildPersonWordHtml(person, photoDataUrl = "") {
+      const skills = (person.skills || []).join("、") || "暂无";
+      const customFields = person.customFields || [];
+      const products = person.products || [];
+      const roleLine = [person.category, person.department, person.position].filter(Boolean).join(" · ") || "-";
+      const photoHtml = photoDataUrl
+        ? `<img src="${photoDataUrl}" width="110" height="110" style="width:110px;height:110px;object-fit:cover;border-radius:8px;border:1px solid #d0d5dd;" />`
+        : `<div style="width:110px;height:110px;border-radius:8px;background:#0f766e;color:#fff;text-align:center;line-height:110px;font-size:28px;font-weight:700;">${wordSafe(initials(person.name))}</div>`;
+
+      const productHtml = products.length
+        ? products.map((item, index) => `
+            <h3 style="margin:18px 0 8px;font-size:14px;color:#0f766e;">${index + 1}. ${wordSafe(item.name)}</h3>
+            <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:12px;">
+              ${wordRows([
+                ["产品类型", item.type],
+                ["公司", item.company],
+                ["角色", item.role],
+                ["时间", `${formatDate(item.startDate)} 至 ${formatDate(item.endDate)}`],
+                ["是否 Apple 相关", item.appleRelated ? "是" : "否"],
+                ["职责", item.responsibilities || "暂无职责描述"],
+                ["成果", item.achievements || "暂无项目成果"]
+              ])}
+            </table>
+          `).join("")
+        : `<p style="color:#667085;">暂无产品经历</p>`;
+
+      const customHtml = customFields.length
+        ? `<table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:12px;">
+            ${wordRows(customFields.map(item => [item.name || "未命名项目", item.value || "-"]))}
+          </table>`
+        : `<p style="color:#667085;">暂无自定义项目</p>`;
+
+      return `
+<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+  <meta charset="utf-8">
+  <title>${wordSafe(person.name)} - 人才档案</title>
+  <!--[if gte mso 9]>
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+      <w:DoNotOptimizeForBrowser/>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
+  <style>
+    body { font-family: "Microsoft YaHei", "PingFang SC", SimSun, sans-serif; color: #101828; line-height: 1.6; }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    h2 { font-size: 15px; margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #0f766e; color: #0f766e; }
+    p { margin: 0 0 8px; }
+  </style>
+</head>
+<body>
+  <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:18px;">
+    <tr>
+      <td width="130" valign="top">${photoHtml}</td>
+      <td valign="middle" style="padding-left:16px;">
+        <h1>${wordSafe(person.name)}</h1>
+        <p style="margin:0 0 4px;color:#475467;">${wordSafe(roleLine)}</p>
+        <p style="margin:0;color:#667085;">工号：${wordSafe(person.employeeNo)}　状态：${wordSafe(person.status)}　性别：${wordSafe(person.gender)}</p>
+      </td>
+    </tr>
+  </table>
+
+  <h2>核心概览</h2>
+  <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:12px;">
+    ${wordRows([
+      ["工作年限", formatYears(person.firstWorkDate)],
+      ["产品经验年限", formatYears(person.appleStartDate)],
+      ["产品经历数", String((person.products || []).length)],
+      ["技能标签", skills]
+    ])}
+  </table>
+
+  <h2>基础信息</h2>
+  <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:12px;">
+    ${wordRows([
+      ["所属分类", person.category || "未分类"],
+      ["科室 / 小组", person.department],
+      ["岗位", person.position],
+      ["工号", person.employeeNo],
+      ["状态", person.status],
+      ["电话", person.phone],
+      ["邮箱", person.email]
+    ])}
+  </table>
+
+  <h2>教育与经验</h2>
+  <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:12px;">
+    ${wordRows([
+      ["毕业学校", person.school],
+      ["毕业时间", formatDate(person.graduationDate)],
+      ["专业", person.major],
+      ["工作时间", formatDate(person.firstWorkDate)],
+      ["产品经验开始", formatDate(person.appleStartDate)],
+      ["产品经验年限", formatYears(person.appleStartDate)]
+    ])}
+  </table>
+
+  <h2>自定义项目</h2>
+  ${customHtml}
+
+  <h2>过往产品信息</h2>
+  ${productHtml}
+
+  <h2>备注</h2>
+  <p>${wordSafe(person.remark || "暂无备注")}</p>
+
+  <p style="margin-top:28px;color:#98a2b3;font-size:11px;">导出时间：${new Date().toLocaleString("zh-CN")} · 研发人才库</p>
+</body>
+</html>`;
+    }
+
+    async function exportPersonToWord(person) {
+      if (!person) {
+        alert("未找到可导出的人才档案。");
+        return;
+      }
+      try {
+        const photoDataUrl = await resolvePhotoDataUrl(person.photoUrl || "");
+        const html = buildPersonWordHtml(person, photoDataUrl);
+        const blob = new Blob(["\ufeff", html], {
+          type: "application/msword;charset=utf-8"
+        });
+        const safeName = String(person.name || "人才档案").replace(/[\\/:*?"<>|]/g, "_");
+        const safeNo = String(person.employeeNo || "no-id").replace(/[\\/:*?"<>|]/g, "_");
+        downloadBlob(blob, `${safeName}-${safeNo}-人才档案.doc`);
+      } catch (error) {
+        console.error(error);
+        alert("导出 Word 失败，请稍后重试。");
+      }
+    }
+
     function openProfileDialog(person) {
       if (!person) return;
+      currentProfileId = person.id;
       els.profileTitle.textContent = "个人完整档案";
 
       const skills = person.skills || [];
@@ -2367,6 +2573,10 @@
       els.customFieldRows.insertAdjacentHTML("beforeend", customFieldRowTemplate());
     });
     document.querySelector("#closeProfileDialog").addEventListener("click", () => els.profileDialog.close());
+    document.querySelector("#exportWordBtn").addEventListener("click", async () => {
+      const person = talents.find(item => item.id === currentProfileId);
+      await exportPersonToWord(person);
+    });
 
     els.productRows.addEventListener("click", event => {
       if (event.target.classList.contains("remove-product")) {
@@ -2409,6 +2619,7 @@
     els.rows.addEventListener("click", async event => {
       const profileButton = event.target.closest(".profile-btn");
       const viewButton = event.target.closest("[data-action='view']");
+      const wordButton = event.target.closest("[data-action='export-word']");
       const editButton = event.target.closest(".edit-btn");
       const deleteButton = event.target.closest(".delete-btn");
       const row = event.target.closest("tr");
@@ -2419,6 +2630,12 @@
         selectedId = person?.id || selectedId;
         renderTable();
         openProfileDialog(person);
+        return;
+      }
+
+      if (wordButton) {
+        const person = talents.find(item => item.id === wordButton.dataset.id);
+        await exportPersonToWord(person);
         return;
       }
 
