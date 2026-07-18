@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>研发人才库</title>
   <style>
     :root {
@@ -369,7 +372,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 940px;
+      min-width: 1080px;
     }
 
     th, td {
@@ -388,6 +391,39 @@
       font-size: 12px;
       font-weight: 700;
       z-index: 1;
+    }
+
+    th.col-actions,
+    td.col-actions {
+      position: sticky;
+      right: 0;
+      z-index: 2;
+      background: #fff;
+      box-shadow: -8px 0 12px rgba(15, 23, 42, .04);
+      white-space: nowrap;
+    }
+
+    th.col-actions {
+      background: #f9fafc;
+      z-index: 3;
+    }
+
+    td.col-actions .row-ops {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    td.col-actions .btn-word {
+      background: rgba(15, 118, 110, .08);
+      border-color: rgba(15, 118, 110, .28);
+      color: #0f766e;
+      font-weight: 700;
+    }
+
+    td.col-actions .btn-word:hover {
+      background: rgba(15, 118, 110, .14);
     }
 
     tbody tr {
@@ -707,10 +743,15 @@
       gap: 8px;
     }
 
-    .profile-dialog .modal-head .btn {
-      background: rgba(255,255,255,.14);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,.18);
+    .profile-dialog .modal-head .btn.primary {
+      background: #fff;
+      color: #0f766e;
+      border-color: #fff;
+      font-weight: 700;
+    }
+
+    .profile-dialog .modal-head .btn.primary:hover {
+      background: #ecfdf8;
     }
 
     .profile-dialog .modal-head .btn:hover {
@@ -1252,11 +1293,11 @@
       <header class="topbar">
         <div>
           <h2>研发人才管理</h2>
-          <p>覆盖结构 / 硬件 / 声学等研发部门 · 点击左侧切换分类</p>
+          <p>覆盖结构 / 硬件 / 声学等研发部门 · 个人档案可导出 Word</p>
         </div>
         <div class="actions">
           <button class="btn" id="importBtn" title="导入 JSON">导入</button>
-          <button class="btn" id="exportBtn" title="导出 JSON">导出</button>
+          <button class="btn" id="exportBtn" title="导出全部 JSON">导出JSON</button>
           <button class="btn primary" id="addBtn">新增人才</button>
           <input class="hidden-file" id="importFile" type="file" accept="application/json">
         </div>
@@ -1310,7 +1351,7 @@
                   <th>产品经验</th>
                   <th>过往产品</th>
                   <th>状态</th>
-                  <th>操作</th>
+                  <th class="col-actions">操作</th>
                 </tr>
               </thead>
               <tbody id="talentRows"></tbody>
@@ -1439,7 +1480,7 @@
     <div class="modal-head">
       <h3 id="profileTitle">个人完整档案</h3>
       <div class="modal-head-actions">
-        <button class="btn" type="button" id="exportWordBtn" title="导出为 Word 文档">导出 Word</button>
+        <button class="btn primary" type="button" id="exportWordBtn" title="导出为 Word 文档">导出 Word</button>
         <button class="btn icon" type="button" id="closeProfileDialog" aria-label="关闭">×</button>
       </div>
     </div>
@@ -1924,11 +1965,13 @@
             <td><span class="tag apple">${formatYears(person.appleStartDate)}</span></td>
             <td><div class="tag-list">${products || "<span class='subtext'>-</span>"}</div></td>
             <td><span class="tag warn">${escapeHtml(person.status || "-")}</span></td>
-            <td>
-              <button class="btn" type="button" title="查看完整档案" data-id="${person.id}" data-action="view">查看</button>
-              <button class="btn" type="button" title="导出 Word" data-id="${person.id}" data-action="export-word">Word</button>
-              <button class="btn icon edit-btn" type="button" title="编辑" data-id="${person.id}">✎</button>
-              <button class="btn icon danger delete-btn" type="button" title="删除" data-id="${person.id}">×</button>
+            <td class="col-actions">
+              <div class="row-ops">
+                <button class="btn" type="button" title="查看完整档案" data-id="${person.id}" data-action="view">查看</button>
+                <button class="btn btn-word" type="button" title="导出个人档案为 Word" data-id="${person.id}" data-action="export-word">导出Word</button>
+                <button class="btn icon edit-btn" type="button" title="编辑" data-id="${person.id}">✎</button>
+                <button class="btn icon danger delete-btn" type="button" title="删除" data-id="${person.id}">×</button>
+              </div>
             </td>
           </tr>
         `;
