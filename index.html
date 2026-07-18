@@ -188,10 +188,7 @@
 
     .content {
       padding: 24px 28px 36px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 390px;
-      gap: 22px;
-      align-items: start;
+      display: block;
     }
 
     .workspace {
@@ -362,44 +359,12 @@
       color: var(--accent);
     }
 
-    .detail-panel {
-      position: sticky;
-      top: 90px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .detail-cover {
-      min-height: 112px;
-      padding: 18px;
-      display: flex;
-      align-items: flex-end;
-      background:
-        linear-gradient(135deg, rgba(15,118,110,.88), rgba(29,39,51,.86)),
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='720' height='260' viewBox='0 0 720 260'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.22' stroke-width='2'%3E%3Cpath d='M25 210 C130 120 205 230 320 135 S540 80 695 160'/%3E%3Cpath d='M42 70 C120 105 170 40 252 82 S400 150 520 70 S640 24 700 78'/%3E%3C/g%3E%3Ccircle cx='112' cy='62' r='28' fill='%23ffffff' fill-opacity='.16'/%3E%3Ccircle cx='560' cy='180' r='42' fill='%23ffffff' fill-opacity='.12'/%3E%3C/svg%3E");
-      background-size: cover;
-      color: white;
-    }
-
-    .detail-cover h3 {
-      margin: 0;
-      font-size: 22px;
-      letter-spacing: 0;
-    }
-
-    .detail-cover p {
-      margin: 5px 0 0;
-      color: rgba(255,255,255,.82);
-      font-size: 13px;
-    }
-
+    .detail-panel,
+    .detail-cover,
+    .detail-cover h3,
+    .detail-cover p,
     .detail-body {
-      padding: 16px;
-      display: grid;
-      gap: 16px;
+      display: none;
     }
 
     .info-grid {
@@ -926,11 +891,7 @@
       }
 
       .content {
-        grid-template-columns: 1fr;
-      }
-
-      .detail-panel {
-        position: static;
+        display: block;
       }
     }
 
@@ -1145,8 +1106,6 @@
             <div class="empty" id="emptyState" hidden>暂无匹配人才</div>
           </section>
         </div>
-
-        <aside class="detail-panel" id="detailPanel" aria-label="人才详情"></aside>
       </section>
     </main>
   </div>
@@ -1398,7 +1357,7 @@
       syncStatus: document.querySelector("#syncStatus"),
       rows: document.querySelector("#talentRows"),
       empty: document.querySelector("#emptyState"),
-      detail: document.querySelector("#detailPanel"),
+      detail: null,
       search: document.querySelector("#searchInput"),
       genderFilter: document.querySelector("#genderFilter"),
       statusFilter: document.querySelector("#statusFilter"),
@@ -1637,6 +1596,7 @@
             <td><div class="tag-list">${products || "<span class='subtext'>-</span>"}</div></td>
             <td><span class="tag warn">${escapeHtml(person.status || "-")}</span></td>
             <td>
+              <button class="btn" type="button" title="查看完整档案" data-id="${person.id}" data-action="view">查看</button>
               <button class="btn icon edit-btn" type="button" title="编辑" data-id="${person.id}">✎</button>
               <button class="btn icon danger delete-btn" type="button" title="删除" data-id="${person.id}">×</button>
             </td>
@@ -1644,65 +1604,6 @@
         `;
       }).join("");
       els.empty.hidden = list.length > 0;
-      renderDetail();
-    }
-
-    function renderDetail() {
-      const person = talents.find(item => item.id === selectedId);
-      if (!person) {
-        els.detail.innerHTML = `<div class="empty">请选择或新增人才</div>`;
-        return;
-      }
-
-      const productItems = (person.products || []).map(item => `
-        <div class="experience-item">
-          <strong>${escapeHtml(item.name || "-")}</strong>
-          <div class="subtext">${escapeHtml(item.type || "-")} · ${escapeHtml(item.role || "-")} · ${formatDate(item.startDate)} 至 ${formatDate(item.endDate)}</div>
-          <div>${escapeHtml(item.responsibilities || "暂无职责描述")}</div>
-          <div class="tag-list">
-            <span class="tag ${item.appleRelated ? "apple" : ""}">${item.appleRelated ? "Apple 相关" : "非 Apple"}</span>
-            ${item.company ? `<span class="tag">${escapeHtml(item.company)}</span>` : ""}
-          </div>
-        </div>
-      `).join("");
-      const customItems = (person.customFields || []).map(item => `
-        <div class="info-item">
-          <span class="info-label">${escapeHtml(item.name || "-")}</span>
-          <span class="info-value">${escapeHtml(item.value || "-")}</span>
-        </div>
-      `).join("");
-
-      els.detail.innerHTML = `
-        <div class="detail-cover">
-          <div>
-            <h3>${escapeHtml(person.name)}</h3>
-            <p>${escapeHtml(person.employeeNo)} · ${escapeHtml(person.department || "-")} · ${escapeHtml(person.position || "-")}</p>
-          </div>
-        </div>
-        <div class="detail-body">
-          <div class="info-grid">
-            <div class="info-item"><span class="info-label">工作年限</span><span class="info-value">${formatYears(person.firstWorkDate)}</span></div>
-            <div class="info-item"><span class="info-label">产品经验</span><span class="info-value">${formatYears(person.appleStartDate)}</span></div>
-            <div class="info-item"><span class="info-label">毕业学校</span><span class="info-value">${escapeHtml(person.school || "-")}</span></div>
-            <div class="info-item"><span class="info-label">专业</span><span class="info-value">${escapeHtml(person.major || "-")}</span></div>
-          </div>
-          <div class="tag-list">
-            ${(person.skills || []).map(skill => `<span class="tag">${escapeHtml(skill)}</span>`).join("") || "<span class='subtext'>暂无技能标签</span>"}
-          </div>
-          <div>
-            <strong>过往产品信息</strong>
-            <div class="experience-list" style="margin-top: 10px;">${productItems || "<div class='subtext'>暂无产品经历</div>"}</div>
-          </div>
-          <div>
-            <strong>自定义项目</strong>
-            <div class="info-grid" style="margin-top: 10px;">${customItems || "<div class='subtext'>暂无自定义项目</div>"}</div>
-          </div>
-          <div>
-            <strong>备注</strong>
-            <div class="subtext" style="margin-top: 6px;">${escapeHtml(person.remark || "暂无备注")}</div>
-          </div>
-        </div>
-      `;
     }
 
     function infoItem(label, value) {
@@ -2119,12 +2020,14 @@
 
     els.rows.addEventListener("click", async event => {
       const profileButton = event.target.closest(".profile-btn");
+      const viewButton = event.target.closest("[data-action='view']");
       const editButton = event.target.closest(".edit-btn");
       const deleteButton = event.target.closest(".delete-btn");
       const row = event.target.closest("tr");
 
-      if (profileButton) {
-        const person = talents.find(item => item.id === profileButton.dataset.id);
+      if (profileButton || viewButton) {
+        const id = (profileButton || viewButton).dataset.id;
+        const person = talents.find(item => item.id === id);
         selectedId = person?.id || selectedId;
         renderTable();
         openProfileDialog(person);
@@ -2153,8 +2056,10 @@
       }
 
       if (row) {
-        selectedId = row.dataset.id;
+        const person = talents.find(item => item.id === row.dataset.id);
+        selectedId = person?.id || selectedId;
         renderTable();
+        openProfileDialog(person);
       }
     });
 
