@@ -590,49 +590,317 @@
     }
 
     .profile-dialog {
-      width: min(1080px, calc(100vw - 28px));
-    }
-
-    .profile-layout {
-      display: grid;
-      grid-template-columns: 180px minmax(0, 1fr);
-      gap: 18px;
-      align-items: start;
-    }
-
-    .profile-photo {
-      width: 180px;
-      aspect-ratio: 1;
-      border-radius: 8px;
-      background: var(--brand-light);
-      display: grid;
-      place-items: center;
-      color: var(--brand);
-      font-size: 44px;
-      font-weight: 800;
+      width: min(920px, calc(100vw - 28px));
+      border-radius: 16px;
       overflow: hidden;
     }
 
-    .profile-photo img {
+    .profile-dialog .modal-head {
+      position: relative;
+      z-index: 2;
+      padding: 14px 18px;
+      border-bottom: 0;
+      background: linear-gradient(135deg, #115e59 0%, #0f766e 48%, #134e4a 100%);
+      color: #fff;
+    }
+
+    .profile-dialog .modal-head h3 {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      opacity: .92;
+    }
+
+    .profile-dialog .modal-head .btn.icon {
+      background: rgba(255,255,255,.14);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    .profile-dialog .modal-head .btn.icon:hover {
+      background: rgba(255,255,255,.24);
+    }
+
+    .profile-dialog .modal-body {
+      padding: 0;
+      max-height: min(82vh, 860px);
+      background: #f3f6f9;
+      gap: 0;
+    }
+
+    .profile-sheet {
+      display: grid;
+      gap: 0;
+    }
+
+    .profile-hero {
+      margin-top: 0;
+      padding: 8px 28px 28px;
+      background:
+        radial-gradient(circle at 88% 12%, rgba(45, 212, 191, .28), transparent 28%),
+        linear-gradient(135deg, #115e59 0%, #0f766e 48%, #134e4a 100%);
+      color: #fff;
+      display: grid;
+      grid-template-columns: 132px minmax(0, 1fr);
+      gap: 22px;
+      align-items: end;
+    }
+
+    .profile-avatar {
+      width: 132px;
+      height: 132px;
+      border-radius: 28px;
+      overflow: hidden;
+      background: rgba(255,255,255,.16);
+      border: 3px solid rgba(255,255,255,.55);
+      box-shadow: 0 18px 40px rgba(0,0,0,.22);
+      display: grid;
+      place-items: center;
+      font-size: 42px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .profile-avatar img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
 
-    .profile-section {
-      display: grid;
-      gap: 10px;
+    .profile-hero-main {
+      min-width: 0;
+      padding-bottom: 6px;
     }
 
-    .profile-section h4 {
+    .profile-hero-main h2 {
       margin: 0;
+      font-size: 30px;
+      line-height: 1.15;
+      letter-spacing: 0.01em;
+    }
+
+    .profile-role {
+      margin: 8px 0 0;
+      color: rgba(255,255,255,.88);
       font-size: 15px;
+    }
+
+    .profile-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .profile-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.16);
+      font-size: 12px;
+      color: #fff;
+    }
+
+    .profile-chip strong {
+      font-weight: 700;
+    }
+
+    .profile-status {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: transparent;
+      font-weight: 700;
+    }
+
+    .profile-body {
+      padding: 22px 24px 28px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .profile-card {
+      background: #fff;
+      border: 1px solid #e4ebf2;
+      border-radius: 14px;
+      padding: 18px 18px 16px;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, .04);
+    }
+
+    .profile-card-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 14px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #1d2733;
+    }
+
+    .profile-card-title::before {
+      content: "";
+      width: 4px;
+      height: 16px;
+      border-radius: 999px;
+      background: var(--brand);
+      flex: 0 0 auto;
+    }
+
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .profile-stat {
+      padding: 12px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #f7fffc, #eef8f5);
+      border: 1px solid #d9efe8;
+    }
+
+    .profile-stat span {
+      display: block;
+      color: #667085;
+      font-size: 12px;
+    }
+
+    .profile-stat strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 18px;
+      color: #115e59;
+      overflow-wrap: anywhere;
     }
 
     .full-info-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
+    }
+
+    .profile-dialog .info-item {
+      padding: 12px 12px 11px;
+      background: #f8fafc;
+      border: 1px solid #eef2f6;
+      border-radius: 10px;
+    }
+
+    .profile-dialog .info-label {
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #8492a6;
+    }
+
+    .profile-dialog .info-value {
+      margin-top: 6px;
+      font-size: 14px;
+      font-weight: 650;
+      color: #1d2733;
+      line-height: 1.45;
+    }
+
+    .skill-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .skill-pill {
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #d7f6ef;
+      color: #115e59;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .experience-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .experience-item {
+      position: relative;
+      border: 1px solid #e7eef5;
+      border-radius: 12px;
+      padding: 14px 14px 14px 16px;
+      display: grid;
+      gap: 8px;
+      background: linear-gradient(180deg, #fff, #fbfdff);
+    }
+
+    .experience-item::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 12px;
+      bottom: 12px;
+      width: 3px;
+      border-radius: 999px;
+      background: var(--brand);
+    }
+
+    .experience-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .experience-item strong {
+      font-size: 15px;
+      color: #1d2733;
+    }
+
+    .experience-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #ecfdf5;
+      color: #047857;
+    }
+
+    .experience-tag.is-muted {
+      background: #f2f4f7;
+      color: #667085;
+    }
+
+    .experience-sub {
+      color: #667085;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .experience-copy {
+      color: #344054;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .profile-remark {
+      margin: 0;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px dashed #d0d5dd;
+      color: #344054;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .profile-empty {
+      color: #98a2b3;
+      font-size: 13px;
+      padding: 8px 2px;
     }
 
     .row-actions {
@@ -702,8 +970,9 @@
       .product-row,
       .custom-row,
       .info-grid,
-      .profile-layout,
-      .full-info-grid {
+      .full-info-grid,
+      .profile-hero,
+      .profile-stats {
         grid-template-columns: 1fr;
       }
 
@@ -737,9 +1006,42 @@
         grid-template-columns: 1fr;
       }
 
-      .profile-photo {
-        width: 100%;
-        max-width: 180px;
+      .profile-dialog .modal-head {
+        color: #1d2733;
+      }
+
+      .profile-dialog .modal-head .btn.icon {
+        background: #eef2f6;
+        color: #1d2733;
+        border-color: transparent;
+      }
+
+      .profile-hero {
+        margin-top: 0;
+        padding: 22px 18px;
+        border-radius: 0;
+      }
+
+      .profile-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 22px;
+        font-size: 30px;
+      }
+
+      .profile-hero-main h2 {
+        font-size: 24px;
+      }
+
+      .profile-body {
+        padding: 16px;
+      }
+    }
+
+    @media (min-width: 761px) and (max-width: 980px) {
+      .profile-stats,
+      .full-info-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
   </style>
@@ -1414,54 +1716,97 @@
 
     function openProfileDialog(person) {
       if (!person) return;
-      els.profileTitle.textContent = `${person.name} 的完整档案`;
+      els.profileTitle.textContent = "个人完整档案";
+
+      const skills = person.skills || [];
+      const skillHtml = skills.length
+        ? `<div class="skill-pills">${skills.map(skill => `<span class="skill-pill">${escapeHtml(skill)}</span>`).join("")}</div>`
+        : `<div class="profile-empty">暂无技能标签</div>`;
 
       const productItems = (person.products || []).map(item => `
         <div class="experience-item">
-          <strong>${escapeHtml(item.name || "-")}</strong>
-          <div class="subtext">${escapeHtml(item.type || "-")} · ${escapeHtml(item.company || "-")} · ${escapeHtml(item.role || "-")}</div>
-          <div class="subtext">${formatDate(item.startDate)} 至 ${formatDate(item.endDate)} · ${item.appleRelated ? "Apple 相关" : "非 Apple"}</div>
-          <div>${escapeHtml(item.responsibilities || "暂无职责描述")}</div>
-          <div class="subtext">${escapeHtml(item.achievements || "暂无项目成果")}</div>
+          <div class="experience-top">
+            <strong>${escapeHtml(item.name || "-")}</strong>
+            <span class="experience-tag ${item.appleRelated ? "" : "is-muted"}">${item.appleRelated ? "Apple 相关" : "非 Apple"}</span>
+          </div>
+          <div class="experience-sub">${escapeHtml(item.type || "-")} · ${escapeHtml(item.company || "-")} · ${escapeHtml(item.role || "-")}</div>
+          <div class="experience-sub">${formatDate(item.startDate)} 至 ${formatDate(item.endDate)}</div>
+          <div class="experience-copy">${escapeHtml(item.responsibilities || "暂无职责描述")}</div>
+          <div class="experience-sub">成果：${escapeHtml(item.achievements || "暂无项目成果")}</div>
         </div>
       `).join("");
 
       const customItems = (person.customFields || []).map(item => infoItem(item.name || "-", item.value || "-")).join("");
+      const roleLine = [person.department, person.position].filter(Boolean).join(" · ") || "岗位待完善";
 
       els.profileBody.innerHTML = `
-        <div class="profile-layout">
-          <div class="profile-photo">
-            ${person.photoUrl ? `<img alt="${escapeHtml(person.name)}" src="${person.photoUrl}">` : escapeHtml(initials(person.name))}
-          </div>
-          <div class="profile-section">
-            <h4>基础信息</h4>
-            <div class="full-info-grid">
-              ${infoItem("工号", person.employeeNo)}
-              ${infoItem("姓名", person.name)}
-              ${infoItem("性别", person.gender)}
-              ${infoItem("状态", person.status)}
-              ${infoItem("部门", person.department)}
-              ${infoItem("岗位", person.position)}
-              ${infoItem("电话", person.phone)}
-              ${infoItem("邮箱", person.email)}
-              ${infoItem("技能标签", (person.skills || []).join("，"))}
+        <div class="profile-sheet">
+          <section class="profile-hero">
+            <div class="profile-avatar">
+              ${person.photoUrl ? `<img alt="${escapeHtml(person.name)}" src="${person.photoUrl}">` : escapeHtml(initials(person.name))}
             </div>
-            <h4>教育与经验</h4>
-            <div class="full-info-grid">
-              ${infoItem("毕业学校", person.school)}
-              ${infoItem("毕业时间", formatDate(person.graduationDate))}
-              ${infoItem("专业", person.major)}
-              ${infoItem("工作时间", formatDate(person.firstWorkDate))}
-              ${infoItem("工作年限", formatYears(person.firstWorkDate))}
-              ${infoItem("产品经验开始时间", formatDate(person.appleStartDate))}
-              ${infoItem("产品经验年限", formatYears(person.appleStartDate))}
+            <div class="profile-hero-main">
+              <h2>${escapeHtml(person.name || "-")}</h2>
+              <p class="profile-role">${escapeHtml(roleLine)}</p>
+              <div class="profile-meta-row">
+                <span class="profile-chip profile-status">${escapeHtml(person.status || "-")}</span>
+                <span class="profile-chip">工号 <strong>${escapeHtml(person.employeeNo || "-")}</strong></span>
+                <span class="profile-chip">${escapeHtml(person.gender || "-")}</span>
+                <span class="profile-chip">${escapeHtml(person.email || "暂无邮箱")}</span>
+              </div>
             </div>
-            <h4>自定义项目</h4>
-            <div class="full-info-grid">${customItems || "<div class='subtext'>暂无自定义项目</div>"}</div>
-            <h4>过往产品信息</h4>
-            <div class="experience-list">${productItems || "<div class='subtext'>暂无产品经历</div>"}</div>
-            <h4>备注</h4>
-            <div class="subtext">${escapeHtml(person.remark || "暂无备注")}</div>
+          </section>
+
+          <div class="profile-body">
+            <section class="profile-card">
+              <h4 class="profile-card-title">核心概览</h4>
+              <div class="profile-stats">
+                <div class="profile-stat"><span>工作年限</span><strong>${escapeHtml(formatYears(person.firstWorkDate))}</strong></div>
+                <div class="profile-stat"><span>产品经验</span><strong>${escapeHtml(formatYears(person.appleStartDate))}</strong></div>
+                <div class="profile-stat"><span>产品经历</span><strong>${(person.products || []).length}</strong></div>
+                <div class="profile-stat"><span>技能标签</span><strong>${skills.length}</strong></div>
+              </div>
+              ${skillHtml}
+            </section>
+
+            <section class="profile-card">
+              <h4 class="profile-card-title">基础信息</h4>
+              <div class="full-info-grid">
+                ${infoItem("电话", person.phone)}
+                ${infoItem("邮箱", person.email)}
+                ${infoItem("部门", person.department)}
+                ${infoItem("岗位", person.position)}
+                ${infoItem("工号", person.employeeNo)}
+                ${infoItem("状态", person.status)}
+              </div>
+            </section>
+
+            <section class="profile-card">
+              <h4 class="profile-card-title">教育与经验</h4>
+              <div class="full-info-grid">
+                ${infoItem("毕业学校", person.school)}
+                ${infoItem("毕业时间", formatDate(person.graduationDate))}
+                ${infoItem("专业", person.major)}
+                ${infoItem("工作时间", formatDate(person.firstWorkDate))}
+                ${infoItem("产品经验开始", formatDate(person.appleStartDate))}
+                ${infoItem("产品经验年限", formatYears(person.appleStartDate))}
+              </div>
+            </section>
+
+            <section class="profile-card">
+              <h4 class="profile-card-title">自定义项目</h4>
+              <div class="full-info-grid">${customItems || "<div class='profile-empty'>暂无自定义项目</div>"}</div>
+            </section>
+
+            <section class="profile-card">
+              <h4 class="profile-card-title">过往产品信息</h4>
+              <div class="experience-list">${productItems || "<div class='profile-empty'>暂无产品经历</div>"}</div>
+            </section>
+
+            <section class="profile-card">
+              <h4 class="profile-card-title">备注</h4>
+              <p class="profile-remark">${escapeHtml(person.remark || "暂无备注")}</p>
+            </section>
           </div>
         </div>
       `;
