@@ -19,46 +19,6 @@
       --shadow: 0 16px 40px rgba(15, 23, 42, .08);
     }
 
-    /* 蓝色主题 */
-    [data-theme="blue"] {
-      --brand: #2563eb;
-      --brand-strong: #1d4ed8;
-      --brand-light: #dbeafe;
-      --brand-dark: #1e3a8a;
-    }
-
-    /* 紫色主题 */
-    [data-theme="purple"] {
-      --brand: #7c3aed;
-      --brand-strong: #6d28d9;
-      --brand-light: #ede9fe;
-      --brand-dark: #5b21b6;
-    }
-
-    /* 橙色主题 */
-    [data-theme="orange"] {
-      --brand: #ea580c;
-      --brand-strong: #c2410c;
-      --brand-light: #ffedd5;
-      --brand-dark: #9a3412;
-    }
-
-    /* 玫红主题 */
-    [data-theme="pink"] {
-      --brand: #db2777;
-      --brand-strong: #be185d;
-      --brand-light: #fce7f3;
-      --brand-dark: #9d174d;
-    }
-
-    /* 靛蓝主题 */
-    [data-theme="indigo"] {
-      --brand: #4f46e5;
-      --brand-strong: #4338ca;
-      --brand-light: #e0e7ff;
-      --brand-dark: #3730a3;
-    }
-
     * { box-sizing: border-box; }
 
     body {
@@ -127,71 +87,6 @@
     .side-stats {
       display: grid;
       gap: 10px;
-    }
-
-    .theme-selector {
-      padding: 14px;
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 8px;
-      background: rgba(255,255,255,.04);
-    }
-
-    .theme-selector h4 {
-      margin: 0 0 10px 0;
-      font-size: 12px;
-      color: #bfccd9;
-    }
-
-    .theme-options {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .theme-btn {
-      width: 100%;
-      aspect-ratio: 1;
-      border: 2px solid rgba(255,255,255,.3);
-      border-radius: 8px;
-      cursor: pointer;
-      display: grid;
-      place-items: center;
-      font-size: 16px;
-      transition: all .2s ease;
-      color: white;
-    }
-
-    .theme-btn.teal {
-      background: linear-gradient(135deg, #0f766e, #115e59);
-    }
-
-    .theme-btn.blue {
-      background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    }
-
-    .theme-btn.purple {
-      background: linear-gradient(135deg, #7c3aed, #6d28d9);
-    }
-
-    .theme-btn.orange {
-      background: linear-gradient(135deg, #ea580c, #c2410c);
-    }
-
-    .theme-btn.pink {
-      background: linear-gradient(135deg, #db2777, #be185d);
-    }
-
-    .theme-btn.indigo {
-      background: linear-gradient(135deg, #4f46e5, #4338ca);
-    }
-
-    .theme-btn:hover {
-      transform: scale(1.05);
-    }
-
-    .theme-btn.active {
-      border-color: white;
-      box-shadow: 0 0 12px rgba(255,255,255,.5);
     }
 
     .stat-tile {
@@ -859,17 +754,6 @@
           <p>Product Development Talent Bank</p>
         </div>
       </div>
-      <div class="theme-selector">
-        <h4>系统主题</h4>
-        <div class="theme-options">
-          <button class="theme-btn teal active" data-theme="teal" title="青色">🌿</button>
-          <button class="theme-btn blue" data-theme="blue" title="蓝色">🌊</button>
-          <button class="theme-btn purple" data-theme="purple" title="紫色">💜</button>
-          <button class="theme-btn orange" data-theme="orange" title="橙色">🍊</button>
-          <button class="theme-btn pink" data-theme="pink" title="玫红">🌸</button>
-          <button class="theme-btn indigo" data-theme="indigo" title="靛蓝">🔵</button>
-        </div>
-      </div>
       <div class="side-stats">
         <div class="stat-tile">
           <span class="stat-value" id="statTotal">0</span>
@@ -1080,42 +964,6 @@
 
   <script>
     const STORAGE_KEY = "talent-bank-records-v1";
-    const THEME_KEY = "talent-bank-theme-v1";
-
-    // 初始化主题
-    function initTheme() {
-      const savedTheme = localStorage.getItem(THEME_KEY) || 'teal';
-      setTheme(savedTheme);
-    }
-
-    function setTheme(themeName) {
-      const root = document.documentElement;
-      if (themeName === 'teal') {
-        root.removeAttribute('data-theme');
-      } else {
-        root.setAttribute('data-theme', themeName);
-      }
-
-      // 更新按钮状态
-      document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.theme === themeName || (themeName === 'teal' && btn.classList.contains('teal'))) {
-          btn.classList.add('active');
-        }
-      });
-
-      localStorage.setItem(THEME_KEY, themeName);
-    }
-
-    // 主题切换事件
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        setTheme(btn.dataset.theme);
-      });
-    });
-
-    // 初始化应用并设置主题
-    initTheme();
 
     const seedTalents = [
       {
