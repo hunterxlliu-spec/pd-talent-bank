@@ -767,6 +767,10 @@
           <span class="stat-value" id="statAvg">0</span>
           <span class="stat-label">平均产品年限</span>
         </div>
+        <div class="stat-tile">
+          <span class="stat-value" id="syncStatus" style="font-size:14px">同步中</span>
+          <span class="stat-label">云端共享状态</span>
+        </div>
       </div>
     </aside>
 
@@ -964,6 +968,9 @@
 
   <script>
     const STORAGE_KEY = "talent-bank-records-v1";
+    // Shared cloud API (Cloudflare Worker -> GitHub Gist)
+    const API_URL = "https://pd-talent-bank-api.pd-talent-hunter.workers.dev/talents";
+    const SYNC_INTERVAL_MS = 12000;
 
     const seedTalents = [
       {
@@ -1073,13 +1080,17 @@
       }
     ];
 
-    let talents = loadTalents();
-    let selectedId = talents[0]?.id || null;
+    let talents = [];
+    let selectedId = null;
+    let remoteUpdatedAt = null;
+    let syncing = false;
+    let suppressPoll = false;
 
     const els = {
       statTotal: document.querySelector("#statTotal"),
       statProduct: document.querySelector("#statProduct"),
       statAvg: document.querySelector("#statAvg"),
+      syncStatus: document.querySelector("#syncStatus"),
       rows: document.querySelector("#talentRows"),
       empty: document.querySelector("#emptyState"),
       detail: document.querySelector("#detailPanel"),
@@ -1099,19 +1110,98 @@
       importFile: document.querySelector("#importFile")
     };
 
-    function loadTalents() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return seedTalents;
+    function setSyncStatus(text) {
+      if (els.syncStatus) els.syncStatus.textContent = text;
+    }
+
+    function normalizeTalentList(list) {
+      if (!Array.isArray(list)) return [];
+      return list.map(item => ({
+        ...item,
+        id: item.id || crypto.randomUUID(),
+        products: Array.isArray(item.products) ? item.products : [],
+        skills: Array.isArray(item.skills) ? item.skills : [],
+        customFields: Array.isArray(item.customFields) ? item.customFields : []
+      }));
+    }
+
+    async function loadTalents() {
+      setSyncStatus("同步中");
       try {
-        const parsed = JSON.parse(saved);
-        return Array.isArray(parsed) ? parsed : seedTalents;
-      } catch {
-        return seedTalents;
+        const res = await fetch(API_URL, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        remoteUpdatedAt = data.updatedAt || null;
+        let list = normalizeTalentList(data.talents);
+        if (!list.length) {
+          list = normalizeTalentList(seedTalents);
+          await saveTalents(list, { silent: true });
+        }
+        setSyncStatus("已同步");
+        return list;
+      } catch (error) {
+        console.error(error);
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) {
+              setSyncStatus("离线缓存");
+              return normalizeTalentList(parsed);
+            }
+          } catch {}
+        }
+        setSyncStatus("同步失败");
+        return normalizeTalentList(seedTalents);
       }
     }
 
-    function saveTalents() {
+    async function saveTalents(nextTalents = talents, { silent = false } = {}) {
+      talents = normalizeTalentList(nextTalents);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(talents));
+      if (!silent) setSyncStatus("保存中");
+      syncing = true;
+      suppressPoll = true;
+      try {
+        const res = await fetch(API_URL, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ talents, version: 1 })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        remoteUpdatedAt = data.updatedAt || new Date().toISOString();
+        if (!silent) setSyncStatus("已同步");
+      } catch (error) {
+        console.error(error);
+        if (!silent) setSyncStatus("保存失败");
+        throw error;
+      } finally {
+        syncing = false;
+        setTimeout(() => { suppressPoll = false; }, 1500);
+      }
+    }
+
+    async function refreshFromCloud({ force = false } = {}) {
+      if (suppressPoll || syncing) return;
+      try {
+        const res = await fetch(API_URL, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!force && data.updatedAt && data.updatedAt === remoteUpdatedAt) return;
+        remoteUpdatedAt = data.updatedAt || remoteUpdatedAt;
+        const list = normalizeTalentList(data.talents);
+        if (!list.length) return;
+        talents = list;
+        if (!talents.find(item => item.id === selectedId)) {
+          selectedId = talents[0]?.id || null;
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(talents));
+        setSyncStatus("已同步");
+        render();
+      } catch {
+        // keep quiet during background poll
+      }
     }
 
     function yearsSince(dateValue) {
@@ -1514,7 +1604,7 @@
         .filter(item => item.name || item.value);
     }
 
-    function handleSubmit(event) {
+    async function handleSubmit(event) {
       event.preventDefault();
       const id = getField("talentId").value || crypto.randomUUID();
       const employeeNo = getField("employeeNo").value.trim();
@@ -1550,9 +1640,13 @@
       if (index >= 0) talents[index] = record;
       else talents.unshift(record);
       selectedId = id;
-      saveTalents();
-      els.dialog.close();
-      render();
+      try {
+        await saveTalents();
+        els.dialog.close();
+        render();
+      } catch {
+        alert("保存到云端失败，请稍后重试。");
+      }
     }
 
     document.querySelector("#addBtn").addEventListener("click", () => openDialog());
@@ -1593,7 +1687,7 @@
 
     els.form.addEventListener("submit", handleSubmit);
 
-    els.rows.addEventListener("click", event => {
+    els.rows.addEventListener("click", async event => {
       const profileButton = event.target.closest(".profile-btn");
       const editButton = event.target.closest(".edit-btn");
       const deleteButton = event.target.closest(".delete-btn");
@@ -1618,8 +1712,12 @@
         if (person && confirm(`确认删除 ${person.name} 吗？`)) {
           talents = talents.filter(item => item.id !== person.id);
           selectedId = talents[0]?.id || null;
-          saveTalents();
-          render();
+          try {
+            await saveTalents();
+            render();
+          } catch {
+            alert("删除同步失败，请稍后重试。");
+          }
         }
         return;
       }
@@ -1649,19 +1747,13 @@
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = async () => {
         try {
           const imported = JSON.parse(reader.result);
           if (!Array.isArray(imported)) throw new Error("not array");
-          talents = imported.map(item => ({
-            ...item,
-            id: item.id || crypto.randomUUID(),
-            products: Array.isArray(item.products) ? item.products : [],
-            skills: Array.isArray(item.skills) ? item.skills : [],
-            customFields: Array.isArray(item.customFields) ? item.customFields : []
-          }));
+          talents = normalizeTalentList(imported);
           selectedId = talents[0]?.id || null;
-          saveTalents();
+          await saveTalents();
           render();
         } catch {
           alert("导入失败，请选择有效的人才库 JSON 文件。");
@@ -1672,7 +1764,18 @@
       reader.readAsText(file);
     });
 
-    render();
+    async function boot() {
+      setSyncStatus("同步中");
+      talents = await loadTalents();
+      selectedId = talents[0]?.id || null;
+      render();
+      setInterval(() => refreshFromCloud(), SYNC_INTERVAL_MS);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") refreshFromCloud({ force: true });
+      });
+    }
+
+    boot();
   </script>
 </body>
 </html>
