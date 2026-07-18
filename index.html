@@ -1001,13 +1001,76 @@
       display: none;
     }
 
-    @media (max-width: 1120px) {
+    .mobile-category-bar {
+      display: none;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      margin-bottom: 14px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .mobile-category-chip {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid #d0d5dd;
+      background: #fff;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 650;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .mobile-category-chip.active {
+      background: rgba(15, 118, 110, 0.1);
+      border-color: rgba(15, 118, 110, 0.35);
+      color: #0f766e;
+    }
+
+    .mobile-category-chip span {
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #f2f4f7;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .mobile-category-chip.active span {
+      background: rgba(15, 118, 110, 0.16);
+    }
+
+    @media (max-width: 1180px) {
+      .app-shell {
+        grid-template-columns: 220px minmax(0, 1fr);
+      }
+
+      .sidebar {
+        padding: 18px 14px;
+      }
+    }
+
+    @media (max-width: 900px) {
       .app-shell {
         grid-template-columns: 1fr;
       }
 
       .sidebar {
         display: none;
+      }
+
+      .mobile-category-bar {
+        display: flex;
       }
 
       .content {
@@ -1180,6 +1243,7 @@
 
       <section class="content">
         <div class="workspace">
+          <div class="mobile-category-bar" id="mobileCategoryBar" aria-label="研发分类"></div>
           <section class="filters" aria-label="筛选">
             <div class="field">
               <label for="searchInput">搜索</label>
@@ -1512,6 +1576,7 @@
       profileTitle: document.querySelector("#profileTitle"),
       photoPreview: document.querySelector("#photoPreview"),
       categoryNav: document.querySelector("#categoryNav"),
+      mobileCategoryBar: document.querySelector("#mobileCategoryBar"),
       importFile: document.querySelector("#importFile")
     };
 
@@ -1556,27 +1621,40 @@
       }
     }
 
-    function renderCategoryNav() {
-      if (!els.categoryNav) return;
-      const items = [
+    function getCategoryItems() {
+      return [
         { id: ALL_CATEGORY, title: "全部人才", editable: false },
         ...categories.map(name => ({ id: name, title: name, editable: true })),
         { id: UNCATEGORIZED, title: "未分类", editable: false }
       ];
-      els.categoryNav.innerHTML = items.map(item => `
-        <div class="nav-item ${activeCategory === item.id ? "active" : ""}" data-category="${escapeHtml(item.id)}">
-          <button class="nav-item-main category-select-btn" type="button" data-category="${escapeHtml(item.id)}">
-            <span class="nav-item-title">${escapeHtml(item.title)}</span>
+    }
+
+    function renderCategoryNav() {
+      const items = getCategoryItems();
+      if (els.categoryNav) {
+        els.categoryNav.innerHTML = items.map(item => `
+          <div class="nav-item ${activeCategory === item.id ? "active" : ""}" data-category="${escapeHtml(item.id)}">
+            <button class="nav-item-main category-select-btn" type="button" data-category="${escapeHtml(item.id)}">
+              <span class="nav-item-title">${escapeHtml(item.title)}</span>
+            </button>
+            <span class="nav-item-count">${countByCategory(item.id)}</span>
+            ${item.editable ? `
+              <span class="nav-item-actions">
+                <button class="btn rename-category-btn" type="button" title="重命名" data-category="${escapeHtml(item.id)}">✎</button>
+                <button class="btn danger delete-category-btn" type="button" title="删除" data-category="${escapeHtml(item.id)}">×</button>
+              </span>
+            ` : ""}
+          </div>
+        `).join("");
+      }
+      if (els.mobileCategoryBar) {
+        els.mobileCategoryBar.innerHTML = items.map(item => `
+          <button class="mobile-category-chip ${activeCategory === item.id ? "active" : ""}" type="button" data-category="${escapeHtml(item.id)}">
+            ${escapeHtml(item.title)}
+            <span>${countByCategory(item.id)}</span>
           </button>
-          <span class="nav-item-count">${countByCategory(item.id)}</span>
-          ${item.editable ? `
-            <span class="nav-item-actions">
-              <button class="btn rename-category-btn" type="button" title="重命名" data-category="${escapeHtml(item.id)}">✎</button>
-              <button class="btn danger delete-category-btn" type="button" title="删除" data-category="${escapeHtml(item.id)}">×</button>
-            </span>
-          ` : ""}
-        </div>
-      `).join("");
+        `).join("");
+      }
     }
 
     function normalizeTalentList(list) {
@@ -2226,6 +2304,13 @@
       }
     });
 
+    els.mobileCategoryBar?.addEventListener("click", event => {
+      const chip = event.target.closest(".mobile-category-chip");
+      if (!chip) return;
+      activeCategory = chip.dataset.category || ALL_CATEGORY;
+      render();
+    });
+
     els.categoryNav.addEventListener("click", async event => {
       const renameBtn = event.target.closest(".rename-category-btn");
       const deleteBtn = event.target.closest(".delete-category-btn");
@@ -2403,6 +2488,9 @@
     });
 
     async function boot() {
+      // Show default categories immediately so the left nav is never blank while syncing.
+      categories = [...DEFAULT_CATEGORIES];
+      renderCategoryNav();
       setSyncStatus("同步中");
       talents = await loadTalents();
       selectedId = talents[0]?.id || null;
