@@ -1085,6 +1085,8 @@
     let remoteUpdatedAt = null;
     let syncing = false;
     let suppressPoll = false;
+    let draftPhotoUrl = "";
+    let photoProcessing = false;
 
     const els = {
       statTotal: document.querySelector("#statTotal"),
@@ -1481,8 +1483,10 @@
       getField("phone").value = person?.phone || "";
       getField("email").value = person?.email || "";
       getField("remark").value = person?.remark || "";
-      getField("photoUrl").value = person?.photoUrl || "";
-      updatePhotoPreview(person?.photoUrl, person?.name);
+      draftPhotoUrl = person?.photoUrl || "";
+      getField("photoUrl").value = "";
+      getField("photoFile").value = "";
+      updatePhotoPreview(draftPhotoUrl, person?.name);
       renderProductRows(person?.products || []);
       renderCustomFieldRows(person?.customFields || []);
       els.dialog.showModal();
@@ -1494,28 +1498,48 @@
         : escapeHtml(initials(name || "照片"));
     }
 
-    function compressImageFile(file, maxEdge = 480, quality = 0.72) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error("读取图片失败"));
-        reader.onload = () => {
-          const img = new Image();
-          img.onerror = () => reject(new Error("图片损坏"));
-          img.onload = () => {
-            const scale = Math.min(1, maxEdge / Math.max(img.width, img.height));
-            const width = Math.max(1, Math.round(img.width * scale));
-            const height = Math.max(1, Math.round(img.height * scale));
-            const canvas = document.createElement("canvas");
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL("image/jpeg", quality));
+    async function compressImageFile(file, maxBytes = 100_000) {
+      let source = null;
+      try {
+        source = await createImageBitmap(file);
+      } catch {
+        source = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error("读取图片失败"));
+          reader.onload = () => {
+            const img = new Image();
+            img.onerror = () => reject(new Error("不支持该图片格式，请改用 JPG/PNG"));
+            img.onload = () => resolve(img);
+            img.src = reader.result;
           };
-          img.src = reader.result;
-        };
-        reader.readAsDataURL(file);
-      });
+          reader.readAsDataURL(file);
+        });
+      }
+
+      let edge = 640;
+      let quality = 0.8;
+      let dataUrl = "";
+
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        const scale = Math.min(1, edge / Math.max(source.width, source.height));
+        const width = Math.max(1, Math.round(source.width * scale));
+        const height = Math.max(1, Math.round(source.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(source, 0, 0, width, height);
+        dataUrl = canvas.toDataURL("image/jpeg", quality);
+        if (dataUrl.length <= maxBytes) break;
+        if (quality > 0.45) quality -= 0.1;
+        else edge = Math.max(160, Math.round(edge * 0.75));
+      }
+
+      if (typeof source.close === "function") source.close();
+      if (!dataUrl || dataUrl.length > maxBytes * 1.25) {
+        throw new Error("照片仍然过大，请选择更小的图片");
+      }
+      return dataUrl;
     }
 
     function productRowTemplate(item = {}) {
@@ -1655,10 +1679,15 @@
         phone: getField("phone").value.trim(),
         email: getField("email").value.trim(),
         remark: getField("remark").value.trim(),
-        photoUrl: getField("photoUrl").value,
+        photoUrl: draftPhotoUrl || "",
         products: readProductRows(),
         customFields: readCustomFieldRows()
       };
+
+      if (photoProcessing) {
+        alert("照片还在处理中，请稍候再保存。");
+        return;
+      }
 
       const index = talents.findIndex(person => person.id === id);
       if (index >= 0) talents[index] = record;
@@ -1701,13 +1730,22 @@
     document.querySelector("#photoFile").addEventListener("change", async event => {
       const file = event.target.files[0];
       if (!file) return;
+      photoProcessing = true;
+      setSyncStatus("处理照片");
       try {
         const compressed = await compressImageFile(file);
-        getField("photoUrl").value = compressed;
-        updatePhotoPreview(compressed, getField("name").value);
-      } catch {
-        alert("照片处理失败，请换一张较小的图片。");
+        draftPhotoUrl = compressed;
+        getField("photoUrl").value = "";
+        updatePhotoPreview(draftPhotoUrl, getField("name").value);
+        setSyncStatus("已同步");
+      } catch (error) {
+        draftPhotoUrl = "";
+        updatePhotoPreview("", getField("name").value);
+        alert(error?.message || "照片处理失败，请改用 JPG/PNG。");
         event.target.value = "";
+        setSyncStatus("已同步");
+      } finally {
+        photoProcessing = false;
       }
     });
 
