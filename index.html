@@ -850,7 +850,7 @@
   </div>
 
   <dialog id="talentDialog">
-    <form id="talentForm" method="dialog">
+    <form id="talentForm">
       <div class="modal-head">
         <h3 id="dialogTitle">新增人才</h3>
         <button class="btn icon" type="button" id="closeDialog" aria-label="关闭">×</button>
@@ -968,8 +968,9 @@
 
   <script>
     const STORAGE_KEY = "talent-bank-records-v1";
-    // Shared cloud API (Cloudflare Worker -> GitHub Gist)
-    const API_URL = "https://pd-talent-bank-api.pd-talent-hunter.workers.dev/talents";
+    // Shared cloud API (Cloudflare Worker + KV)
+    const API_BASE = "https://pd-talent-bank-api.pd-talent-hunter.workers.dev";
+    const API_URL = `${API_BASE}/talents`;
     const SYNC_INTERVAL_MS = 12000;
 
     const seedTalents = [
@@ -1156,6 +1157,18 @@
         setSyncStatus("同步失败");
         return normalizeTalentList(seedTalents);
       }
+    }
+
+    async function uploadPhoto(talentId, dataUrl) {
+      const res = await fetch(`${API_BASE}/photos/${encodeURIComponent(talentId)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataUrl })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `照片上传失败 HTTP ${res.status}`);
+      // cache-bust so refreshed image shows immediately
+      return `${data.photoUrl}?v=${Date.now()}`;
     }
 
     async function saveTalents(nextTalents = talents, { silent = false } = {}) {
@@ -1498,7 +1511,7 @@
         : escapeHtml(initials(name || "照片"));
     }
 
-    async function compressImageFile(file, maxBytes = 100_000) {
+    async function compressImageFile(file, maxBytes = 280_000) {
       let source = null;
       try {
         source = await createImageBitmap(file);
@@ -1654,6 +1667,12 @@
 
     async function handleSubmit(event) {
       event.preventDefault();
+      event.stopPropagation();
+      if (photoProcessing) {
+        alert("照片还在处理中，请稍候再保存。");
+        return;
+      }
+
       const id = getField("talentId").value || crypto.randomUUID();
       const employeeNo = getField("employeeNo").value.trim();
       const duplicate = talents.find(person => person.employeeNo === employeeNo && person.id !== id);
@@ -1662,38 +1681,40 @@
         return;
       }
 
-      const record = {
-        id,
-        employeeNo,
-        name: getField("name").value.trim(),
-        gender: getField("gender").value,
-        status: getField("status").value,
-        school: getField("school").value.trim(),
-        graduationDate: getField("graduationDate").value,
-        major: getField("major").value.trim(),
-        firstWorkDate: getField("firstWorkDate").value,
-        appleStartDate: getField("appleStartDate").value,
-        department: getField("department").value.trim(),
-        position: getField("position").value.trim(),
-        skills: getField("skills").value.split(/[,，]/).map(item => item.trim()).filter(Boolean),
-        phone: getField("phone").value.trim(),
-        email: getField("email").value.trim(),
-        remark: getField("remark").value.trim(),
-        photoUrl: draftPhotoUrl || "",
-        products: readProductRows(),
-        customFields: readCustomFieldRows()
-      };
-
-      if (photoProcessing) {
-        alert("照片还在处理中，请稍候再保存。");
-        return;
-      }
-
-      const index = talents.findIndex(person => person.id === id);
-      if (index >= 0) talents[index] = record;
-      else talents.unshift(record);
-      selectedId = id;
+      let photoUrl = draftPhotoUrl || "";
       try {
+        if (photoUrl.startsWith("data:image/")) {
+          setSyncStatus("上传照片");
+          photoUrl = await uploadPhoto(id, photoUrl);
+          draftPhotoUrl = photoUrl;
+        }
+
+        const record = {
+          id,
+          employeeNo,
+          name: getField("name").value.trim(),
+          gender: getField("gender").value,
+          status: getField("status").value,
+          school: getField("school").value.trim(),
+          graduationDate: getField("graduationDate").value,
+          major: getField("major").value.trim(),
+          firstWorkDate: getField("firstWorkDate").value,
+          appleStartDate: getField("appleStartDate").value,
+          department: getField("department").value.trim(),
+          position: getField("position").value.trim(),
+          skills: getField("skills").value.split(/[,，]/).map(item => item.trim()).filter(Boolean),
+          phone: getField("phone").value.trim(),
+          email: getField("email").value.trim(),
+          remark: getField("remark").value.trim(),
+          photoUrl,
+          products: readProductRows(),
+          customFields: readCustomFieldRows()
+        };
+
+        const index = talents.findIndex(person => person.id === id);
+        if (index >= 0) talents[index] = record;
+        else talents.unshift(record);
+        selectedId = id;
         await saveTalents();
         els.dialog.close();
         render();
