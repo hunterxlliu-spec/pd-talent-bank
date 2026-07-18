@@ -7,6 +7,9 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>研发人才库</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --ink: #1d2733;
@@ -34,9 +37,15 @@
       min-height: 100vh;
       color: var(--ink);
       background: #eef2f6;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-family: "Manrope", "PingFang SC", "Microsoft YaHei", sans-serif;
       font-size: var(--fs);
       line-height: 1.45;
+    }
+
+    .brand h1,
+    .login-brand-name,
+    .login-title {
+      font-family: "Noto Serif SC", "Songti SC", serif;
     }
 
     button, input, select, textarea {
@@ -1262,9 +1271,216 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
+
+    /* —— Admin login gate —— */
+    .login-gate {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 28px 18px;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 90% 70% at 12% 18%, rgba(45, 212, 191, .22), transparent 55%),
+        radial-gradient(ellipse 70% 55% at 88% 82%, rgba(15, 118, 110, .35), transparent 50%),
+        linear-gradient(155deg, #0b1c22 0%, #123038 42%, #0f766e 100%);
+      color: #ecfdf8;
+    }
+
+    .login-gate::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(circle at center, black 30%, transparent 78%);
+      pointer-events: none;
+      animation: loginGrid 18s linear infinite;
+    }
+
+    @keyframes loginGrid {
+      from { transform: translate3d(0, 0, 0); }
+      to { transform: translate3d(-48px, -48px, 0); }
+    }
+
+    .login-panel {
+      position: relative;
+      z-index: 1;
+      width: min(420px, 100%);
+      display: grid;
+      gap: 22px;
+      animation: loginRise .7s cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    @keyframes loginRise {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-brand {
+      display: grid;
+      gap: 10px;
+      justify-items: start;
+    }
+
+    .login-mark {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: #2dd4bf;
+      color: #0b1c22;
+      font-weight: 800;
+      font-size: 22px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.28);
+      animation: loginPulse 2.8s ease-in-out infinite;
+    }
+
+    @keyframes loginPulse {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-3px); }
+    }
+
+    .login-brand-name {
+      margin: 0;
+      font-size: clamp(28px, 5vw, 36px);
+      line-height: 1.15;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .login-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: rgba(236, 253, 248, .92);
+    }
+
+    .login-copy {
+      margin: 0;
+      max-width: 34ch;
+      color: rgba(204, 251, 241, .78);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .login-form {
+      display: grid;
+      gap: 14px;
+      padding: 20px 18px;
+      border-radius: 16px;
+      background: rgba(8, 24, 28, .55);
+      border: 1px solid rgba(255,255,255,.12);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 24px 50px rgba(0,0,0,.28);
+    }
+
+    .login-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .login-field label {
+      font-size: 12px;
+      color: rgba(204, 251, 241, .75);
+      font-weight: 600;
+    }
+
+    .login-field input {
+      min-height: 42px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: #fff;
+      padding: 0 12px;
+      font-size: 14px;
+    }
+
+    .login-field input::placeholder {
+      color: rgba(255,255,255,.38);
+    }
+
+    .login-field input:focus {
+      border-color: rgba(45, 212, 191, .7);
+      box-shadow: 0 0 0 3px rgba(45, 212, 191, .18);
+      outline: none;
+    }
+
+    .login-error {
+      min-height: 18px;
+      margin: 0;
+      color: #fecaca;
+      font-size: 12px;
+    }
+
+    .login-submit {
+      min-height: 44px;
+      border-radius: 10px;
+      background: #2dd4bf;
+      color: #0b1c22;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      transition: transform .15s ease, background .15s ease;
+    }
+
+    .login-submit:hover {
+      background: #5eead4;
+    }
+
+    .login-submit:active {
+      transform: translateY(1px);
+    }
+
+    .login-submit:disabled {
+      opacity: .65;
+      cursor: wait;
+    }
+
+    .login-footnote {
+      margin: 0;
+      color: rgba(204, 251, 241, .55);
+      font-size: 11px;
+    }
+
+    body.is-locked .app-shell,
+    body.is-locked dialog {
+      display: none !important;
+    }
+
+    body:not(.is-locked) .login-gate {
+      display: none;
+    }
   </style>
 </head>
-<body>
+<body class="is-locked">
+  <div class="login-gate" id="loginGate" aria-label="管理员登录">
+    <div class="login-panel">
+      <div class="login-brand">
+        <div class="login-mark" aria-hidden="true">R</div>
+        <h1 class="login-brand-name">研发人才库</h1>
+        <p class="login-title">管理员登录</p>
+        <p class="login-copy">仅授权账号可进入人才库。请使用 admin 账户完成身份验证。</p>
+      </div>
+      <form class="login-form" id="loginForm" autocomplete="on">
+        <div class="login-field">
+          <label for="loginUsername">账号</label>
+          <input id="loginUsername" name="username" type="text" autocomplete="username" placeholder="admin" required>
+        </div>
+        <div class="login-field">
+          <label for="loginPassword">密码</label>
+          <input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="请输入管理员密码" required>
+        </div>
+        <p class="login-error" id="loginError" role="alert"></p>
+        <button class="login-submit" type="submit" id="loginSubmit">进入人才库</button>
+        <p class="login-footnote">会话约 7 天有效 · 离开时可随时退出登录</p>
+      </form>
+    </div>
+  </div>
+
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand">
@@ -1311,6 +1527,7 @@
           <button class="btn" id="importBtn" title="导入 JSON">导入</button>
           <button class="btn" id="exportBtn" title="导出全部 JSON">导出JSON</button>
           <button class="btn primary" id="addBtn">新增人才</button>
+          <button class="btn" id="logoutBtn" title="退出登录">退出</button>
           <input class="hidden-file" id="importFile" type="file" accept="application/json">
         </div>
       </header>
@@ -1502,6 +1719,7 @@
   <script>
     const STORAGE_KEY = "talent-bank-records-v1";
     const CATEGORIES_KEY = "talent-bank-categories-v1";
+    const AUTH_TOKEN_KEY = "talent-bank-admin-token-v1";
     // Shared cloud API (Cloudflare Worker + KV)
     const API_BASE = "https://pd-talent-bank-api.pd-talent-hunter.workers.dev";
     const API_URL = `${API_BASE}/talents`;
@@ -1509,6 +1727,112 @@
     const DEFAULT_CATEGORIES = ["结构研发", "硬件研发", "声学研发", "软件研发", "NPI/质量"];
     const ALL_CATEGORY = "__all__";
     const UNCATEGORIZED = "__uncategorized__";
+
+    let authToken = sessionStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(AUTH_TOKEN_KEY) || "";
+    let authUsername = "";
+    let appStarted = false;
+
+    function setAuthToken(token) {
+      authToken = token || "";
+      if (authToken) {
+        sessionStorage.setItem(AUTH_TOKEN_KEY, authToken);
+        localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+      } else {
+        sessionStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+      }
+    }
+
+    function authHeaders(extra = {}) {
+      const headers = { ...extra };
+      if (authToken) headers.Authorization = `Bearer ${authToken}`;
+      return headers;
+    }
+
+    async function apiFetch(url, options = {}) {
+      const next = { ...options };
+      next.headers = authHeaders(options.headers || {});
+      const res = await fetch(url, next);
+      if (res.status === 401) {
+        setAuthToken("");
+        showLogin("登录已过期，请重新登录");
+        throw new Error("未授权，请先登录");
+      }
+      return res;
+    }
+
+    function withAuthPhotoUrl(url) {
+      if (!url) return "";
+      if (!authToken) return url;
+      try {
+        const parsed = new URL(url, API_BASE);
+        if (!parsed.href.startsWith(API_BASE)) return url;
+        parsed.searchParams.set("token", authToken);
+        return parsed.toString();
+      } catch {
+        return url;
+      }
+    }
+
+    function showLogin(message = "") {
+      document.body.classList.add("is-locked");
+      const errorEl = document.querySelector("#loginError");
+      if (errorEl) errorEl.textContent = message || "";
+      const password = document.querySelector("#loginPassword");
+      if (password && message) password.focus();
+    }
+
+    function showApp() {
+      document.body.classList.remove("is-locked");
+      const errorEl = document.querySelector("#loginError");
+      if (errorEl) errorEl.textContent = "";
+    }
+
+    async function verifySession() {
+      if (!authToken) return false;
+      try {
+        const res = await fetch(`${API_BASE}/auth/me`, {
+          headers: authHeaders(),
+          cache: "no-store"
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          setAuthToken("");
+          return false;
+        }
+        authUsername = data.username || "admin";
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    async function login(username, password) {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "登录失败");
+      setAuthToken(data.token);
+      authUsername = data.username || username;
+      return data;
+    }
+
+    async function logout() {
+      try {
+        if (authToken) {
+          await fetch(`${API_BASE}/auth/logout`, {
+            method: "POST",
+            headers: authHeaders()
+          });
+        }
+      } catch {}
+      setAuthToken("");
+      authUsername = "";
+      showLogin("");
+    }
 
     const seedTalents = [
       {
@@ -1755,7 +2079,7 @@
     async function loadTalents() {
       setSyncStatus("同步中");
       try {
-        const res = await fetch(API_URL, { cache: "no-store" });
+        const res = await apiFetch(API_URL, { cache: "no-store" });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
         remoteUpdatedAt = data.updatedAt || null;
@@ -1772,6 +2096,10 @@
         return list;
       } catch (error) {
         console.error(error);
+        if (!authToken || String(error.message || "").includes("未授权")) {
+          setSyncStatus("未登录");
+          return [];
+        }
         const saved = localStorage.getItem(STORAGE_KEY);
         const savedCats = localStorage.getItem(CATEGORIES_KEY);
         if (savedCats) {
@@ -1789,13 +2117,12 @@
           } catch {}
         }
         setSyncStatus("同步失败");
-        ensureCategoriesFromTalents(seedTalents);
-        return normalizeTalentList(seedTalents);
+        return [];
       }
     }
 
     async function uploadPhoto(talentId, dataUrl) {
-      const res = await fetch(`${API_BASE}/photos/${encodeURIComponent(talentId)}`, {
+      const res = await apiFetch(`${API_BASE}/photos/${encodeURIComponent(talentId)}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dataUrl })
@@ -1813,7 +2140,7 @@
       syncing = true;
       suppressPoll = true;
       try {
-        const res = await fetch(API_URL, {
+        const res = await apiFetch(API_URL, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ talents, categories, version: 1 })
@@ -1834,9 +2161,9 @@
     }
 
     async function refreshFromCloud({ force = false } = {}) {
-      if (suppressPoll || syncing) return;
+      if (suppressPoll || syncing || !authToken) return;
       try {
-        const res = await fetch(API_URL, { cache: "no-store" });
+        const res = await apiFetch(API_URL, { cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
         if (!force && data.updatedAt && data.updatedAt === remoteUpdatedAt) return;
@@ -1892,7 +2219,8 @@
 
     function avatarHtml(person) {
       if (person.photoUrl) {
-        return `<button class="avatar-btn profile-btn" type="button" title="查看完整档案" data-id="${person.id}"><span class="avatar"><img alt="${escapeHtml(person.name)}" src="${person.photoUrl}"></span></button>`;
+        const src = withAuthPhotoUrl(person.photoUrl);
+        return `<button class="avatar-btn profile-btn" type="button" title="查看完整档案" data-id="${person.id}"><span class="avatar"><img alt="${escapeHtml(person.name)}" src="${escapeHtml(src)}"></span></button>`;
       }
       return `<button class="avatar-btn profile-btn" type="button" title="查看完整档案" data-id="${person.id}"><span class="avatar">${escapeHtml(initials(person.name))}</span></button>`;
     }
@@ -2028,7 +2356,7 @@
       if (!photoUrl) return "";
       if (photoUrl.startsWith("data:image/")) return photoUrl;
       try {
-        const res = await fetch(photoUrl, { cache: "no-store" });
+        const res = await apiFetch(withAuthPhotoUrl(photoUrl), { cache: "no-store" });
         if (!res.ok) return "";
         const blob = await res.blob();
         return await new Promise((resolve, reject) => {
@@ -2209,7 +2537,7 @@
         <div class="profile-sheet">
           <section class="profile-hero">
             <div class="profile-avatar">
-              ${person.photoUrl ? `<img alt="${escapeHtml(person.name)}" src="${person.photoUrl}">` : escapeHtml(initials(person.name))}
+              ${person.photoUrl ? `<img alt="${escapeHtml(person.name)}" src="${escapeHtml(withAuthPhotoUrl(person.photoUrl))}">` : escapeHtml(initials(person.name))}
             </div>
             <div class="profile-hero-main">
               <h2>${escapeHtml(person.name || "-")}</h2>
@@ -2759,8 +3087,42 @@
       reader.readAsText(file);
     });
 
-    async function boot() {
-      // Show default categories immediately so the left nav is never blank while syncing.
+    document.querySelector("#logoutBtn").addEventListener("click", async () => {
+      if (!confirm("确认退出登录？")) return;
+      await logout();
+    });
+
+    document.querySelector("#loginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const username = document.querySelector("#loginUsername").value.trim();
+      const password = document.querySelector("#loginPassword").value;
+      const submitBtn = document.querySelector("#loginSubmit");
+      const errorEl = document.querySelector("#loginError");
+      errorEl.textContent = "";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "验证中…";
+      try {
+        await login(username, password);
+        document.querySelector("#loginPassword").value = "";
+        showApp();
+        await startApp();
+      } catch (error) {
+        errorEl.textContent = error?.message || "登录失败";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "进入人才库";
+      }
+    });
+
+    async function startApp() {
+      if (appStarted) {
+        setSyncStatus("同步中");
+        talents = await loadTalents();
+        selectedId = talents[0]?.id || null;
+        render();
+        return;
+      }
+      appStarted = true;
       categories = [...DEFAULT_CATEGORIES];
       renderCategoryNav();
       setSyncStatus("同步中");
@@ -2771,6 +3133,18 @@
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") refreshFromCloud({ force: true });
       });
+    }
+
+    async function boot() {
+      const ok = await verifySession();
+      if (!ok) {
+        showLogin("");
+        document.querySelector("#loginUsername").value = "admin";
+        document.querySelector("#loginPassword").focus();
+        return;
+      }
+      showApp();
+      await startApp();
     }
 
     boot();
