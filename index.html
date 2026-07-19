@@ -1838,12 +1838,12 @@
             </select>
           </div>
           <div class="field">
-            <label for="birthDate">出生年月</label>
-            <input id="birthDate" type="month">
+            <label for="birthDate">出生日期</label>
+            <input id="birthDate" type="date">
           </div>
           <div class="field">
             <label for="age">年龄</label>
-            <input id="age" type="text" readonly placeholder="根据出生年月自动计算">
+            <input id="age" type="text" readonly placeholder="根据出生日期自动计算">
           </div>
           <div class="field">
             <label for="hometown">籍贯</label>
@@ -1863,7 +1863,7 @@
           </div>
           <div class="field">
             <label for="joinDate">入职时间</label>
-            <input id="joinDate" type="month">
+            <input id="joinDate" type="date">
           </div>
           <div class="field">
             <label for="baseLocation">常驻基地</label>
@@ -1875,7 +1875,7 @@
           </div>
           <div class="field">
             <label for="graduationDate">毕业时间</label>
-            <input id="graduationDate" type="month">
+            <input id="graduationDate" type="date">
           </div>
           <div class="field">
             <label for="major">专业</label>
@@ -1883,11 +1883,11 @@
           </div>
           <div class="field">
             <label for="firstWorkDate">工作时间</label>
-            <input id="firstWorkDate" type="month">
+            <input id="firstWorkDate" type="date">
           </div>
           <div class="field">
             <label for="appleStartDate">产品经验开始时间</label>
-            <input id="appleStartDate" type="month">
+            <input id="appleStartDate" type="date">
           </div>
           <div class="field">
             <label for="category">所属分类 *</label>
@@ -2317,10 +2317,10 @@
         gender: "男",
         status: "在职",
         school: "华南理工大学",
-        graduationDate: "2018-06",
+        graduationDate: "2018-06-30",
         major: "机械设计制造及其自动化",
-        firstWorkDate: "2018-07",
-        appleStartDate: "2020-03",
+        firstWorkDate: "2018-07-01",
+        appleStartDate: "2020-03-01",
         category: "NPI/质量",
         department: "NPI",
         position: "产品工程师",
@@ -2338,8 +2338,8 @@
             type: "iPhone",
             company: "某精密制造厂",
             role: "NPI 工程师",
-            startDate: "2020-03",
-            endDate: "2022-12",
+            startDate: "2020-03-01",
+            endDate: "2022-12-31",
             appleRelated: true,
             responsibilities: "负责试产问题追踪、DOE 验证和量产导入。",
             achievements: "将关键外观不良率降低 18%。"
@@ -2353,10 +2353,10 @@
         gender: "女",
         status: "候选",
         school: "电子科技大学",
-        graduationDate: "2019-07",
+        graduationDate: "2019-07-01",
         major: "电子信息工程",
-        firstWorkDate: "2019-07",
-        appleStartDate: "2021-06",
+        firstWorkDate: "2019-07-15",
+        appleStartDate: "2021-06-01",
         category: "NPI/质量",
         department: "质量",
         position: "SQE",
@@ -2374,8 +2374,8 @@
             type: "AirPods",
             company: "某电子科技公司",
             role: "质量工程师",
-            startDate: "2021-06",
-            endDate: "2024-04",
+            startDate: "2021-06-01",
+            endDate: "2024-04-30",
             appleRelated: true,
             responsibilities: "供应商过程审核、异常分析和改善验证。",
             achievements: "建立来料质量周报机制。"
@@ -2389,9 +2389,9 @@
         gender: "男",
         status: "储备",
         school: "同济大学",
-        graduationDate: "2020-06",
+        graduationDate: "2020-06-30",
         major: "工业工程",
-        firstWorkDate: "2020-08",
+        firstWorkDate: "2020-08-01",
         appleStartDate: "",
         category: "结构研发",
         department: "制造",
@@ -2410,8 +2410,8 @@
             type: "Wearable",
             company: "某智能硬件公司",
             role: "IE 工程师",
-            startDate: "2020-08",
-            endDate: "2023-09",
+            startDate: "2020-08-01",
+            endDate: "2023-09-30",
             appleRelated: false,
             responsibilities: "产线节拍测算、工站布局和人力配置。",
             achievements: "单线 UPH 提升 12%。"
@@ -2520,7 +2520,10 @@
 
     function calcAgeFromBirth(birthValue) {
       if (!birthValue) return "";
-      const start = new Date(toDateStart(birthValue));
+      const iso = normalizeDate(birthValue);
+      if (!iso) return "";
+      const [y, m, d] = iso.split("-").map(Number);
+      const start = new Date(y, m - 1, d);
       if (Number.isNaN(start.getTime())) return "";
       const now = new Date();
       let age = now.getFullYear() - start.getFullYear();
@@ -2582,7 +2585,17 @@
         ...item,
         id: item.id || crypto.randomUUID(),
         category: String(item.category || "").trim(),
-        products: Array.isArray(item.products) ? item.products : [],
+        birthDate: normalizeDate(item.birthDate),
+        joinDate: normalizeDate(item.joinDate),
+        graduationDate: normalizeDate(item.graduationDate),
+        firstWorkDate: normalizeDate(item.firstWorkDate),
+        appleStartDate: normalizeDate(item.appleStartDate),
+        age: item.age || calcAgeFromBirth(item.birthDate) || "",
+        products: (Array.isArray(item.products) ? item.products : []).map(product => ({
+          ...product,
+          startDate: normalizeDate(product.startDate),
+          endDate: normalizeDate(product.endDate)
+        })),
         skills: Array.isArray(item.skills) ? item.skills : [],
         customFields: Array.isArray(item.customFields) ? item.customFields : []
       }));
@@ -2703,7 +2716,10 @@
 
     function yearsSince(dateValue) {
       if (!dateValue) return 0;
-      const start = new Date(toDateStart(dateValue));
+      const iso = normalizeDate(dateValue);
+      if (!iso) return 0;
+      const [y, m, d] = iso.split("-").map(Number);
+      const start = new Date(y, m - 1, d);
       if (Number.isNaN(start.getTime())) return 0;
       const now = new Date();
       const years = (now - start) / (365.25 * 24 * 60 * 60 * 1000);
@@ -2717,17 +2733,28 @@
 
     function formatDate(dateValue) {
       if (!dateValue) return "-";
-      return normalizeMonth(dateValue);
+      return normalizeDate(dateValue) || "-";
     }
 
-    function normalizeMonth(dateValue) {
+    function normalizeDate(dateValue) {
       if (!dateValue) return "";
-      return String(dateValue).slice(0, 7);
+      const raw = String(dateValue).trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
+      if (/^\d{4}-\d{2}$/.test(raw)) return `${raw}-01`;
+      if (/^\d{4}\/\d{1,2}\/\d{1,2}/.test(raw)) {
+        const [y, m, d] = raw.split(/[/\s]/);
+        return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      }
+      const parsed = new Date(raw);
+      if (Number.isNaN(parsed.getTime())) return "";
+      const y = parsed.getFullYear();
+      const m = String(parsed.getMonth() + 1).padStart(2, "0");
+      const d = String(parsed.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
     }
 
     function toDateStart(dateValue) {
-      const month = normalizeMonth(dateValue);
-      return month ? `${month}-01` : "";
+      return normalizeDate(dateValue);
     }
 
     function initials(name) {
@@ -2990,7 +3017,7 @@
       ["工号", person.employeeNo],
       ["状态", person.status],
       ["性别", person.gender],
-      ["出生年月", formatDate(person.birthDate)],
+      ["出生日期", formatDate(person.birthDate)],
       ["年龄", person.age || calcAgeFromBirth(person.birthDate) || "-"],
       ["籍贯", person.hometown],
       ["学历", person.education],
@@ -3108,7 +3135,7 @@
                 <h4 class="profile-card-title"><span class="profile-card-kicker">身份背景</span></h4>
                 <div class="full-info-grid cols-2">
                   ${infoItem("性别", person.gender)}
-                  ${infoItem("出生年月", formatDate(person.birthDate))}
+                  ${infoItem("出生日期", formatDate(person.birthDate))}
                   ${infoItem("年龄", ageText)}
                   ${infoItem("籍贯", person.hometown)}
                   ${infoItem("学历", person.education)}
@@ -3203,14 +3230,14 @@
       getField("name").value = person?.name || "";
       getField("gender").value = person?.gender === "女" ? "女" : "男";
       getField("status").value = person?.status || "在职";
-      getField("birthDate").value = normalizeMonth(person?.birthDate);
+      getField("birthDate").value = normalizeDate(person?.birthDate);
       updateAgeField();
       getField("school").value = person?.school || "";
-      getField("graduationDate").value = normalizeMonth(person?.graduationDate);
+      getField("graduationDate").value = normalizeDate(person?.graduationDate);
       getField("major").value = person?.major || "";
-      getField("firstWorkDate").value = normalizeMonth(person?.firstWorkDate);
-      getField("appleStartDate").value = normalizeMonth(person?.appleStartDate);
-      getField("joinDate").value = normalizeMonth(person?.joinDate);
+      getField("firstWorkDate").value = normalizeDate(person?.firstWorkDate);
+      getField("appleStartDate").value = normalizeDate(person?.appleStartDate);
+      getField("joinDate").value = normalizeDate(person?.joinDate);
       getField("baseLocation").value = person?.baseLocation || "";
       getField("department").value = person?.department || "";
       getField("position").value = person?.position || "";
@@ -3299,11 +3326,11 @@
           </div>
           <div class="field">
             <label>开始时间</label>
-            <input class="product-start" type="month" value="${escapeHtml(normalizeMonth(item.startDate))}">
+            <input class="product-start" type="date" value="${escapeHtml(normalizeDate(item.startDate))}">
           </div>
           <div class="field">
             <label>结束时间</label>
-            <input class="product-end" type="month" value="${escapeHtml(normalizeMonth(item.endDate))}">
+            <input class="product-end" type="date" value="${escapeHtml(normalizeDate(item.endDate))}">
           </div>
           <div class="field">
             <label>Apple 相关</label>
@@ -3348,8 +3375,8 @@
           type: row.querySelector(".product-type").value.trim(),
           company: row.querySelector(".product-company").value.trim(),
           role: row.querySelector(".product-role").value.trim(),
-          startDate: row.querySelector(".product-start").value,
-          endDate: row.querySelector(".product-end").value,
+          startDate: normalizeDate(row.querySelector(".product-start").value),
+          endDate: normalizeDate(row.querySelector(".product-end").value),
           appleRelated: row.querySelector(".product-apple").value === "true",
           responsibilities: row.querySelector(".product-responsibilities").value.trim(),
           achievements: row.querySelector(".product-achievements").value.trim()
@@ -3418,19 +3445,19 @@
           name: getField("name").value.trim(),
           gender: getField("gender").value,
           status: getField("status").value,
-          birthDate: getField("birthDate").value,
+          birthDate: normalizeDate(getField("birthDate").value),
           age: calcAgeFromBirth(getField("birthDate").value),
           hometown: getField("hometown").value.trim(),
           education: getField("education").value.trim(),
           englishLevel: getField("englishLevel").value.trim(),
           titleLevel: getField("titleLevel").value.trim(),
-          joinDate: getField("joinDate").value,
+          joinDate: normalizeDate(getField("joinDate").value),
           baseLocation: getField("baseLocation").value.trim(),
           school: getField("school").value.trim(),
-          graduationDate: getField("graduationDate").value,
+          graduationDate: normalizeDate(getField("graduationDate").value),
           major: getField("major").value.trim(),
-          firstWorkDate: getField("firstWorkDate").value,
-          appleStartDate: getField("appleStartDate").value,
+          firstWorkDate: normalizeDate(getField("firstWorkDate").value),
+          appleStartDate: normalizeDate(getField("appleStartDate").value),
           category: getField("category").value.trim(),
           department: getField("department").value.trim(),
           position: getField("position").value.trim(),
