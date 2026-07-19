@@ -12,22 +12,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --ink: #1d2733;
-      --muted: #667085;
-      --line: #d7dee8;
+      --ink: #152033;
+      --muted: #5b6b7c;
+      --line: #e2e8f0;
       --panel: #ffffff;
-      --soft: #f5f7fb;
-      --brand: #0f766e;
-      --brand-strong: #115e59;
-      --brand-light: #d7f6ef;
-      --accent: #b45309;
+      --soft: #f7f9fc;
+      --brand: #0d9488;
+      --brand-strong: #0f766e;
+      --brand-light: #ccfbf1;
+      --accent: #c2410c;
       --danger: #b42318;
-      --shadow: 0 16px 40px rgba(15, 23, 42, .08);
-      --fs: 13px;
-      --fs-sm: 12px;
-      --fs-xs: 11px;
-      --fs-title: 18px;
-      --fs-brand: 16px;
+      --shadow: 0 12px 32px rgba(15, 23, 42, .07);
+      --shadow-soft: 0 4px 14px rgba(15, 23, 42, .04);
+      --radius: 14px;
+      --fs: 14px;
+      --fs-sm: 13px;
+      --fs-xs: 12px;
+      --fs-title: 20px;
+      --fs-brand: 18px;
     }
 
     * { box-sizing: border-box; }
@@ -36,10 +38,14 @@
       margin: 0;
       min-height: 100vh;
       color: var(--ink);
-      background: #eef2f6;
+      background:
+        radial-gradient(ellipse 70% 45% at 8% -8%, rgba(45, 212, 191, .14), transparent 55%),
+        radial-gradient(ellipse 55% 40% at 100% 0%, rgba(148, 163, 184, .16), transparent 50%),
+        linear-gradient(180deg, #f5f8fc 0%, #eef2f7 100%);
       font-family: "Manrope", "PingFang SC", "Microsoft YaHei", sans-serif;
       font-size: var(--fs);
-      line-height: 1.45;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
 
     .brand h1,
@@ -64,13 +70,14 @@
     }
 
     .sidebar {
-      background: #17212d;
+      background: linear-gradient(175deg, #1a2433 0%, #141c28 100%);
       color: white;
-      padding: 18px 14px;
+      padding: 20px 16px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 18px;
       overflow: hidden;
+      border-right: 1px solid rgba(255, 255, 255, .04);
     }
 
     .brand {
@@ -263,10 +270,10 @@
       align-items: center;
       justify-content: space-between;
       gap: 14px;
-      padding: 14px 22px;
-      background: rgba(238, 242, 246, .92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--line);
+      padding: 16px 24px;
+      background: rgba(245, 248, 252, .86);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(226, 232, 240, .9);
     }
 
     .topbar h2 {
@@ -290,27 +297,29 @@
     }
 
     .btn {
-      min-height: 32px;
+      min-height: 34px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      padding: 0 11px;
-      border-radius: 7px;
+      padding: 0 13px;
+      border-radius: 9px;
       color: var(--ink);
       background: white;
       border: 1px solid var(--line);
-      box-shadow: 0 1px 0 rgba(15, 23, 42, .03);
+      box-shadow: var(--shadow-soft);
       white-space: nowrap;
       font-size: var(--fs-sm);
+      transition: border-color .15s ease, background .15s ease, transform .15s ease;
     }
 
-    .btn:hover { border-color: #aeb9c8; }
+    .btn:hover { border-color: #b6c2d1; transform: translateY(-1px); }
 
     .btn.primary {
       color: white;
-      background: var(--brand);
+      background: linear-gradient(180deg, #14b8a6 0%, var(--brand) 100%);
       border-color: var(--brand);
+      box-shadow: 0 6px 16px rgba(13, 148, 136, .25);
     }
 
     .btn.primary:hover { background: var(--brand-strong); }
@@ -327,25 +336,25 @@
     }
 
     .content {
-      padding: 16px 20px 28px;
+      padding: 18px 22px 32px;
       display: block;
     }
 
     .workspace {
       display: grid;
-      gap: 12px;
+      gap: 14px;
       min-width: 0;
     }
 
     .filters {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 12px;
+      background: rgba(255, 255, 255, .92);
+      border: 1px solid rgba(226, 232, 240, .95);
+      border-radius: var(--radius);
+      padding: 14px;
       display: grid;
       grid-template-columns: minmax(200px, 1.4fr) repeat(3, minmax(110px, .7fr));
-      gap: 8px;
-      box-shadow: var(--shadow);
+      gap: 10px;
+      box-shadow: var(--shadow-soft);
     }
 
     .field {
@@ -362,10 +371,10 @@
     input, select, textarea {
       width: 100%;
       border: 1px solid var(--line);
-      border-radius: 7px;
+      border-radius: 9px;
       background: white;
       color: var(--ink);
-      padding: 7px 9px;
+      padding: 8px 10px;
       outline: none;
       font-size: var(--fs-sm);
     }
@@ -382,16 +391,16 @@
 
     .table-wrap {
       overflow: auto;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
+      background: rgba(255, 255, 255, .96);
+      border: 1px solid rgba(226, 232, 240, .95);
+      border-radius: var(--radius);
       box-shadow: var(--shadow);
       position: relative;
     }
 
     .table-scroll-hint {
       margin: 0 0 8px;
-      color: #667085;
+      color: var(--muted);
       font-size: var(--fs-xs);
     }
 
@@ -402,8 +411,8 @@
     }
 
     th, td {
-      padding: 10px 11px;
-      border-bottom: 1px solid #edf0f4;
+      padding: 12px 12px;
+      border-bottom: 1px solid #eef1f5;
       text-align: left;
       vertical-align: middle;
       font-size: var(--fs-sm);
@@ -413,10 +422,11 @@
     th {
       position: sticky;
       top: 0;
-      background: #f9fafc;
+      background: linear-gradient(180deg, #fbfcfe 0%, #f4f7fb 100%);
       color: #475467;
       font-size: var(--fs-xs);
       font-weight: 700;
+      letter-spacing: .02em;
       z-index: 1;
     }
 
@@ -457,15 +467,15 @@
       align-items: center;
     }
 
-    td.col-actions .btn-word {
-      background: rgba(15, 118, 110, .08);
-      border-color: rgba(15, 118, 110, .28);
+    td.col-actions .btn-pdf {
+      background: rgba(13, 148, 136, .08);
+      border-color: rgba(13, 148, 136, .28);
       color: #0f766e;
       font-weight: 700;
     }
 
-    td.col-actions .btn-word:hover {
-      background: rgba(15, 118, 110, .14);
+    td.col-actions .btn-pdf:hover {
+      background: rgba(13, 148, 136, .14);
     }
 
     td .cell-sub {
@@ -481,7 +491,7 @@
     }
 
     tbody tr:hover, tbody tr.active {
-      background: #edfdf9;
+      background: #f0fdfa;
     }
 
     .person-cell {
@@ -1715,12 +1725,13 @@
       <header class="topbar">
         <div>
           <h2>研发人才管理</h2>
-          <p>覆盖结构 / 硬件 / 声学等研发部门 · 个人档案可导出 Word</p>
+          <p>覆盖结构 / 硬件 / 声学等研发部门 · 清单导出 Excel · 档案导出 PDF</p>
         </div>
         <div class="actions">
           <span class="current-user-chip" id="currentUserChip" hidden>未登录</span>
           <button class="btn" id="usersAdminBtn" title="用户管理" hidden>用户管理</button>
           <button class="btn" id="importBtn" title="导入 JSON">导入</button>
+          <button class="btn" id="exportExcelBtn" title="导出当前筛选结果为 Excel">导出Excel</button>
           <button class="btn" id="exportBtn" title="导出全部 JSON">导出JSON</button>
           <button class="btn primary" id="addBtn">新增人才</button>
           <button class="btn" id="logoutBtn" title="退出登录">退出</button>
@@ -1947,7 +1958,7 @@
     <div class="modal-head">
       <h3 id="profileTitle">个人完整档案</h3>
       <div class="modal-head-actions">
-        <button class="btn primary" type="button" id="exportWordBtn" title="导出为 Word 文档">导出 Word</button>
+        <button class="btn primary" type="button" id="exportPdfBtn" title="导出为 PDF">导出 PDF</button>
         <button class="btn icon" type="button" id="closeProfileDialog" aria-label="关闭">×</button>
       </div>
     </div>
@@ -2867,7 +2878,7 @@
             <td class="col-actions">
               <div class="row-ops">
                 <button class="btn" type="button" title="查看完整档案" data-id="${person.id}" data-action="view">查看</button>
-                <button class="btn btn-word" type="button" title="导出个人档案为 Word" data-id="${person.id}" data-action="export-word">导出Word</button>
+                <button class="btn btn-pdf" type="button" title="导出个人档案为 PDF" data-id="${person.id}" data-action="export-pdf">导出PDF</button>
                 <button class="btn icon edit-btn" type="button" title="编辑" data-id="${person.id}">✎</button>
                 <button class="btn icon danger delete-btn" type="button" title="删除" data-id="${person.id}">×</button>
               </div>
@@ -2929,14 +2940,14 @@
       }
     }
 
-    function buildPersonWordHtml(person, photoDataUrl = "") {
+    function buildPersonResumeHtml(person, photoDataUrl = "") {
       const skills = (person.skills || []).join("、") || "暂无";
       const customFields = person.customFields || [];
       const products = person.products || [];
       const roleLine = [person.category, person.department, person.position].filter(Boolean).join(" · ") || "-";
       const photoHtml = photoDataUrl
-        ? `<img src="${photoDataUrl}" width="110" height="110" style="width:110px;height:110px;object-fit:cover;border-radius:8px;border:1px solid #d0d5dd;" />`
-        : `<div style="width:110px;height:110px;border-radius:8px;background:#0f766e;color:#fff;text-align:center;line-height:110px;font-size:28px;font-weight:700;">${wordSafe(initials(person.name))}</div>`;
+        ? `<img src="${photoDataUrl}" width="110" height="110" style="width:110px;height:110px;object-fit:cover;border-radius:10px;border:1px solid #d0d5dd;" />`
+        : `<div style="width:110px;height:110px;border-radius:10px;background:#0d9488;color:#fff;text-align:center;line-height:110px;font-size:28px;font-weight:700;">${wordSafe(initials(person.name))}</div>`;
 
       const productHtml = products.length
         ? products.map((item, index) => `
@@ -2962,42 +2973,19 @@
         : `<p style="color:#667085;">暂无自定义项目</p>`;
 
       return `
-<!DOCTYPE html>
-<html xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:w="urn:schemas-microsoft-com:office:word"
-      xmlns="http://www.w3.org/TR/REC-html40">
-<head>
-  <meta charset="utf-8">
-  <title>${wordSafe(person.name)} - 人才档案</title>
-  <!--[if gte mso 9]>
-  <xml>
-    <w:WordDocument>
-      <w:View>Print</w:View>
-      <w:Zoom>100</w:Zoom>
-      <w:DoNotOptimizeForBrowser/>
-    </w:WordDocument>
-  </xml>
-  <![endif]-->
-  <style>
-    body { font-family: "Microsoft YaHei", "PingFang SC", SimSun, sans-serif; color: #101828; line-height: 1.6; }
-    h1 { font-size: 22px; margin: 0 0 6px; }
-    h2 { font-size: 15px; margin: 22px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #0f766e; color: #0f766e; }
-    p { margin: 0 0 8px; }
-  </style>
-</head>
-<body>
+  <div class="resume-sheet" style="font-family:'PingFang SC','Microsoft YaHei',sans-serif;color:#101828;line-height:1.6;padding:8px 4px;background:#fff;">
   <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:18px;">
     <tr>
       <td width="130" valign="top">${photoHtml}</td>
       <td valign="middle" style="padding-left:16px;">
-        <h1>${wordSafe(person.name)}</h1>
+        <h1 style="font-size:22px;margin:0 0 6px;">${wordSafe(person.name)}</h1>
         <p style="margin:0 0 4px;color:#475467;">${wordSafe(roleLine)}</p>
         <p style="margin:0;color:#667085;">工号：${wordSafe(person.employeeNo)}　状态：${wordSafe(person.status)}　性别：${wordSafe(person.gender)}</p>
       </td>
     </tr>
   </table>
 
-  <h2>核心概览</h2>
+  <h2 style="font-size:15px;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #0d9488;color:#0f766e;">核心概览</h2>
   <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:12px;">
     ${wordRows([
       ["工作年限", formatYears(person.firstWorkDate)],
@@ -3007,7 +2995,7 @@
     ])}
   </table>
 
-  <h2>基础信息</h2>
+  <h2 style="font-size:15px;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #0d9488;color:#0f766e;">基础信息</h2>
   <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:12px;">
     ${wordRows([
       ["所属分类", person.category || "未分类"],
@@ -3030,7 +3018,7 @@
     ])}
   </table>
 
-  <h2>教育与经验</h2>
+  <h2 style="font-size:15px;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #0d9488;color:#0f766e;">教育与经验</h2>
   <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:12px;">
     ${wordRows([
       ["毕业学校", person.school],
@@ -3042,38 +3030,160 @@
     ])}
   </table>
 
-  <h2>自定义项目</h2>
+  <h2 style="font-size:15px;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #0d9488;color:#0f766e;">自定义项目</h2>
   ${customHtml}
 
-  <h2>过往产品信息</h2>
+  <h2 style="font-size:15px;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #0d9488;color:#0f766e;">过往产品信息</h2>
   ${productHtml}
 
-  <h2>备注</h2>
-  <p>${wordSafe(person.remark || "暂无备注")}</p>
+  <h2 style="font-size:15px;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #0d9488;color:#0f766e;">备注</h2>
+  <p style="margin:0 0 8px;">${wordSafe(person.remark || "暂无备注")}</p>
 
   <p style="margin-top:28px;color:#98a2b3;font-size:11px;">导出时间：${new Date().toLocaleString("zh-CN")} · 研发人才库</p>
-</body>
-</html>`;
+  </div>`;
     }
 
-    async function exportPersonToWord(person) {
+    function loadScriptOnce(src) {
+      return new Promise((resolve, reject) => {
+        const existing = [...document.scripts].find(item => item.src === src);
+        if (existing) {
+          if (existing.dataset.loaded === "1") {
+            resolve();
+            return;
+          }
+          existing.addEventListener("load", () => resolve(), { once: true });
+          existing.addEventListener("error", () => reject(new Error("脚本加载失败")), { once: true });
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = true;
+        script.onload = () => {
+          script.dataset.loaded = "1";
+          resolve();
+        };
+        script.onerror = () => reject(new Error("脚本加载失败"));
+        document.head.appendChild(script);
+      });
+    }
+
+    async function exportPersonToPdf(person) {
       if (!person) {
         alert("未找到可导出的人才档案。");
         return;
       }
+      const safeName = String(person.name || "人才档案").replace(/[\\/:*?"<>|]/g, "_");
+      const safeNo = String(person.employeeNo || "no-id").replace(/[\\/:*?"<>|]/g, "_");
+      const filename = `${safeName}-${safeNo}-人才档案.pdf`;
+      const host = document.createElement("div");
+      host.style.cssText = "position:fixed;left:-12000px;top:0;width:794px;background:#fff;z-index:-1;";
       try {
         const photoDataUrl = await resolvePhotoDataUrl(person.photoUrl || "");
-        const html = buildPersonWordHtml(person, photoDataUrl);
-        const blob = new Blob(["\ufeff", html], {
-          type: "application/msword;charset=utf-8"
-        });
-        const safeName = String(person.name || "人才档案").replace(/[\\/:*?"<>|]/g, "_");
-        const safeNo = String(person.employeeNo || "no-id").replace(/[\\/:*?"<>|]/g, "_");
-        downloadBlob(blob, `${safeName}-${safeNo}-人才档案.doc`);
+        host.innerHTML = buildPersonResumeHtml(person, photoDataUrl);
+        document.body.appendChild(host);
+        await loadScriptOnce("https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js");
+        if (!window.html2pdf) throw new Error("PDF 组件不可用");
+        await window.html2pdf().set({
+          margin: [10, 12, 10, 12],
+          filename,
+          image: { type: "jpeg", quality: 0.96 },
+          html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: "#ffffff" },
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+          pagebreak: { mode: ["css", "legacy"] }
+        }).from(host).save();
       } catch (error) {
         console.error(error);
-        alert("导出 Word 失败，请稍后重试。");
+        try {
+          const win = window.open("", "_blank", "noopener,noreferrer");
+          if (!win) throw new Error("弹窗被拦截");
+          win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${wordSafe(filename)}</title>
+            <style>@page{size:A4;margin:12mm}body{margin:0;background:#fff}</style></head><body>${host.innerHTML || buildPersonResumeHtml(person)}</body></html>`);
+          win.document.close();
+          win.focus();
+          setTimeout(() => win.print(), 350);
+        } catch (fallbackError) {
+          console.error(fallbackError);
+          alert("导出 PDF 失败，请检查网络后重试；或允许浏览器弹窗后重试。");
+        }
+      } finally {
+        host.remove();
       }
+    }
+
+    function excelEscape(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function exportFilteredToExcel() {
+      const list = filteredTalents();
+      if (!list.length) {
+        alert("当前筛选下没有可导出的人才。");
+        return;
+      }
+      const headers = [
+        "姓名", "工号", "性别", "年龄", "籍贯", "学历", "英语水平", "职称",
+        "毕业学校", "专业", "毕业时间", "入职时间", "工作时间", "产品经验开始",
+        "工作年限", "产品经验年限", "所属分类", "科室/小组", "岗位", "状态",
+        "常驻基地", "技能", "证书/资质", "电话", "邮箱", "备注"
+      ];
+      const rows = list.map(person => [
+        person.name,
+        person.employeeNo,
+        person.gender,
+        person.age || calcAgeFromBirth(person.birthDate),
+        person.hometown,
+        person.education,
+        englishLevelLabel(person.englishLevel),
+        person.titleLevel,
+        person.school,
+        person.major,
+        formatDate(person.graduationDate),
+        formatDate(person.joinDate),
+        formatDate(person.firstWorkDate),
+        formatDate(person.appleStartDate),
+        formatYears(person.firstWorkDate),
+        formatYears(person.appleStartDate),
+        person.category || "未分类",
+        person.department,
+        person.position,
+        person.status,
+        person.baseLocation,
+        (person.skills || []).join("、"),
+        person.certificates,
+        person.phone,
+        person.email,
+        person.remark
+      ].map(value => (value === "-" ? "" : value)));
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <Styles>
+  <Style ss:ID="header"><Font ss:Bold="1"/><Interior ss:Color="#D7F6EF" ss:Pattern="Solid"/></Style>
+ </Styles>
+ <Worksheet ss:Name="人才清单">
+  <Table>
+   <Row>
+    ${headers.map(h => `<Cell ss:StyleID="header"><Data ss:Type="String">${excelEscape(h)}</Data></Cell>`).join("")}
+   </Row>
+   ${rows.map(cols => `
+   <Row>
+    ${cols.map(cell => `<Cell><Data ss:Type="String">${excelEscape(cell)}</Data></Cell>`).join("")}
+   </Row>`).join("")}
+  </Table>
+ </Worksheet>
+</Workbook>`;
+
+      const blob = new Blob(["\ufeff", xml], { type: "application/vnd.ms-excel;charset=utf-8" });
+      downloadBlob(blob, `研发人才清单-${new Date().toISOString().slice(0, 10)}.xls`);
     }
 
     function openProfileDialog(person) {
@@ -3569,9 +3679,9 @@
       els.customFieldRows.insertAdjacentHTML("beforeend", customFieldRowTemplate());
     });
     document.querySelector("#closeProfileDialog").addEventListener("click", () => els.profileDialog.close());
-    document.querySelector("#exportWordBtn").addEventListener("click", async () => {
+    document.querySelector("#exportPdfBtn").addEventListener("click", async () => {
       const person = talents.find(item => item.id === currentProfileId);
-      await exportPersonToWord(person);
+      await exportPersonToPdf(person);
     });
 
     els.productRows.addEventListener("click", event => {
@@ -3615,7 +3725,7 @@
     els.rows.addEventListener("click", async event => {
       const profileButton = event.target.closest(".profile-btn");
       const viewButton = event.target.closest("[data-action='view']");
-      const wordButton = event.target.closest("[data-action='export-word']");
+      const pdfButton = event.target.closest("[data-action='export-pdf']");
       const editButton = event.target.closest(".edit-btn");
       const deleteButton = event.target.closest(".delete-btn");
       const row = event.target.closest("tr");
@@ -3629,9 +3739,9 @@
         return;
       }
 
-      if (wordButton) {
-        const person = talents.find(item => item.id === wordButton.dataset.id);
-        await exportPersonToWord(person);
+      if (pdfButton) {
+        const person = talents.find(item => item.id === pdfButton.dataset.id);
+        await exportPersonToPdf(person);
         return;
       }
 
@@ -3666,6 +3776,10 @@
 
     [els.search, els.genderFilter, els.statusFilter, els.appleFilter].forEach(control => {
       control.addEventListener("input", renderTable);
+    });
+
+    document.querySelector("#exportExcelBtn").addEventListener("click", () => {
+      exportFilteredToExcel();
     });
 
     document.querySelector("#exportBtn").addEventListener("click", () => {
