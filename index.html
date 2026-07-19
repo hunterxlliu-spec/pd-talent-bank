@@ -386,12 +386,19 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       box-shadow: var(--shadow);
+      position: relative;
+    }
+
+    .table-scroll-hint {
+      margin: 0 0 8px;
+      color: #667085;
+      font-size: var(--fs-xs);
     }
 
     table {
-      width: 100%;
+      width: max-content;
+      min-width: 100%;
       border-collapse: collapse;
-      min-width: 1040px;
     }
 
     th, td {
@@ -400,6 +407,7 @@
       text-align: left;
       vertical-align: middle;
       font-size: var(--fs-sm);
+      white-space: nowrap;
     }
 
     th {
@@ -410,6 +418,21 @@
       font-size: var(--fs-xs);
       font-weight: 700;
       z-index: 1;
+    }
+
+    th.col-person,
+    td.col-person {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: #fff;
+      min-width: 220px;
+      box-shadow: 8px 0 12px rgba(15, 23, 42, .04);
+    }
+
+    th.col-person {
+      background: #f9fafc;
+      z-index: 4;
     }
 
     th.col-actions,
@@ -443,6 +466,13 @@
 
     td.col-actions .btn-word:hover {
       background: rgba(15, 118, 110, .14);
+    }
+
+    td .cell-sub {
+      color: var(--muted);
+      font-size: var(--fs-xs);
+      margin-top: 2px;
+      white-space: nowrap;
     }
 
     tbody tr {
@@ -1664,13 +1694,21 @@
             </div>
           </section>
 
+          <p class="table-scroll-hint">表格较宽时可左右滑动查看：年龄、籍贯、学历、英语水平、职称、入职时间等</p>
           <section class="table-wrap" aria-label="人才列表">
             <table>
               <thead>
                 <tr>
-                  <th>人才</th>
+                  <th class="col-person">人才</th>
                   <th>性别</th>
+                  <th>年龄</th>
+                  <th>籍贯</th>
+                  <th>学历</th>
+                  <th>英语水平</th>
+                  <th>职称</th>
                   <th>毕业学校 / 专业</th>
+                  <th>入职时间</th>
+                  <th>常驻基地</th>
                   <th>工作年限</th>
                   <th>产品经验</th>
                   <th>过往产品</th>
@@ -2702,7 +2740,7 @@
         ).join("");
         return `
           <tr class="${person.id === selectedId ? "active" : ""}" data-id="${person.id}">
-            <td>
+            <td class="col-person">
               <div class="person-cell">
                 ${avatarHtml(person)}
                 <div>
@@ -2712,10 +2750,19 @@
               </div>
             </td>
             <td>${escapeHtml(person.gender || "-")}</td>
+            <td>${escapeHtml(person.age || calcAgeFromBirth(person.birthDate) || "-")}</td>
+            <td>${escapeHtml(person.hometown || "-")}</td>
+            <td>${escapeHtml(person.education || "-")}</td>
+            <td>
+              <div>${escapeHtml(person.englishLevel ? englishLevelLabel(person.englishLevel).replace(/^\d\.\s*/, "") : "-")}</div>
+            </td>
+            <td>${escapeHtml(person.titleLevel || "-")}</td>
             <td>
               <strong>${escapeHtml(person.school || "-")}</strong>
-              <div class="subtext">${escapeHtml(person.major || "-")} · ${formatDate(person.graduationDate)}</div>
+              <div class="cell-sub">${escapeHtml(person.major || "-")} · ${formatDate(person.graduationDate)}</div>
             </td>
+            <td>${formatDate(person.joinDate)}</td>
+            <td>${escapeHtml(person.baseLocation || "-")}</td>
             <td>${formatYears(person.firstWorkDate)}</td>
             <td><span class="tag apple">${formatYears(person.appleStartDate)}</span></td>
             <td><div class="tag-list">${products || "<span class='subtext'>-</span>"}</div></td>
