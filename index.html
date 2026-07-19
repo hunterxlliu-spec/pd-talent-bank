@@ -1781,7 +1781,6 @@
           <button class="btn" id="usersAdminBtn" title="用户管理" hidden>用户管理</button>
           <button class="btn" id="importBtn" title="导入 JSON">导入</button>
           <button class="btn" id="exportExcelBtn" title="导出当前筛选结果为 Excel">导出Excel</button>
-          <button class="btn" id="exportBtn" title="导出全部 JSON">导出JSON</button>
           <button class="btn primary" id="addBtn">新增人才</button>
           <button class="btn" id="logoutBtn" title="退出登录">退出</button>
           <input class="hidden-file" id="importFile" type="file" accept="application/json">
@@ -3843,16 +3842,6 @@
 
     document.querySelector("#exportExcelBtn").addEventListener("click", () => {
       exportFilteredToExcel();
-    });
-
-    document.querySelector("#exportBtn").addEventListener("click", () => {
-      const blob = new Blob([JSON.stringify(talents, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `talent-bank-${new Date().toISOString().slice(0, 10)}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
     });
 
     document.querySelector("#importBtn").addEventListener("click", () => els.importFile.click());
