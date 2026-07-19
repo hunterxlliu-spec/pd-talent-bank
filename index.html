@@ -1642,7 +1642,6 @@
                 <option value="">全部</option>
                 <option>男</option>
                 <option>女</option>
-                <option>其他</option>
               </select>
             </div>
             <div class="field">
@@ -1717,9 +1716,8 @@
           <div class="field">
             <label for="gender">性别</label>
             <select id="gender">
-              <option>男</option>
-              <option>女</option>
-              <option>其他</option>
+              <option value="男">男</option>
+              <option value="女">女</option>
             </select>
           </div>
           <div class="field">
@@ -1730,6 +1728,38 @@
               <option>储备</option>
               <option>离职</option>
             </select>
+          </div>
+          <div class="field">
+            <label for="birthDate">出生年月</label>
+            <input id="birthDate" type="month">
+          </div>
+          <div class="field">
+            <label for="age">年龄</label>
+            <input id="age" type="text" readonly placeholder="根据出生年月自动计算">
+          </div>
+          <div class="field">
+            <label for="hometown">籍贯</label>
+            <select id="hometown"></select>
+          </div>
+          <div class="field">
+            <label for="education">学历</label>
+            <select id="education"></select>
+          </div>
+          <div class="field">
+            <label for="englishLevel">英语水平</label>
+            <select id="englishLevel"></select>
+          </div>
+          <div class="field">
+            <label for="titleLevel">职称</label>
+            <select id="titleLevel"></select>
+          </div>
+          <div class="field">
+            <label for="joinDate">入职时间</label>
+            <input id="joinDate" type="month">
+          </div>
+          <div class="field">
+            <label for="baseLocation">常驻基地</label>
+            <input id="baseLocation" placeholder="如 深圳 / 青岛 / 越南">
           </div>
           <div class="field span-2">
             <label for="school">毕业学校</label>
@@ -1748,7 +1778,7 @@
             <input id="firstWorkDate" type="month">
           </div>
           <div class="field">
-            <label for="appleStartDate">Apple 产品经验开始时间</label>
+            <label for="appleStartDate">产品经验开始时间</label>
             <input id="appleStartDate" type="month">
           </div>
           <div class="field">
@@ -1766,6 +1796,10 @@
           <div class="field span-2">
             <label for="skills">技能标签</label>
             <input id="skills" placeholder="用逗号分隔，如 NPI, SMT, 结构件">
+          </div>
+          <div class="field span-2">
+            <label for="certificates">证书 / 资质</label>
+            <input id="certificates" placeholder="如 CET-6, PMP, Six Sigma">
           </div>
           <div class="field">
             <label for="phone">电话</label>
@@ -1886,6 +1920,22 @@
     const DEFAULT_CATEGORIES = ["结构研发", "硬件研发", "声学研发", "软件研发", "NPI/质量"];
     const ALL_CATEGORY = "__all__";
     const UNCATEGORIZED = "__uncategorized__";
+    const CHINA_REGIONS = [
+      "北京", "天津", "上海", "重庆",
+      "河北", "山西", "辽宁", "吉林", "黑龙江",
+      "江苏", "浙江", "安徽", "福建", "江西", "山东",
+      "河南", "湖北", "湖南", "广东", "海南",
+      "四川", "贵州", "云南", "陕西", "甘肃", "青海",
+      "内蒙古", "广西", "西藏", "宁夏", "新疆",
+      "香港", "澳门", "台湾"
+    ];
+    const EDUCATION_OPTIONS = ["专科", "本科", "硕士", "博士", "其他"];
+    const ENGLISH_LEVEL_OPTIONS = [
+      { value: "仅能读写", label: "1. 仅能读写" },
+      { value: "基本沟通读写", label: "2. 基本沟通，读写" },
+      { value: "无障碍沟通听说读写", label: "3. 无障碍沟通，听说读写能力强" }
+    ];
+    const TITLE_LEVEL_OPTIONS = ["助理工程师", "工程师", "高级工程师", "专家", "其他"];
 
     let authToken = sessionStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(AUTH_TOKEN_KEY) || "";
     let authUsername = "";
@@ -2340,6 +2390,48 @@
       }
     }
 
+    function fillSelectOptions(selectId, options, selected = "", { blankLabel = "请选择", valueKey = null, labelKey = null } = {}) {
+      const select = getField(selectId);
+      if (!select) return;
+      const normalized = options.map(item => {
+        if (valueKey && labelKey && item && typeof item === "object") {
+          return { value: item[valueKey], label: item[labelKey] };
+        }
+        return { value: item, label: item };
+      });
+      select.innerHTML = [
+        `<option value="">${escapeHtml(blankLabel)}</option>`,
+        ...normalized.map(item => (
+          `<option value="${escapeHtml(item.value)}" ${item.value === selected ? "selected" : ""}>${escapeHtml(item.label)}</option>`
+        ))
+      ].join("");
+      if (selected && !normalized.some(item => item.value === selected)) {
+        select.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(selected)}" selected>${escapeHtml(selected)}</option>`);
+      }
+    }
+
+    function calcAgeFromBirth(birthValue) {
+      if (!birthValue) return "";
+      const start = new Date(toDateStart(birthValue));
+      if (Number.isNaN(start.getTime())) return "";
+      const now = new Date();
+      let age = now.getFullYear() - start.getFullYear();
+      const monthDiff = now.getMonth() - start.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < start.getDate())) age -= 1;
+      return age >= 0 && age < 120 ? String(age) : "";
+    }
+
+    function updateAgeField() {
+      const birth = getField("birthDate")?.value || "";
+      const ageInput = getField("age");
+      if (ageInput) ageInput.value = calcAgeFromBirth(birth);
+    }
+
+    function englishLevelLabel(value) {
+      const found = ENGLISH_LEVEL_OPTIONS.find(item => item.value === value);
+      return found ? found.label : (value || "-");
+    }
+
     function getCategoryItems() {
       return [
         { id: ALL_CATEGORY, title: "全部人才", editable: false },
@@ -2569,6 +2661,12 @@
           person.name,
           person.school,
           person.major,
+          person.hometown,
+          person.education,
+          person.englishLevel,
+          person.baseLocation,
+          person.certificates,
+          person.titleLevel,
           person.category,
           person.department,
           person.position,
@@ -2771,10 +2869,20 @@
       ["所属分类", person.category || "未分类"],
       ["科室 / 小组", person.department],
       ["岗位", person.position],
+      ["职称", person.titleLevel],
       ["工号", person.employeeNo],
       ["状态", person.status],
+      ["性别", person.gender],
+      ["出生年月", formatDate(person.birthDate)],
+      ["年龄", person.age || calcAgeFromBirth(person.birthDate) || "-"],
+      ["籍贯", person.hometown],
+      ["学历", person.education],
+      ["英语水平", englishLevelLabel(person.englishLevel)],
+      ["入职时间", formatDate(person.joinDate)],
+      ["常驻基地", person.baseLocation],
       ["电话", person.phone],
-      ["邮箱", person.email]
+      ["邮箱", person.email],
+      ["证书 / 资质", person.certificates]
     ])}
   </table>
 
@@ -2886,10 +2994,20 @@
                 ${infoItem("所属分类", person.category || "未分类")}
                 ${infoItem("科室 / 小组", person.department)}
                 ${infoItem("岗位", person.position)}
+                ${infoItem("职称", person.titleLevel)}
                 ${infoItem("工号", person.employeeNo)}
                 ${infoItem("状态", person.status)}
+                ${infoItem("性别", person.gender)}
+                ${infoItem("出生年月", formatDate(person.birthDate))}
+                ${infoItem("年龄", person.age || calcAgeFromBirth(person.birthDate) || "-")}
+                ${infoItem("籍贯", person.hometown)}
+                ${infoItem("学历", person.education)}
+                ${infoItem("英语水平", englishLevelLabel(person.englishLevel))}
+                ${infoItem("入职时间", formatDate(person.joinDate))}
+                ${infoItem("常驻基地", person.baseLocation)}
                 ${infoItem("电话", person.phone)}
                 ${infoItem("邮箱", person.email)}
+                ${infoItem("证书 / 资质", person.certificates)}
               </div>
             </section>
 
@@ -2945,19 +3063,32 @@
         || DEFAULT_CATEGORIES[0]
       );
       fillCategorySelect(defaultCategory);
+      fillSelectOptions("hometown", CHINA_REGIONS, person?.hometown || "", { blankLabel: "请选择籍贯" });
+      fillSelectOptions("education", EDUCATION_OPTIONS, person?.education || "", { blankLabel: "请选择学历" });
+      fillSelectOptions("englishLevel", ENGLISH_LEVEL_OPTIONS, person?.englishLevel || "", {
+        blankLabel: "请选择英语水平",
+        valueKey: "value",
+        labelKey: "label"
+      });
+      fillSelectOptions("titleLevel", TITLE_LEVEL_OPTIONS, person?.titleLevel || "", { blankLabel: "请选择职称" });
       getField("talentId").value = person?.id || "";
       getField("employeeNo").value = person?.employeeNo || "";
       getField("name").value = person?.name || "";
-      getField("gender").value = person?.gender || "男";
+      getField("gender").value = person?.gender === "女" ? "女" : "男";
       getField("status").value = person?.status || "在职";
+      getField("birthDate").value = normalizeMonth(person?.birthDate);
+      updateAgeField();
       getField("school").value = person?.school || "";
       getField("graduationDate").value = normalizeMonth(person?.graduationDate);
       getField("major").value = person?.major || "";
       getField("firstWorkDate").value = normalizeMonth(person?.firstWorkDate);
       getField("appleStartDate").value = normalizeMonth(person?.appleStartDate);
+      getField("joinDate").value = normalizeMonth(person?.joinDate);
+      getField("baseLocation").value = person?.baseLocation || "";
       getField("department").value = person?.department || "";
       getField("position").value = person?.position || "";
       getField("skills").value = (person?.skills || []).join(", ");
+      getField("certificates").value = person?.certificates || "";
       getField("phone").value = person?.phone || "";
       getField("email").value = person?.email || "";
       getField("remark").value = person?.remark || "";
@@ -3160,6 +3291,14 @@
           name: getField("name").value.trim(),
           gender: getField("gender").value,
           status: getField("status").value,
+          birthDate: getField("birthDate").value,
+          age: calcAgeFromBirth(getField("birthDate").value),
+          hometown: getField("hometown").value.trim(),
+          education: getField("education").value.trim(),
+          englishLevel: getField("englishLevel").value.trim(),
+          titleLevel: getField("titleLevel").value.trim(),
+          joinDate: getField("joinDate").value,
+          baseLocation: getField("baseLocation").value.trim(),
           school: getField("school").value.trim(),
           graduationDate: getField("graduationDate").value,
           major: getField("major").value.trim(),
@@ -3169,6 +3308,7 @@
           department: getField("department").value.trim(),
           position: getField("position").value.trim(),
           skills: getField("skills").value.split(/[,，]/).map(item => item.trim()).filter(Boolean),
+          certificates: getField("certificates").value.trim(),
           phone: getField("phone").value.trim(),
           email: getField("email").value.trim(),
           remark: getField("remark").value.trim(),
@@ -3192,6 +3332,8 @@
     document.querySelector("#addBtn").addEventListener("click", () => openDialog());
     document.querySelector("#closeDialog").addEventListener("click", () => els.dialog.close());
     document.querySelector("#cancelBtn").addEventListener("click", () => els.dialog.close());
+    document.querySelector("#birthDate")?.addEventListener("change", updateAgeField);
+    document.querySelector("#birthDate")?.addEventListener("input", updateAgeField);
     document.querySelector("#addCategoryBtn").addEventListener("click", async () => {
       const name = prompt("请输入新的研发分类名称：", "");
       const trimmed = (name || "").trim();
