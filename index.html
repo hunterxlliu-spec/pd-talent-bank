@@ -28,7 +28,6 @@
       --fs-xs: 12px;
       --fs-title: 22px;
       --fs-brand: 15px;
-      --goertek-logo: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyODAgNzgiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iR29lcnRlayI+CiAgPHRleHQgeD0iMTQwIiB5PSIzNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkF2ZW5pciBOZXh0LCBIZWx2ZXRpY2EgTmV1ZSwgUGluZ0ZhbmcgU0MsIEFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjMwIiBmb250LXdlaWdodD0iNjAwIiBsZXR0ZXItc3BhY2luZz0iLTAuOCIgZmlsbD0iIzJiMmIyYiI+R29lcnRlazwvdGV4dD4KICA8dGV4dCB4PSIxNDAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXZlbmlyIE5leHQsIEhlbHZldGljYSBOZXVlLCBQaW5nRmFuZyBTQywgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjUwMCIgbGV0dGVyLXNwYWNpbmc9IjAuMiI+CiAgICA8dHNwYW4gZmlsbD0iIzJiMmIyYiI+V2UgbWFrZSA8L3RzcGFuPjx0c3BhbiBmaWxsPSIjMzJjMjRkIiBmb250LXdlaWdodD0iNzAwIj5pdDwvdHNwYW4+PHRzcGFuIGZpbGw9IiMyYjJiMmIiPiB0b2dldGhlcjwvdHNwYW4+CiAgPC90ZXh0Pgo8L3N2Zz4K");
     }
 
     * { box-sizing: border-box; }
@@ -91,23 +90,6 @@
       gap: 10px;
       padding: 4px 4px 8px;
       border-bottom: 1px solid rgba(255, 255, 255, .1);
-    }
-
-    .brand-logo {
-      display: block;
-      height: 46px;
-      width: auto;
-      max-width: 168px;
-      object-fit: contain;
-      content: var(--goertek-logo);
-      background: transparent;
-      padding: 0;
-      border-radius: 0;
-      filter: none;
-    }
-
-    img.brand-logo {
-      content: normal;
     }
 
     .brand-mark {
@@ -1488,16 +1470,6 @@
       display: none;
     }
 
-    .login-logo {
-      display: block;
-      height: 56px;
-      width: auto;
-      max-width: 220px;
-      object-fit: contain;
-      margin-bottom: 8px;
-      background: transparent;
-    }
-
     @keyframes loginPulse {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-3px); }
@@ -1713,8 +1685,7 @@
   <div class="login-gate" id="loginGate" aria-label="账号登录">
     <div class="login-panel">
       <div class="login-brand">
-        <img class="login-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyODAgNzgiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iR29lcnRlayI+CiAgPHRleHQgeD0iMTQwIiB5PSIzNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkF2ZW5pciBOZXh0LCBIZWx2ZXRpY2EgTmV1ZSwgUGluZ0ZhbmcgU0MsIEFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjMwIiBmb250LXdlaWdodD0iNjAwIiBsZXR0ZXItc3BhY2luZz0iLTAuOCIgZmlsbD0iIzJiMmIyYiI+R29lcnRlazwvdGV4dD4KICA8dGV4dCB4PSIxNDAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXZlbmlyIE5leHQsIEhlbHZldGljYSBOZXVlLCBQaW5nRmFuZyBTQywgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjUwMCIgbGV0dGVyLXNwYWNpbmc9IjAuMiI+CiAgICA8dHNwYW4gZmlsbD0iIzJiMmIyYiI+V2UgbWFrZSA8L3RzcGFuPjx0c3BhbiBmaWxsPSIjMzJjMjRkIiBmb250LXdlaWdodD0iNzAwIj5pdDwvdHNwYW4+PHRzcGFuIGZpbGw9IiMyYjJiMmIiPiB0b2dldGhlcjwvdHNwYW4+CiAgPC90ZXh0Pgo8L3N2Zz4K" alt="Goertek 歌尔">
-        <h1 class="login-brand-name">U01-A BG 研发人才库管理系统</h1>
+<h1 class="login-brand-name">U01-A BG 研发人才库管理系统</h1>
         <p class="login-title">账号登录</p>
         <p class="login-copy">管理员使用 admin；普通用户使用工号登录。默认密码 RDadmin2026，首次登录需修改。</p>
       </div>
@@ -1737,8 +1708,7 @@
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand">
-        <img class="brand-logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyODAgNzgiIHJvbGU9ImltZyIgYXJpYS1sYWJlbD0iR29lcnRlayI+CiAgPHRleHQgeD0iMTQwIiB5PSIzNiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkF2ZW5pciBOZXh0LCBIZWx2ZXRpY2EgTmV1ZSwgUGluZ0ZhbmcgU0MsIEFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjMwIiBmb250LXdlaWdodD0iNjAwIiBsZXR0ZXItc3BhY2luZz0iLTAuOCIgZmlsbD0iIzJiMmIyYiI+R29lcnRlazwvdGV4dD4KICA8dGV4dCB4PSIxNDAiIHk9IjU4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LWZhbWlseT0iQXZlbmlyIE5leHQsIEhlbHZldGljYSBOZXVlLCBQaW5nRmFuZyBTQywgQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEuNSIgZm9udC13ZWlnaHQ9IjUwMCIgbGV0dGVyLXNwYWNpbmc9IjAuMiI+CiAgICA8dHNwYW4gZmlsbD0iIzJiMmIyYiI+V2UgbWFrZSA8L3RzcGFuPjx0c3BhbiBmaWxsPSIjMzJjMjRkIiBmb250LXdlaWdodD0iNzAwIj5pdDwvdHNwYW4+PHRzcGFuIGZpbGw9IiMyYjJiMmIiPiB0b2dldGhlcjwvdHNwYW4+CiAgPC90ZXh0Pgo8L3N2Zz4K" alt="Goertek 歌尔">
-        <div>
+<div>
           <h1>U01-A BG</h1>
           <p>研发人才库管理系统</p>
         </div>
