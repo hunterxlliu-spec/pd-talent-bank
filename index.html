@@ -6,30 +6,29 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>研发人才库</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Noto+Serif+SC:wght@600;700&display=swap" rel="stylesheet">
+  <title>U01-A BG 研发人才库管理系统</title>
+  <!-- Apple-like system typography -->
   <style>
     :root {
-      --ink: #152033;
-      --muted: #5b6b7c;
-      --line: #e2e8f0;
+      --ink: #1d1d1f;
+      --muted: #6e6e73;
+      --line: #d2d2d7;
       --panel: #ffffff;
-      --soft: #f7f9fc;
-      --brand: #0d9488;
-      --brand-strong: #0f766e;
-      --brand-light: #ccfbf1;
-      --accent: #c2410c;
-      --danger: #b42318;
-      --shadow: 0 12px 32px rgba(15, 23, 42, .07);
-      --shadow-soft: 0 4px 14px rgba(15, 23, 42, .04);
-      --radius: 14px;
+      --soft: #f5f5f7;
+      --brand: #0071e3;
+      --brand-strong: #0077ed;
+      --brand-light: #e8f1fc;
+      --accent: #0071e3;
+      --danger: #ff3b30;
+      --shadow: 0 8px 28px rgba(0, 0, 0, .06);
+      --shadow-soft: 0 1px 2px rgba(0, 0, 0, .04), 0 4px 12px rgba(0, 0, 0, .04);
+      --radius: 12px;
       --fs: 14px;
       --fs-sm: 13px;
       --fs-xs: 12px;
-      --fs-title: 20px;
-      --fs-brand: 18px;
+      --fs-title: 22px;
+      --fs-brand: 15px;
+      --goertek-logo: url("data:image/png;base64,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");
     }
 
     * { box-sizing: border-box; }
@@ -38,20 +37,21 @@
       margin: 0;
       min-height: 100vh;
       color: var(--ink);
-      background:
-        radial-gradient(ellipse 70% 45% at 8% -8%, rgba(45, 212, 191, .14), transparent 55%),
-        radial-gradient(ellipse 55% 40% at 100% 0%, rgba(148, 163, 184, .16), transparent 50%),
-        linear-gradient(180deg, #f5f8fc 0%, #eef2f7 100%);
-      font-family: "Manrope", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--soft);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
       font-size: var(--fs);
-      line-height: 1.5;
+      line-height: 1.47;
       -webkit-font-smoothing: antialiased;
+      letter-spacing: -0.01em;
     }
 
     .brand h1,
     .login-brand-name,
-    .login-title {
-      font-family: "Noto Serif SC", "Songti SC", serif;
+    .login-title,
+    .topbar h2 {
+      font-family: inherit;
+      font-weight: 600;
+      letter-spacing: -0.02em;
     }
 
     button, input, select, textarea {
@@ -70,46 +70,56 @@
     }
 
     .sidebar {
-      background: linear-gradient(175deg, #1a2433 0%, #141c28 100%);
-      color: white;
-      padding: 20px 16px;
+      background: rgba(245, 245, 247, .92);
+      color: var(--ink);
+      padding: 18px 14px 20px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 16px;
       overflow: hidden;
-      border-right: 1px solid rgba(255, 255, 255, .04);
+      border-right: 1px solid var(--line);
+      backdrop-filter: saturate(180%) blur(20px);
     }
 
     .brand {
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-start;
       gap: 10px;
-      min-height: 40px;
+      padding: 4px 4px 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand-logo {
+      display: block;
+      height: 28px;
+      width: auto;
+      max-width: 140px;
+      object-fit: contain;
+      content: var(--goertek-logo);
+    }
+
+    img.brand-logo {
+      content: normal;
     }
 
     .brand-mark {
-      width: 36px;
-      height: 36px;
-      display: grid;
-      place-items: center;
-      border-radius: 8px;
-      background: #2dd4bf;
-      color: #123;
-      font-weight: 800;
-      font-size: 15px;
+      display: none;
     }
 
     .brand h1 {
       margin: 0;
       font-size: var(--fs-brand);
-      line-height: 1.2;
-      letter-spacing: 0;
+      line-height: 1.25;
+      color: var(--ink);
+      font-weight: 600;
     }
 
     .brand p {
-      margin: 2px 0 0;
-      color: #b7c4d5;
-      font-size: var(--fs-xs);
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
     }
 
     .side-stats {
@@ -134,19 +144,19 @@
     .side-nav-head h3 {
       margin: 0;
       font-size: var(--fs-xs);
-      letter-spacing: 0.08em;
+      letter-spacing: 0.04em;
       text-transform: uppercase;
-      color: #9db0c3;
-      font-weight: 700;
+      color: var(--muted);
+      font-weight: 600;
     }
 
     .side-nav-head .btn {
       min-height: 26px;
       padding: 0 8px;
       font-size: var(--fs-xs);
-      background: rgba(255,255,255,.08);
-      color: #fff;
-      border-color: rgba(255,255,255,.14);
+      background: #fff;
+      color: var(--ink);
+      border-color: var(--line);
     }
 
     .side-nav {
@@ -163,22 +173,23 @@
       justify-content: space-between;
       gap: 6px;
       padding: 8px 10px;
-      border-radius: 8px;
+      border-radius: 10px;
       background: transparent;
-      color: #d5e0ec;
+      color: var(--ink);
       border: 1px solid transparent;
       text-align: left;
       cursor: pointer;
     }
 
     .nav-item:hover {
-      background: rgba(255,255,255,.06);
+      background: rgba(0, 0, 0, .04);
     }
 
     .nav-item.active {
-      background: rgba(45, 212, 191, .16);
-      border-color: rgba(45, 212, 191, .28);
-      color: #fff;
+      background: #fff;
+      border-color: var(--line);
+      color: var(--ink);
+      box-shadow: var(--shadow-soft);
     }
 
     .nav-item-main {
@@ -211,9 +222,10 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: rgba(255,255,255,.1);
+      background: rgba(0, 0, 0, .06);
       font-size: var(--fs-xs);
-      font-weight: 700;
+      font-weight: 600;
+      color: var(--muted);
     }
 
     .nav-item-actions {
@@ -230,29 +242,31 @@
       min-height: 26px;
       width: 26px;
       padding: 0;
-      background: rgba(255,255,255,.1);
-      color: #fff;
-      border: 0;
+      background: #fff;
+      color: var(--ink);
+      border: 1px solid var(--line);
     }
 
     .stat-tile {
-      padding: 10px 12px;
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 8px;
-      background: rgba(255,255,255,.04);
+      padding: 12px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: var(--shadow-soft);
     }
 
     .stat-value {
       display: block;
-      font-size: 20px;
+      font-size: 22px;
       line-height: 1;
-      font-weight: 800;
+      font-weight: 600;
+      letter-spacing: -0.03em;
     }
 
     .stat-label {
       display: block;
-      margin-top: 5px;
-      color: #bfccd9;
+      margin-top: 6px;
+      color: var(--muted);
       font-size: var(--fs-xs);
     }
 
@@ -270,10 +284,10 @@
       align-items: center;
       justify-content: space-between;
       gap: 14px;
-      padding: 16px 24px;
-      background: rgba(245, 248, 252, .86);
-      backdrop-filter: blur(14px);
-      border-bottom: 1px solid rgba(226, 232, 240, .9);
+      padding: 18px 28px;
+      background: rgba(245, 245, 247, .78);
+      backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid rgba(210, 210, 215, .7);
     }
 
     .topbar h2 {
@@ -302,24 +316,25 @@
       align-items: center;
       justify-content: center;
       gap: 6px;
-      padding: 0 13px;
-      border-radius: 9px;
+      padding: 0 14px;
+      border-radius: 980px;
       color: var(--ink);
-      background: white;
+      background: #fff;
       border: 1px solid var(--line);
-      box-shadow: var(--shadow-soft);
+      box-shadow: none;
       white-space: nowrap;
       font-size: var(--fs-sm);
-      transition: border-color .15s ease, background .15s ease, transform .15s ease;
+      font-weight: 500;
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
     }
 
-    .btn:hover { border-color: #b6c2d1; transform: translateY(-1px); }
+    .btn:hover { background: #fafafa; border-color: #b0b0b5; }
 
     .btn.primary {
       color: white;
-      background: linear-gradient(180deg, #14b8a6 0%, var(--brand) 100%);
+      background: var(--brand);
       border-color: var(--brand);
-      box-shadow: 0 6px 16px rgba(13, 148, 136, .25);
+      box-shadow: none;
     }
 
     .btn.primary:hover { background: var(--brand-strong); }
@@ -347,8 +362,8 @@
     }
 
     .filters {
-      background: rgba(255, 255, 255, .92);
-      border: 1px solid rgba(226, 232, 240, .95);
+      background: #fff;
+      border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 14px;
       display: grid;
@@ -386,15 +401,15 @@
 
     input:focus, select:focus, textarea:focus {
       border-color: var(--brand);
-      box-shadow: 0 0 0 3px rgba(15, 118, 110, .13);
+      box-shadow: 0 0 0 3px rgba(0, 113, 227, .18);
     }
 
     .table-wrap {
       overflow: auto;
-      background: rgba(255, 255, 255, .96);
-      border: 1px solid rgba(226, 232, 240, .95);
+      background: #fff;
+      border: 1px solid var(--line);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-soft);
       position: relative;
     }
 
@@ -422,11 +437,11 @@
     th {
       position: sticky;
       top: 0;
-      background: linear-gradient(180deg, #fbfcfe 0%, #f4f7fb 100%);
-      color: #475467;
+      background: #fbfbfd;
+      color: var(--muted);
       font-size: var(--fs-xs);
-      font-weight: 700;
-      letter-spacing: .02em;
+      font-weight: 600;
+      letter-spacing: 0;
       z-index: 1;
     }
 
@@ -468,14 +483,14 @@
     }
 
     td.col-actions .btn-pdf {
-      background: rgba(13, 148, 136, .08);
-      border-color: rgba(13, 148, 136, .28);
-      color: #0f766e;
-      font-weight: 700;
+      background: var(--brand-light);
+      border-color: #b6d4f7;
+      color: var(--brand);
+      font-weight: 600;
     }
 
     td.col-actions .btn-pdf:hover {
-      background: rgba(13, 148, 136, .14);
+      background: #d9e9fb;
     }
 
     td .cell-sub {
@@ -491,7 +506,7 @@
     }
 
     tbody tr:hover, tbody tr.active {
-      background: #f0fdfa;
+      background: #f5f9ff;
     }
 
     .person-cell {
@@ -805,10 +820,10 @@
       justify-content: space-between;
       gap: 12px;
       padding: 12px 16px;
-      background: rgba(244, 247, 250, .92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(15, 23, 42, .06);
-      color: #344054;
+      background: rgba(255, 255, 255, .86);
+      backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--line);
+      color: var(--ink);
     }
 
     .profile-dialog .modal-head h3 {
@@ -828,14 +843,14 @@
     }
 
     .profile-dialog .modal-head .btn.primary {
-      background: #0f766e;
+      background: var(--brand);
       color: #fff;
-      border-color: #0f766e;
-      font-weight: 700;
+      border-color: var(--brand);
+      font-weight: 600;
     }
 
     .profile-dialog .modal-head .btn.primary:hover {
-      background: #115e59;
+      background: var(--brand-strong);
     }
 
     .profile-dialog .modal-head .btn.icon {
@@ -851,7 +866,7 @@
     .profile-dialog .modal-body {
       padding: 0;
       max-height: min(90vh, 920px);
-      background: #f4f7fa;
+      background: #f5f5f7;
       gap: 0;
       overflow: auto;
     }
@@ -889,33 +904,33 @@
     }
 
     .profile-hero {
-      margin: 12px 16px 0;
+      margin: 16px 16px 0;
       padding: 22px;
-      border-radius: 18px;
-      background:
-        radial-gradient(circle at 92% 8%, rgba(94, 234, 212, .28), transparent 34%),
-        linear-gradient(145deg, #0f766e 0%, #115e59 52%, #134e4a 100%);
-      color: #fff;
+      border-radius: 16px;
+      background: #fff;
+      color: var(--ink);
       display: grid;
       grid-template-columns: 88px minmax(0, 1fr);
       gap: 18px;
       align-items: center;
-      box-shadow: 0 16px 40px rgba(15, 118, 110, .28);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-soft);
     }
 
     .profile-avatar {
       width: 88px;
       height: 88px;
-      border-radius: 22px;
+      border-radius: 50%;
       overflow: hidden;
-      background: rgba(255,255,255,.16);
-      border: 2px solid rgba(255,255,255,.5);
-      box-shadow: 0 10px 24px rgba(0,0,0,.18);
+      background: #e8e8ed;
+      border: 0;
+      box-shadow: none;
       display: grid;
       place-items: center;
       font-size: 26px;
-      font-weight: 800;
-      letter-spacing: 0.04em;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #3a3a3c;
     }
 
     .profile-avatar img {
@@ -928,15 +943,16 @@
 
     .profile-hero-main h2 {
       margin: 0;
-      font-family: "Noto Serif SC", "Songti SC", serif;
       font-size: clamp(22px, 3vw, 28px);
       line-height: 1.2;
-      letter-spacing: 0.01em;
+      letter-spacing: -0.02em;
+      font-weight: 600;
+      color: var(--ink);
     }
 
     .profile-role {
       margin: 6px 0 0;
-      color: rgba(255,255,255,.9);
+      color: var(--muted);
       font-size: 13px;
     }
 
@@ -953,10 +969,10 @@
       gap: 5px;
       padding: 5px 10px;
       border-radius: 999px;
-      background: rgba(255,255,255,.14);
-      border: 1px solid rgba(255,255,255,.16);
+      background: #f5f5f7;
+      border: 1px solid var(--line);
       font-size: 12px;
-      color: #fff;
+      color: var(--ink);
     }
 
     .profile-chip strong { font-weight: 700; }
@@ -1390,24 +1406,12 @@
       padding: 28px 18px;
       position: relative;
       overflow: hidden;
-      background:
-        radial-gradient(ellipse 90% 70% at 12% 18%, rgba(45, 212, 191, .22), transparent 55%),
-        radial-gradient(ellipse 70% 55% at 88% 82%, rgba(15, 118, 110, .35), transparent 50%),
-        linear-gradient(155deg, #0b1c22 0%, #123038 42%, #0f766e 100%);
-      color: #ecfdf8;
+      background: #f5f5f7;
+      color: var(--ink);
     }
 
     .login-gate::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
-      background-size: 48px 48px;
-      mask-image: radial-gradient(circle at center, black 30%, transparent 78%);
-      pointer-events: none;
-      animation: loginGrid 18s linear infinite;
+      content: none;
     }
 
     @keyframes loginGrid {
@@ -1436,17 +1440,16 @@
     }
 
     .login-mark {
-      width: 52px;
-      height: 52px;
-      display: grid;
-      place-items: center;
-      border-radius: 14px;
-      background: #2dd4bf;
-      color: #0b1c22;
-      font-weight: 800;
-      font-size: 22px;
-      box-shadow: 0 12px 30px rgba(0,0,0,.28);
-      animation: loginPulse 2.8s ease-in-out infinite;
+      display: none;
+    }
+
+    .login-logo {
+      display: block;
+      height: 32px;
+      width: auto;
+      max-width: 160px;
+      object-fit: contain;
+      margin-bottom: 4px;
     }
 
     @keyframes loginPulse {
@@ -1456,23 +1459,24 @@
 
     .login-brand-name {
       margin: 0;
-      font-size: clamp(28px, 5vw, 36px);
-      line-height: 1.15;
-      font-weight: 700;
-      letter-spacing: 0.02em;
+      font-size: clamp(24px, 4vw, 30px);
+      line-height: 1.2;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--ink);
     }
 
     .login-title {
       margin: 0;
-      font-size: 20px;
+      font-size: 17px;
       font-weight: 600;
-      color: rgba(236, 253, 248, .92);
+      color: var(--ink);
     }
 
     .login-copy {
       margin: 0;
-      max-width: 34ch;
-      color: rgba(204, 251, 241, .78);
+      max-width: 40ch;
+      color: var(--muted);
       font-size: 14px;
       line-height: 1.55;
     }
@@ -1480,12 +1484,11 @@
     .login-form {
       display: grid;
       gap: 14px;
-      padding: 20px 18px;
-      border-radius: 16px;
-      background: rgba(8, 24, 28, .55);
-      border: 1px solid rgba(255,255,255,.12);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 24px 50px rgba(0,0,0,.28);
+      padding: 22px 20px;
+      border-radius: 18px;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
     }
 
     .login-field {
@@ -1495,54 +1498,54 @@
 
     .login-field label {
       font-size: 12px;
-      color: rgba(204, 251, 241, .75);
+      color: var(--muted);
       font-weight: 600;
     }
 
     .login-field input {
       min-height: 42px;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color: #fff;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
       padding: 0 12px;
       font-size: 14px;
     }
 
     .login-field input::placeholder {
-      color: rgba(255,255,255,.38);
+      color: #aeaeb2;
     }
 
     .login-field input:focus {
-      border-color: rgba(45, 212, 191, .7);
-      box-shadow: 0 0 0 3px rgba(45, 212, 191, .18);
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(0, 113, 227, .18);
       outline: none;
     }
 
     .login-error {
       min-height: 18px;
       margin: 0;
-      color: #fecaca;
+      color: var(--danger);
       font-size: 12px;
     }
 
     .login-submit {
       min-height: 44px;
-      border-radius: 10px;
-      background: #2dd4bf;
-      color: #0b1c22;
-      font-weight: 800;
+      border-radius: 980px;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 600;
       font-size: 14px;
-      letter-spacing: 0.02em;
-      transition: transform .15s ease, background .15s ease;
+      letter-spacing: -0.01em;
+      transition: background .15s ease;
     }
 
     .login-submit:hover {
-      background: #5eead4;
+      background: var(--brand-strong);
     }
 
     .login-submit:active {
-      transform: translateY(1px);
+      transform: none;
     }
 
     .login-submit:disabled {
@@ -1552,7 +1555,7 @@
 
     .login-footnote {
       margin: 0;
-      color: rgba(204, 251, 241, .55);
+      color: var(--muted);
       font-size: 11px;
     }
 
@@ -1664,8 +1667,8 @@
   <div class="login-gate" id="loginGate" aria-label="账号登录">
     <div class="login-panel">
       <div class="login-brand">
-        <div class="login-mark" aria-hidden="true">R</div>
-        <h1 class="login-brand-name">研发人才库</h1>
+        <img class="login-logo" src="data:image/png;base64,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" alt="Goertek 歌尔">
+        <h1 class="login-brand-name">U01-A BG 研发人才库管理系统</h1>
         <p class="login-title">账号登录</p>
         <p class="login-copy">管理员使用 admin；普通用户使用工号登录。默认密码 RDadmin2026，首次登录需修改。</p>
       </div>
@@ -1679,7 +1682,7 @@
           <input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="请输入密码" required>
         </div>
         <p class="login-error" id="loginError" role="alert"></p>
-        <button class="login-submit" type="submit" id="loginSubmit">进入人才库</button>
+        <button class="login-submit" type="submit" id="loginSubmit">进入系统</button>
         <p class="login-footnote">会话约 7 天有效 · 离开时可随时退出登录</p>
       </form>
     </div>
@@ -1688,10 +1691,10 @@
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-mark">R</div>
+        <img class="brand-logo" src="data:image/png;base64,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" alt="Goertek 歌尔">
         <div>
-          <h1>研发人才库</h1>
-          <p>R&D Talent Bank</p>
+          <h1>U01-A BG</h1>
+          <p>研发人才库管理系统</p>
         </div>
       </div>
       <div class="side-nav-block">
@@ -1724,8 +1727,8 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <h2>研发人才管理</h2>
-          <p>覆盖结构 / 硬件 / 声学等研发部门 · 清单导出 Excel · 档案导出 PDF</p>
+          <h2>人才管理</h2>
+          <p>U01-A BG · 结构 / 硬件 / 声学等研发部门 · 清单 Excel · 档案 PDF</p>
         </div>
         <div class="actions">
           <span class="current-user-chip" id="currentUserChip" hidden>未登录</span>
@@ -1775,18 +1778,20 @@
             </div>
           </section>
 
-          <p class="table-scroll-hint">表格较宽时可左右滑动查看：年龄、籍贯、学历、英语水平、职称、入职时间等</p>
+          <p class="table-scroll-hint">表格较宽时可左右滑动查看：英文名、当前项目、年龄、籍贯、学历、英语水平、职称、入职时间等</p>
           <section class="table-wrap" aria-label="人才列表">
             <table>
               <thead>
                 <tr>
                   <th class="col-person">人才</th>
+                  <th>英文名</th>
                   <th>性别</th>
                   <th>年龄</th>
                   <th>籍贯</th>
                   <th>学历</th>
                   <th>英语水平</th>
                   <th>职称</th>
+                  <th>当前项目</th>
                   <th>毕业学校 / 专业</th>
                   <th>入职时间</th>
                   <th>常驻基地</th>
@@ -1831,6 +1836,14 @@
           <div class="field">
             <label for="name">姓名 *</label>
             <input id="name" required>
+          </div>
+          <div class="field">
+            <label for="englishName">英文名</label>
+            <input id="englishName" placeholder="English Name">
+          </div>
+          <div class="field">
+            <label for="currentProject">当前项目</label>
+            <input id="currentProject" placeholder="如 iPhone 结构件项目">
           </div>
           <div class="field">
             <label for="gender">性别</label>
@@ -2325,6 +2338,8 @@
         id: crypto.randomUUID(),
         employeeNo: "A1024",
         name: "林启航",
+        englishName: "Qihang Lin",
+        currentProject: "iPhone 结构件项目",
         gender: "男",
         status: "在职",
         school: "华南理工大学",
@@ -2361,6 +2376,8 @@
         id: crypto.randomUUID(),
         employeeNo: "B2048",
         name: "周若宁",
+        englishName: "Ruoning Zhou",
+        currentProject: "AirPods 声学模组",
         gender: "女",
         status: "候选",
         school: "电子科技大学",
@@ -2397,6 +2414,8 @@
         id: crypto.randomUUID(),
         employeeNo: "C4096",
         name: "陈墨",
+        englishName: "Mo Chen",
+        currentProject: "",
         gender: "男",
         status: "储备",
         school: "同济大学",
@@ -2596,6 +2615,8 @@
         ...item,
         id: item.id || crypto.randomUUID(),
         category: String(item.category || "").trim(),
+        englishName: String(item.englishName || "").trim(),
+        currentProject: String(item.currentProject || "").trim(),
         birthDate: normalizeDate(item.birthDate),
         joinDate: normalizeDate(item.joinDate),
         graduationDate: normalizeDate(item.graduationDate),
@@ -2805,6 +2826,8 @@
         const haystack = [
           person.employeeNo,
           person.name,
+          person.englishName,
+          person.currentProject,
           person.school,
           person.major,
           person.hometown,
@@ -2857,6 +2880,7 @@
                 </div>
               </div>
             </td>
+            <td>${escapeHtml(person.englishName || "-")}</td>
             <td>${escapeHtml(person.gender || "-")}</td>
             <td>${escapeHtml(person.age || calcAgeFromBirth(person.birthDate) || "-")}</td>
             <td>${escapeHtml(person.hometown || "-")}</td>
@@ -2865,6 +2889,7 @@
               <div>${escapeHtml(person.englishLevel ? englishLevelLabel(person.englishLevel).replace(/^\d\.\s*/, "") : "-")}</div>
             </td>
             <td>${escapeHtml(person.titleLevel || "-")}</td>
+            <td>${escapeHtml(person.currentProject || "-")}</td>
             <td>
               <strong>${escapeHtml(person.school || "-")}</strong>
               <div class="cell-sub">${escapeHtml(person.major || "-")} · ${formatDate(person.graduationDate)}</div>
@@ -2940,107 +2965,143 @@
       }
     }
 
-    function buildPersonResumeHtml(person, photoDataUrl = "") {
-      const skills = (person.skills || []).join("、") || "暂无";
-      const customFields = person.customFields || [];
-      const products = person.products || [];
-      const roleLine = [person.category, person.department, person.position].filter(Boolean).join(" · ") || "-";
-      const photoHtml = photoDataUrl
-        ? `<img src="${photoDataUrl}" width="110" height="110" style="width:110px;height:110px;object-fit:cover;border-radius:10px;border:1px solid #d0d5dd;" />`
-        : `<div style="width:110px;height:110px;border-radius:10px;background:#0d9488;color:#fff;text-align:center;line-height:110px;font-size:28px;font-weight:700;">${wordSafe(initials(person.name))}</div>`;
+    function waitForImages(root, timeoutMs = 4000) {
+      const imgs = [...(root.querySelectorAll ? root.querySelectorAll("img") : [])];
+      if (!imgs.length) return Promise.resolve();
+      return Promise.all(imgs.map(img => new Promise(resolve => {
+        if (img.complete && img.naturalWidth) {
+          resolve();
+          return;
+        }
+        const done = () => resolve();
+        img.addEventListener("load", done, { once: true });
+        img.addEventListener("error", done, { once: true });
+        setTimeout(done, timeoutMs);
+      })));
+    }
 
-      const productHtml = products.length
-        ? products.map((item, index) => `
-            <h3 style="margin:18px 0 8px;font-size:14px;color:#0f766e;">${index + 1}. ${wordSafe(item.name)}</h3>
-            <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:12px;">
-              ${wordRows([
-                ["产品类型", item.type],
-                ["公司", item.company],
-                ["角色", item.role],
-                ["时间", `${formatDate(item.startDate)} 至 ${formatDate(item.endDate)}`],
-                ["是否 Apple 相关", item.appleRelated ? "是" : "否"],
-                ["职责", item.responsibilities || "暂无职责描述"],
-                ["成果", item.achievements || "暂无项目成果"]
-              ])}
-            </table>
-          `).join("")
-        : `<p style="color:#667085;">暂无产品经历</p>`;
+    function buildProfileSheetHtml(person, options = {}) {
+      const skills = person.skills || [];
+      const skillHtml = skills.length
+        ? `<div class="skill-pills">${skills.map(skill => `<span class="skill-pill">${escapeHtml(skill)}</span>`).join("")}</div>`
+        : `<div class="profile-empty">暂无技能标签</div>`;
 
-      const customHtml = customFields.length
-        ? `<table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:12px;">
-            ${wordRows(customFields.map(item => [item.name || "未命名项目", item.value || "-"]))}
-          </table>`
-        : `<p style="color:#667085;">暂无自定义项目</p>`;
+      const productItems = (person.products || []).map(item => `
+        <div class="experience-item">
+          <div class="experience-top">
+            <strong>${escapeHtml(item.name || "-")}</strong>
+            <span class="experience-tag ${item.appleRelated ? "" : "is-muted"}">${item.appleRelated ? "产品相关" : "其他产品"}</span>
+          </div>
+          <div class="experience-sub">${escapeHtml(item.type || "-")} · ${escapeHtml(item.company || "-")} · ${escapeHtml(item.role || "-")}</div>
+          <div class="experience-sub">${formatDate(item.startDate)} 至 ${formatDate(item.endDate)}</div>
+          <div class="experience-copy">${escapeHtml(item.responsibilities || "暂无职责描述")}</div>
+          <div class="experience-sub">成果：${escapeHtml(item.achievements || "暂无项目成果")}</div>
+        </div>
+      `).join("");
+
+      const customItems = (person.customFields || []).map(item => infoItem(item.name || "-", item.value || "-")).join("");
+      const roleLine = [person.category, person.department, person.position].filter(Boolean).join(" · ") || "岗位待完善";
+      const ageText = person.age || calcAgeFromBirth(person.birthDate) || "-";
+      const photoSrc = Object.prototype.hasOwnProperty.call(options, "photoSrc")
+        ? (options.photoSrc || "")
+        : (person.photoUrl ? withAuthPhotoUrl(person.photoUrl) : "");
+      const photoHtml = photoSrc
+        ? `<img alt="${escapeHtml(person.name || "")}" src="${escapeHtml(photoSrc)}">`
+        : escapeHtml(initials(person.name));
 
       return `
-  <div class="resume-sheet" style="font-family:'PingFang SC','Microsoft YaHei',sans-serif;color:#101828;line-height:1.6;padding:8px 4px;background:#fff;">
-  <table width="100%" cellspacing="0" cellpadding="0" style="margin-bottom:18px;">
-    <tr>
-      <td width="130" valign="top">${photoHtml}</td>
-      <td valign="middle" style="padding-left:16px;">
-        <h1 style="font-size:22px;margin:0 0 6px;">${wordSafe(person.name)}</h1>
-        <p style="margin:0 0 4px;color:#475467;">${wordSafe(roleLine)}</p>
-        <p style="margin:0;color:#667085;">工号：${wordSafe(person.employeeNo)}　状态：${wordSafe(person.status)}　性别：${wordSafe(person.gender)}</p>
-      </td>
-    </tr>
-  </table>
+        <div class="profile-sheet">
+          <section class="profile-hero">
+            <div class="profile-avatar">${photoHtml}</div>
+            <div class="profile-hero-main">
+              <h2>${escapeHtml(person.name || "-")}</h2>
+              ${person.englishName ? `<p class="profile-role">${escapeHtml(person.englishName)}</p>` : ""}
+              <p class="profile-role">${escapeHtml(roleLine)}</p>
+              <div class="profile-meta-row">
+                <span class="profile-chip profile-status">${escapeHtml(person.status || "-")}</span>
+                <span class="profile-chip">工号 <strong>${escapeHtml(person.employeeNo || "-")}</strong></span>
+                <span class="profile-chip">${escapeHtml(person.gender || "-")}${ageText !== "-" ? ` · ${escapeHtml(ageText)}岁` : ""}</span>
+                <span class="profile-chip">${escapeHtml(person.hometown || "籍贯待完善")}</span>
+                <span class="profile-chip">${escapeHtml(person.education || "学历待完善")}</span>
+                <span class="profile-chip">${escapeHtml(person.currentProject || "当前项目待完善")}</span>
+              </div>
+            </div>
+          </section>
 
-  <h2 style="font-size:15px;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #0d9488;color:#0f766e;">核心概览</h2>
-  <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:12px;">
-    ${wordRows([
-      ["工作年限", formatYears(person.firstWorkDate)],
-      ["产品经验年限", formatYears(person.appleStartDate)],
-      ["产品经历数", String((person.products || []).length)],
-      ["技能标签", skills]
-    ])}
-  </table>
+          <div class="profile-body">
+            <div class="profile-stats">
+              <div class="profile-stat"><span>工作年限</span><strong>${escapeHtml(formatYears(person.firstWorkDate))}</strong></div>
+              <div class="profile-stat"><span>产品经验</span><strong>${escapeHtml(formatYears(person.appleStartDate))}</strong></div>
+              <div class="profile-stat"><span>产品经历</span><strong>${(person.products || []).length}</strong></div>
+              <div class="profile-stat"><span>技能标签</span><strong>${skills.length}</strong></div>
+            </div>
 
-  <h2 style="font-size:15px;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #0d9488;color:#0f766e;">基础信息</h2>
-  <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:12px;">
-    ${wordRows([
-      ["所属分类", person.category || "未分类"],
-      ["科室 / 小组", person.department],
-      ["岗位", person.position],
-      ["职称", person.titleLevel],
-      ["工号", person.employeeNo],
-      ["状态", person.status],
-      ["性别", person.gender],
-      ["出生日期", formatDate(person.birthDate)],
-      ["年龄", person.age || calcAgeFromBirth(person.birthDate) || "-"],
-      ["籍贯", person.hometown],
-      ["学历", person.education],
-      ["英语水平", englishLevelLabel(person.englishLevel)],
-      ["入职时间", formatDate(person.joinDate)],
-      ["常驻基地", person.baseLocation],
-      ["电话", person.phone],
-      ["邮箱", person.email],
-      ["证书 / 资质", person.certificates]
-    ])}
-  </table>
+            <div class="profile-section-grid">
+              <section class="profile-card">
+                <h4 class="profile-card-title"><span class="profile-card-kicker">身份背景</span></h4>
+                <div class="full-info-grid cols-2">
+                  ${infoItem("英文名", person.englishName)}
+                  ${infoItem("性别", person.gender)}
+                  ${infoItem("出生日期", formatDate(person.birthDate))}
+                  ${infoItem("年龄", ageText)}
+                  ${infoItem("籍贯", person.hometown)}
+                  ${infoItem("学历", person.education)}
+                  ${infoItem("英语水平", englishLevelLabel(person.englishLevel))}
+                  ${infoItem("电话", person.phone)}
+                  ${infoItem("邮箱", person.email)}
+                </div>
+              </section>
 
-  <h2 style="font-size:15px;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #0d9488;color:#0f766e;">教育与经验</h2>
-  <table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:12px;">
-    ${wordRows([
-      ["毕业学校", person.school],
-      ["毕业时间", formatDate(person.graduationDate)],
-      ["专业", person.major],
-      ["工作时间", formatDate(person.firstWorkDate)],
-      ["产品经验开始", formatDate(person.appleStartDate)],
-      ["产品经验年限", formatYears(person.appleStartDate)]
-    ])}
-  </table>
+              <section class="profile-card">
+                <h4 class="profile-card-title"><span class="profile-card-kicker">组织信息</span></h4>
+                <div class="full-info-grid cols-2">
+                  ${infoItem("所属分类", person.category || "未分类")}
+                  ${infoItem("科室 / 小组", person.department)}
+                  ${infoItem("岗位", person.position)}
+                  ${infoItem("职称", person.titleLevel)}
+                  ${infoItem("当前项目", person.currentProject)}
+                  ${infoItem("入职时间", formatDate(person.joinDate))}
+                  ${infoItem("常驻基地", person.baseLocation)}
+                  ${infoItem("工号", person.employeeNo)}
+                  ${infoItem("状态", person.status)}
+                </div>
+              </section>
+            </div>
 
-  <h2 style="font-size:15px;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #0d9488;color:#0f766e;">自定义项目</h2>
-  ${customHtml}
+            <section class="profile-card">
+              <h4 class="profile-card-title"><span class="profile-card-kicker">教育与经验</span></h4>
+              <div class="full-info-grid">
+                ${infoItem("毕业学校", person.school)}
+                ${infoItem("毕业时间", formatDate(person.graduationDate))}
+                ${infoItem("专业", person.major)}
+                ${infoItem("工作时间", formatDate(person.firstWorkDate))}
+                ${infoItem("产品经验开始", formatDate(person.appleStartDate))}
+                ${infoItem("证书 / 资质", person.certificates)}
+              </div>
+            </section>
 
-  <h2 style="font-size:15px;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #0d9488;color:#0f766e;">过往产品信息</h2>
-  ${productHtml}
+            <section class="profile-card">
+              <h4 class="profile-card-title"><span class="profile-card-kicker">技能标签</span></h4>
+              ${skillHtml}
+            </section>
 
-  <h2 style="font-size:15px;margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid #0d9488;color:#0f766e;">备注</h2>
-  <p style="margin:0 0 8px;">${wordSafe(person.remark || "暂无备注")}</p>
+            <section class="profile-card">
+              <h4 class="profile-card-title"><span class="profile-card-kicker">过往产品信息</span></h4>
+              <div class="experience-list">${productItems || "<div class='profile-empty'>暂无产品经历</div>"}</div>
+            </section>
 
-  <p style="margin-top:28px;color:#98a2b3;font-size:11px;">导出时间：${new Date().toLocaleString("zh-CN")} · 研发人才库</p>
-  </div>`;
+            <section class="profile-card">
+              <h4 class="profile-card-title"><span class="profile-card-kicker">自定义项目</span></h4>
+              <div class="full-info-grid">${customItems || "<div class='profile-empty'>暂无自定义项目</div>"}</div>
+            </section>
+
+            <section class="profile-card">
+              <h4 class="profile-card-title"><span class="profile-card-kicker">备注</span></h4>
+              <p class="profile-remark">${escapeHtml(person.remark || "暂无备注")}</p>
+            </section>
+          </div>
+        </div>
+      `;
     }
 
     function loadScriptOnce(src) {
@@ -3075,38 +3136,104 @@
       const safeName = String(person.name || "人才档案").replace(/[\\/:*?"<>|]/g, "_");
       const safeNo = String(person.employeeNo || "no-id").replace(/[\\/:*?"<>|]/g, "_");
       const filename = `${safeName}-${safeNo}-人才档案.pdf`;
+
+      const photoDataUrl = await resolvePhotoDataUrl(person.photoUrl || "");
+      const sheetHtml = buildProfileSheetHtml(person, { photoSrc: photoDataUrl });
+      const styleText = [...document.querySelectorAll("style")].map(node => node.textContent || "").join("\n");
+
       const host = document.createElement("div");
-      host.style.cssText = "position:fixed;left:-12000px;top:0;width:794px;background:#fff;z-index:-1;";
+      host.id = "pdf-capture-root";
+      host.innerHTML = `
+        <style>
+          ${styleText}
+          #pdf-capture-root, #pdf-capture-root * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          #pdf-capture-root { background: #f5f5f7; color: #1d1d1f; }
+          #pdf-capture-root .profile-sheet { background: transparent; }
+          #pdf-capture-root .profile-hero { margin: 12px; }
+          #pdf-capture-root .profile-body { padding-bottom: 8px; }
+        </style>
+        ${sheetHtml}
+        <p style="margin:8px 12px 16px;color:#6e6e73;font-size:11px;">导出时间：${new Date().toLocaleString("zh-CN")} · U01-A BG 研发人才库管理系统</p>
+      `;
+      Object.assign(host.style, {
+        position: "fixed",
+        left: "0",
+        top: "0",
+        width: "794px",
+        background: "#f5f5f7",
+        zIndex: "2147483646",
+        opacity: "1",
+        pointerEvents: "none",
+        transform: "translateX(0)"
+      });
+
+      const veil = document.createElement("div");
+      Object.assign(veil.style, {
+        position: "fixed",
+        inset: "0",
+        background: "rgba(255,255,255,.92)",
+        zIndex: "2147483645",
+        display: "grid",
+        placeItems: "center",
+        fontFamily: "-apple-system,BlinkMacSystemFont,PingFang SC,sans-serif",
+        color: "#1d1d1f",
+        fontSize: "14px"
+      });
+      veil.textContent = "正在生成 PDF…";
+
+      document.body.appendChild(veil);
+      document.body.appendChild(host);
+
       try {
-        const photoDataUrl = await resolvePhotoDataUrl(person.photoUrl || "");
-        host.innerHTML = buildPersonResumeHtml(person, photoDataUrl);
-        document.body.appendChild(host);
+        await waitForImages(host);
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         await loadScriptOnce("https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js");
         if (!window.html2pdf) throw new Error("PDF 组件不可用");
+
+        const captureTarget = host.querySelector(".profile-sheet") || host;
         await window.html2pdf().set({
-          margin: [10, 12, 10, 12],
+          margin: [8, 8, 8, 8],
           filename,
-          image: { type: "jpeg", quality: 0.96 },
-          html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: "#ffffff" },
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            logging: false,
+            backgroundColor: "#f5f5f7",
+            windowWidth: 794,
+            onclone: (doc) => {
+              const cloned = doc.getElementById("pdf-capture-root");
+              if (cloned) {
+                cloned.style.opacity = "1";
+                cloned.style.left = "0";
+                cloned.style.top = "0";
+                cloned.style.position = "static";
+                cloned.style.width = "794px";
+              }
+            }
+          },
           jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-          pagebreak: { mode: ["css", "legacy"] }
-        }).from(host).save();
+          pagebreak: { mode: ["avoid-all", "css", "legacy"] }
+        }).from(captureTarget).save();
       } catch (error) {
         console.error(error);
         try {
           const win = window.open("", "_blank", "noopener,noreferrer");
           if (!win) throw new Error("弹窗被拦截");
-          win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${wordSafe(filename)}</title>
-            <style>@page{size:A4;margin:12mm}body{margin:0;background:#fff}</style></head><body>${host.innerHTML || buildPersonResumeHtml(person)}</body></html>`);
+          win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(filename)}</title>
+            <style>@page{size:A4;margin:10mm}${styleText}body{margin:0;background:#f5f5f7}.profile-dialog,.modal-body{max-height:none!important;overflow:visible!important}</style></head>
+            <body>${sheetHtml}<p style="margin:8px 12px 16px;color:#6e6e73;font-size:11px;">导出时间：${new Date().toLocaleString("zh-CN")} · U01-A BG 研发人才库管理系统</p></body></html>`);
           win.document.close();
           win.focus();
-          setTimeout(() => win.print(), 350);
+          setTimeout(() => win.print(), 400);
         } catch (fallbackError) {
           console.error(fallbackError);
-          alert("导出 PDF 失败，请检查网络后重试；或允许浏览器弹窗后重试。");
+          alert("导出 PDF 失败，请检查网络后重试；或允许浏览器弹窗后选择“存储为 PDF”。");
         }
       } finally {
         host.remove();
+        veil.remove();
       }
     }
 
@@ -3125,13 +3252,14 @@
         return;
       }
       const headers = [
-        "姓名", "工号", "性别", "年龄", "籍贯", "学历", "英语水平", "职称",
+        "姓名", "英文名", "工号", "性别", "年龄", "籍贯", "学历", "英语水平", "职称", "当前项目",
         "毕业学校", "专业", "毕业时间", "入职时间", "工作时间", "产品经验开始",
         "工作年限", "产品经验年限", "所属分类", "科室/小组", "岗位", "状态",
         "常驻基地", "技能", "证书/资质", "电话", "邮箱", "备注"
       ];
       const rows = list.map(person => [
         person.name,
+        person.englishName,
         person.employeeNo,
         person.gender,
         person.age || calcAgeFromBirth(person.birthDate),
@@ -3139,6 +3267,7 @@
         person.education,
         englishLevelLabel(person.englishLevel),
         person.titleLevel,
+        person.currentProject,
         person.school,
         person.major,
         formatDate(person.graduationDate),
@@ -3190,120 +3319,7 @@
       if (!person) return;
       currentProfileId = person.id;
       els.profileTitle.textContent = `${person.name || "人才"} · 完整档案`;
-
-      const skills = person.skills || [];
-      const skillHtml = skills.length
-        ? `<div class="skill-pills">${skills.map(skill => `<span class="skill-pill">${escapeHtml(skill)}</span>`).join("")}</div>`
-        : `<div class="profile-empty">暂无技能标签</div>`;
-
-      const productItems = (person.products || []).map(item => `
-        <div class="experience-item">
-          <div class="experience-top">
-            <strong>${escapeHtml(item.name || "-")}</strong>
-            <span class="experience-tag ${item.appleRelated ? "" : "is-muted"}">${item.appleRelated ? "产品相关" : "其他产品"}</span>
-          </div>
-          <div class="experience-sub">${escapeHtml(item.type || "-")} · ${escapeHtml(item.company || "-")} · ${escapeHtml(item.role || "-")}</div>
-          <div class="experience-sub">${formatDate(item.startDate)} 至 ${formatDate(item.endDate)}</div>
-          <div class="experience-copy">${escapeHtml(item.responsibilities || "暂无职责描述")}</div>
-          <div class="experience-sub">成果：${escapeHtml(item.achievements || "暂无项目成果")}</div>
-        </div>
-      `).join("");
-
-      const customItems = (person.customFields || []).map(item => infoItem(item.name || "-", item.value || "-")).join("");
-      const roleLine = [person.category, person.department, person.position].filter(Boolean).join(" · ") || "岗位待完善";
-      const ageText = person.age || calcAgeFromBirth(person.birthDate) || "-";
-
-      els.profileBody.innerHTML = `
-        <div class="profile-sheet">
-          <section class="profile-hero">
-            <div class="profile-avatar">
-              ${person.photoUrl ? `<img alt="${escapeHtml(person.name)}" src="${escapeHtml(withAuthPhotoUrl(person.photoUrl))}">` : escapeHtml(initials(person.name))}
-            </div>
-            <div class="profile-hero-main">
-              <h2>${escapeHtml(person.name || "-")}</h2>
-              <p class="profile-role">${escapeHtml(roleLine)}</p>
-              <div class="profile-meta-row">
-                <span class="profile-chip profile-status">${escapeHtml(person.status || "-")}</span>
-                <span class="profile-chip">工号 <strong>${escapeHtml(person.employeeNo || "-")}</strong></span>
-                <span class="profile-chip">${escapeHtml(person.gender || "-")}${ageText !== "-" ? ` · ${escapeHtml(ageText)}岁` : ""}</span>
-                <span class="profile-chip">${escapeHtml(person.hometown || "籍贯待完善")}</span>
-                <span class="profile-chip">${escapeHtml(person.education || "学历待完善")}</span>
-              </div>
-            </div>
-          </section>
-
-          <div class="profile-body">
-            <div class="profile-stats">
-              <div class="profile-stat"><span>工作年限</span><strong>${escapeHtml(formatYears(person.firstWorkDate))}</strong></div>
-              <div class="profile-stat"><span>产品经验</span><strong>${escapeHtml(formatYears(person.appleStartDate))}</strong></div>
-              <div class="profile-stat"><span>产品经历</span><strong>${(person.products || []).length}</strong></div>
-              <div class="profile-stat"><span>技能标签</span><strong>${skills.length}</strong></div>
-            </div>
-
-            <div class="profile-section-grid">
-              <section class="profile-card">
-                <h4 class="profile-card-title"><span class="profile-card-kicker">身份背景</span></h4>
-                <div class="full-info-grid cols-2">
-                  ${infoItem("性别", person.gender)}
-                  ${infoItem("出生日期", formatDate(person.birthDate))}
-                  ${infoItem("年龄", ageText)}
-                  ${infoItem("籍贯", person.hometown)}
-                  ${infoItem("学历", person.education)}
-                  ${infoItem("英语水平", englishLevelLabel(person.englishLevel))}
-                  ${infoItem("电话", person.phone)}
-                  ${infoItem("邮箱", person.email)}
-                </div>
-              </section>
-
-              <section class="profile-card">
-                <h4 class="profile-card-title"><span class="profile-card-kicker">组织信息</span></h4>
-                <div class="full-info-grid cols-2">
-                  ${infoItem("所属分类", person.category || "未分类")}
-                  ${infoItem("科室 / 小组", person.department)}
-                  ${infoItem("岗位", person.position)}
-                  ${infoItem("职称", person.titleLevel)}
-                  ${infoItem("入职时间", formatDate(person.joinDate))}
-                  ${infoItem("常驻基地", person.baseLocation)}
-                  ${infoItem("工号", person.employeeNo)}
-                  ${infoItem("状态", person.status)}
-                </div>
-              </section>
-            </div>
-
-            <section class="profile-card">
-              <h4 class="profile-card-title"><span class="profile-card-kicker">教育与经验</span></h4>
-              <div class="full-info-grid">
-                ${infoItem("毕业学校", person.school)}
-                ${infoItem("毕业时间", formatDate(person.graduationDate))}
-                ${infoItem("专业", person.major)}
-                ${infoItem("工作时间", formatDate(person.firstWorkDate))}
-                ${infoItem("产品经验开始", formatDate(person.appleStartDate))}
-                ${infoItem("证书 / 资质", person.certificates)}
-              </div>
-            </section>
-
-            <section class="profile-card">
-              <h4 class="profile-card-title"><span class="profile-card-kicker">技能标签</span></h4>
-              ${skillHtml}
-            </section>
-
-            <section class="profile-card">
-              <h4 class="profile-card-title"><span class="profile-card-kicker">过往产品信息</span></h4>
-              <div class="experience-list">${productItems || "<div class='profile-empty'>暂无产品经历</div>"}</div>
-            </section>
-
-            <section class="profile-card">
-              <h4 class="profile-card-title"><span class="profile-card-kicker">自定义项目</span></h4>
-              <div class="full-info-grid">${customItems || "<div class='profile-empty'>暂无自定义项目</div>"}</div>
-            </section>
-
-            <section class="profile-card">
-              <h4 class="profile-card-title"><span class="profile-card-kicker">备注</span></h4>
-              <p class="profile-remark">${escapeHtml(person.remark || "暂无备注")}</p>
-            </section>
-          </div>
-        </div>
-      `;
+      els.profileBody.innerHTML = buildProfileSheetHtml(person);
       els.profileDialog.showModal();
     }
 
@@ -3338,6 +3354,8 @@
       getField("talentId").value = person?.id || "";
       getField("employeeNo").value = person?.employeeNo || "";
       getField("name").value = person?.name || "";
+      getField("englishName").value = person?.englishName || "";
+      getField("currentProject").value = person?.currentProject || "";
       getField("gender").value = person?.gender === "女" ? "女" : "男";
       getField("status").value = person?.status || "在职";
       getField("birthDate").value = normalizeDate(person?.birthDate);
@@ -3553,6 +3571,8 @@
           id,
           employeeNo,
           name: getField("name").value.trim(),
+          englishName: getField("englishName").value.trim(),
+          currentProject: getField("currentProject").value.trim(),
           gender: getField("gender").value,
           status: getField("status").value,
           birthDate: normalizeDate(getField("birthDate").value),
