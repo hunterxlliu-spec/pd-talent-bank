@@ -1454,25 +1454,119 @@
     body:not(.is-locked) .login-gate {
       display: none;
     }
+
+    .current-user-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 32px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #eef6f4;
+      color: #0f766e;
+      font-size: var(--fs-xs);
+      font-weight: 700;
+      border: 1px solid rgba(15, 118, 110, .18);
+    }
+
+    .admin-dialog,
+    .password-dialog {
+      width: min(720px, calc(100vw - 28px));
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .password-dialog {
+      width: min(420px, calc(100vw - 28px));
+    }
+
+    .admin-dialog .modal-body,
+    .password-dialog .modal-body {
+      display: grid;
+      gap: 14px;
+    }
+
+    .admin-user-form {
+      display: grid;
+      grid-template-columns: 1.1fr 1.2fr auto;
+      gap: 10px;
+      align-items: end;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #f8fafc;
+    }
+
+    .admin-user-table-wrap {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: auto;
+      max-height: 360px;
+      background: #fff;
+    }
+
+    .admin-user-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 520px;
+    }
+
+    .admin-user-table th,
+    .admin-user-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #edf0f4;
+      text-align: left;
+      font-size: var(--fs-sm);
+    }
+
+    .admin-user-table th {
+      background: #f9fafc;
+      color: #475467;
+      font-size: var(--fs-xs);
+      position: sticky;
+      top: 0;
+    }
+
+    .admin-hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: var(--fs-xs);
+      line-height: 1.5;
+    }
+
+    .admin-empty {
+      padding: 18px;
+      color: var(--muted);
+      font-size: var(--fs-sm);
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      .admin-user-form {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body class="is-locked">
-  <div class="login-gate" id="loginGate" aria-label="管理员登录">
+  <div class="login-gate" id="loginGate" aria-label="账号登录">
     <div class="login-panel">
       <div class="login-brand">
         <div class="login-mark" aria-hidden="true">R</div>
         <h1 class="login-brand-name">研发人才库</h1>
-        <p class="login-title">管理员登录</p>
-        <p class="login-copy">仅授权账号可进入人才库。请使用 admin 账户完成身份验证。</p>
+        <p class="login-title">账号登录</p>
+        <p class="login-copy">管理员使用 admin；普通用户使用工号登录。默认密码 RDadmin2026，首次登录需修改。</p>
       </div>
       <form class="login-form" id="loginForm" autocomplete="on">
         <div class="login-field">
-          <label for="loginUsername">账号</label>
-          <input id="loginUsername" name="username" type="text" autocomplete="username" placeholder="admin" required>
+          <label for="loginUsername">账号 / 工号</label>
+          <input id="loginUsername" name="username" type="text" autocomplete="username" placeholder="admin 或工号" required>
         </div>
         <div class="login-field">
           <label for="loginPassword">密码</label>
-          <input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="请输入管理员密码" required>
+          <input id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="请输入密码" required>
         </div>
         <p class="login-error" id="loginError" role="alert"></p>
         <button class="login-submit" type="submit" id="loginSubmit">进入人才库</button>
@@ -1524,6 +1618,8 @@
           <p>覆盖结构 / 硬件 / 声学等研发部门 · 个人档案可导出 Word</p>
         </div>
         <div class="actions">
+          <span class="current-user-chip" id="currentUserChip" hidden>未登录</span>
+          <button class="btn" id="usersAdminBtn" title="用户管理" hidden>用户管理</button>
           <button class="btn" id="importBtn" title="导入 JSON">导入</button>
           <button class="btn" id="exportBtn" title="导出全部 JSON">导出JSON</button>
           <button class="btn primary" id="addBtn">新增人才</button>
@@ -1716,6 +1812,69 @@
     <div class="modal-body" id="profileBody"></div>
   </dialog>
 
+  <dialog id="usersAdminDialog" class="admin-dialog">
+    <div class="modal-head">
+      <h3>用户管理</h3>
+      <button class="btn icon" type="button" id="closeUsersAdminDialog" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="admin-hint">
+        仅超级管理员 <strong>admin</strong> 可添加/删除用户。用户名使用<strong>工号</strong>，默认密码 <strong>RDadmin2026</strong>，首次登录须改密。
+      </p>
+      <form class="admin-user-form" id="addUserForm">
+        <div class="field">
+          <label for="newUserEmployeeNo">工号（用户名）</label>
+          <input id="newUserEmployeeNo" required placeholder="如 0964878" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="newUserName">姓名</label>
+          <input id="newUserName" required placeholder="如 刘显理" autocomplete="off">
+        </div>
+        <button class="btn primary" type="submit" id="addUserSubmit">添加用户</button>
+      </form>
+      <div class="admin-user-table-wrap">
+        <table class="admin-user-table">
+          <thead>
+            <tr>
+              <th>工号</th>
+              <th>姓名</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="adminUserRows"></tbody>
+        </table>
+        <div class="admin-empty" id="adminUserEmpty" hidden>暂无普通用户，请先添加</div>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="passwordDialog" class="password-dialog">
+    <div class="modal-head">
+      <h3 id="passwordDialogTitle">修改密码</h3>
+      <button class="btn icon" type="button" id="closePasswordDialog" aria-label="关闭" hidden>×</button>
+    </div>
+    <form class="modal-body" id="passwordForm">
+      <p class="admin-hint" id="passwordHint">首次登录请设置新密码后继续使用。</p>
+      <div class="field">
+        <label for="currentPasswordInput">当前密码</label>
+        <input id="currentPasswordInput" type="password" autocomplete="current-password" required>
+      </div>
+      <div class="field">
+        <label for="newPasswordInput">新密码</label>
+        <input id="newPasswordInput" type="password" autocomplete="new-password" minlength="6" required>
+      </div>
+      <div class="field">
+        <label for="confirmPasswordInput">确认新密码</label>
+        <input id="confirmPasswordInput" type="password" autocomplete="new-password" minlength="6" required>
+      </div>
+      <p class="login-error" id="passwordError" role="alert"></p>
+      <div class="row-actions">
+        <button class="btn primary" type="submit" id="passwordSubmit">保存新密码</button>
+      </div>
+    </form>
+  </dialog>
+
   <script>
     const STORAGE_KEY = "talent-bank-records-v1";
     const CATEGORIES_KEY = "talent-bank-categories-v1";
@@ -1730,7 +1889,11 @@
 
     let authToken = sessionStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(AUTH_TOKEN_KEY) || "";
     let authUsername = "";
+    let authName = "";
+    let authRole = "";
+    let mustChangePassword = false;
     let appStarted = false;
+    const DEFAULT_USER_PASSWORD = "RDadmin2026";
 
     function setAuthToken(token) {
       authToken = token || "";
@@ -1741,6 +1904,43 @@
         sessionStorage.removeItem(AUTH_TOKEN_KEY);
         localStorage.removeItem(AUTH_TOKEN_KEY);
       }
+    }
+
+    function applyAuthProfile(data = {}) {
+      authUsername = data.username || "";
+      authName = data.name || (authUsername === "admin" ? "超级管理员" : "");
+      authRole = data.role || "";
+      mustChangePassword = Boolean(data.mustChangePassword);
+      updateAuthChrome();
+    }
+
+    function clearAuthProfile() {
+      authUsername = "";
+      authName = "";
+      authRole = "";
+      mustChangePassword = false;
+      updateAuthChrome();
+    }
+
+    function isSuperAdmin() {
+      return authRole === "superadmin" || authUsername === "admin";
+    }
+
+    function updateAuthChrome() {
+      const chip = document.querySelector("#currentUserChip");
+      const usersBtn = document.querySelector("#usersAdminBtn");
+      if (chip) {
+        if (authUsername) {
+          chip.hidden = false;
+          chip.textContent = authName
+            ? `${authName} · ${authUsername}`
+            : authUsername;
+        } else {
+          chip.hidden = true;
+          chip.textContent = "未登录";
+        }
+      }
+      if (usersBtn) usersBtn.hidden = !isSuperAdmin();
     }
 
     function authHeaders(extra = {}) {
@@ -1755,6 +1955,7 @@
       const res = await fetch(url, next);
       if (res.status === 401) {
         setAuthToken("");
+        clearAuthProfile();
         showLogin("登录已过期，请重新登录");
         throw new Error("未授权，请先登录");
       }
@@ -1786,6 +1987,7 @@
       document.body.classList.remove("is-locked");
       const errorEl = document.querySelector("#loginError");
       if (errorEl) errorEl.textContent = "";
+      updateAuthChrome();
     }
 
     async function verifySession() {
@@ -1798,9 +2000,10 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
           setAuthToken("");
+          clearAuthProfile();
           return false;
         }
-        authUsername = data.username || "admin";
+        applyAuthProfile(data);
         return true;
       } catch {
         return false;
@@ -1816,7 +2019,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "登录失败");
       setAuthToken(data.token);
-      authUsername = data.username || username;
+      applyAuthProfile(data);
       return data;
     }
 
@@ -1830,8 +2033,122 @@
         }
       } catch {}
       setAuthToken("");
-      authUsername = "";
+      clearAuthProfile();
+      document.querySelector("#usersAdminDialog")?.close();
+      document.querySelector("#passwordDialog")?.close();
       showLogin("");
+    }
+
+    async function ensurePasswordChanged() {
+      if (!mustChangePassword) return true;
+      return openPasswordDialog({ forced: true });
+    }
+
+    function openPasswordDialog({ forced = false } = {}) {
+      return new Promise((resolve) => {
+        const dialog = document.querySelector("#passwordDialog");
+        const form = document.querySelector("#passwordForm");
+        const closeBtn = document.querySelector("#closePasswordDialog");
+        const title = document.querySelector("#passwordDialogTitle");
+        const hint = document.querySelector("#passwordHint");
+        const errorEl = document.querySelector("#passwordError");
+        errorEl.textContent = "";
+        form.reset();
+        title.textContent = forced ? "首次登录修改密码" : "修改密码";
+        hint.textContent = forced
+          ? `当前仍为默认密码 ${DEFAULT_USER_PASSWORD}，请设置专属新密码后再进入系统。`
+          : "请输入当前密码并设置新密码。";
+        closeBtn.hidden = forced;
+
+        const onClose = () => {
+          cleanup();
+          resolve(!mustChangePassword);
+        };
+        const onSubmit = async (event) => {
+          event.preventDefault();
+          const currentPassword = document.querySelector("#currentPasswordInput").value;
+          const newPassword = document.querySelector("#newPasswordInput").value;
+          const confirmPassword = document.querySelector("#confirmPasswordInput").value;
+          errorEl.textContent = "";
+          if (newPassword !== confirmPassword) {
+            errorEl.textContent = "两次输入的新密码不一致";
+            return;
+          }
+          if (newPassword.length < 6) {
+            errorEl.textContent = "新密码至少 6 位";
+            return;
+          }
+          if (newPassword === DEFAULT_USER_PASSWORD) {
+            errorEl.textContent = "请勿继续使用默认密码";
+            return;
+          }
+          const submitBtn = document.querySelector("#passwordSubmit");
+          submitBtn.disabled = true;
+          try {
+            const res = await apiFetch(`${API_BASE}/auth/change-password`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ currentPassword, newPassword })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || "修改失败");
+            mustChangePassword = false;
+            dialog.close();
+            resolve(true);
+          } catch (error) {
+            errorEl.textContent = error?.message || "修改失败";
+          } finally {
+            submitBtn.disabled = false;
+          }
+        };
+        function cleanup() {
+          form.removeEventListener("submit", onSubmit);
+          closeBtn.removeEventListener("click", onCloseClick);
+          dialog.removeEventListener("close", onClose);
+        }
+        function onCloseClick() {
+          if (forced) return;
+          dialog.close();
+        }
+        form.addEventListener("submit", onSubmit);
+        closeBtn.addEventListener("click", onCloseClick);
+        dialog.addEventListener("close", onClose, { once: true });
+        dialog.addEventListener("cancel", (event) => {
+          if (forced) event.preventDefault();
+        });
+        dialog.showModal();
+        document.querySelector("#currentPasswordInput").focus();
+      });
+    }
+
+    async function loadAdminUsers() {
+      const res = await apiFetch(`${API_BASE}/admin/users`, { cache: "no-store" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "加载用户失败");
+      const rows = document.querySelector("#adminUserRows");
+      const empty = document.querySelector("#adminUserEmpty");
+      const users = data.users || [];
+      rows.innerHTML = users.map(user => `
+        <tr data-username="${escapeHtml(user.username)}">
+          <td><strong>${escapeHtml(user.username)}</strong></td>
+          <td>${escapeHtml(user.name || "-")}</td>
+          <td>${user.mustChangePassword ? "待改密" : "已激活"}</td>
+          <td>
+            <button class="btn danger" type="button" data-action="delete-user" data-username="${escapeHtml(user.username)}">删除</button>
+          </td>
+        </tr>
+      `).join("");
+      empty.hidden = users.length > 0;
+      return data;
+    }
+
+    async function openUsersAdminDialog() {
+      if (!isSuperAdmin()) {
+        alert("仅超级管理员可管理用户");
+        return;
+      }
+      await loadAdminUsers();
+      document.querySelector("#usersAdminDialog").showModal();
     }
 
     const seedTalents = [
@@ -3092,6 +3409,60 @@
       await logout();
     });
 
+    document.querySelector("#usersAdminBtn").addEventListener("click", async () => {
+      try {
+        await openUsersAdminDialog();
+      } catch (error) {
+        alert(error?.message || "无法打开用户管理");
+      }
+    });
+
+    document.querySelector("#closeUsersAdminDialog").addEventListener("click", () => {
+      document.querySelector("#usersAdminDialog").close();
+    });
+
+    document.querySelector("#addUserForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const employeeNo = document.querySelector("#newUserEmployeeNo").value.trim();
+      const name = document.querySelector("#newUserName").value.trim();
+      const submitBtn = document.querySelector("#addUserSubmit");
+      submitBtn.disabled = true;
+      try {
+        const res = await apiFetch(`${API_BASE}/admin/users`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: employeeNo, name })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "添加失败");
+        document.querySelector("#addUserForm").reset();
+        await loadAdminUsers();
+        alert(`已添加 ${name}（${employeeNo}）\n默认密码：${data.defaultPassword || DEFAULT_USER_PASSWORD}\n请提醒对方首次登录后修改密码。`);
+      } catch (error) {
+        alert(error?.message || "添加失败");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+
+    document.querySelector("#adminUserRows").addEventListener("click", async event => {
+      const btn = event.target.closest("[data-action='delete-user']");
+      if (!btn) return;
+      const username = btn.dataset.username;
+      if (!username) return;
+      if (!confirm(`确认删除用户 ${username} 吗？`)) return;
+      try {
+        const res = await apiFetch(`${API_BASE}/admin/users/${encodeURIComponent(username)}`, {
+          method: "DELETE"
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "删除失败");
+        await loadAdminUsers();
+      } catch (error) {
+        alert(error?.message || "删除失败");
+      }
+    });
+
     document.querySelector("#loginForm").addEventListener("submit", async event => {
       event.preventDefault();
       const username = document.querySelector("#loginUsername").value.trim();
@@ -3105,6 +3476,11 @@
         await login(username, password);
         document.querySelector("#loginPassword").value = "";
         showApp();
+        const ok = await ensurePasswordChanged();
+        if (!ok) {
+          await logout();
+          return;
+        }
         await startApp();
       } catch (error) {
         errorEl.textContent = error?.message || "登录失败";
@@ -3115,6 +3491,13 @@
     });
 
     async function startApp() {
+      if (mustChangePassword) {
+        const ok = await ensurePasswordChanged();
+        if (!ok) {
+          await logout();
+          return;
+        }
+      }
       if (appStarted) {
         setSyncStatus("同步中");
         talents = await loadTalents();
@@ -3139,11 +3522,18 @@
       const ok = await verifySession();
       if (!ok) {
         showLogin("");
-        document.querySelector("#loginUsername").value = "admin";
-        document.querySelector("#loginPassword").focus();
+        document.querySelector("#loginUsername").value = "";
+        document.querySelector("#loginUsername").focus();
         return;
       }
       showApp();
+      if (mustChangePassword) {
+        const changed = await ensurePasswordChanged();
+        if (!changed) {
+          await logout();
+          return;
+        }
+      }
       await startApp();
     }
 
