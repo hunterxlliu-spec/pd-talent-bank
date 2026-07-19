@@ -1,6 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 78" role="img" aria-label="Goertek">
-  <rect x="0.5" y="0.5" width="279" height="77" rx="14" ry="14" fill="#ffffff" stroke="#e8eaed"/>
-  <text x="140" y="36" text-anchor="middle" font-family="Avenir Next, Helvetica Neue, PingFang SC, Arial Black, sans-serif" font-size="30" font-weight="800" letter-spacing="-0.8" fill="#2b2b2b">Goertek</text>
+  <text x="140" y="36" text-anchor="middle" font-family="Avenir Next, Helvetica Neue, PingFang SC, Arial, sans-serif" font-size="30" font-weight="600" letter-spacing="-0.8" fill="#2b2b2b">Goertek</text>
   <text x="140" y="58" text-anchor="middle" font-family="Avenir Next, Helvetica Neue, PingFang SC, Arial, sans-serif" font-size="11.5" font-weight="500" letter-spacing="0.2">
     <tspan fill="#2b2b2b">We make </tspan><tspan fill="#32c24d" font-weight="700">it</tspan><tspan fill="#2b2b2b"> together</tspan>
   </text>
