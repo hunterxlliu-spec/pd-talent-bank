@@ -112,6 +112,39 @@
       line-height: 1.35;
     }
 
+    /* Electron macOS: clear traffic-light overlap on left titlebar */
+    body.is-macos-app .sidebar {
+      padding-top: 52px;
+    }
+
+    body.is-macos-app .brand {
+      -webkit-app-region: drag;
+      padding-top: 2px;
+    }
+
+    body.is-macos-app .sidebar button,
+    body.is-macos-app .sidebar .nav-item,
+    body.is-macos-app .sidebar a,
+    body.is-macos-app .sidebar input,
+    body.is-macos-app .sidebar select {
+      -webkit-app-region: no-drag;
+    }
+
+    body.is-macos-app .login-gate {
+      padding-top: 56px;
+    }
+
+    body.is-macos-app .topbar {
+      -webkit-app-region: drag;
+    }
+
+    body.is-macos-app .topbar .actions,
+    body.is-macos-app .topbar button,
+    body.is-macos-app .topbar input,
+    body.is-macos-app .topbar a {
+      -webkit-app-region: no-drag;
+    }
+
     .side-stats {
       display: grid;
       gap: 10px;
@@ -1683,6 +1716,15 @@
   </style>
 </head>
 <body class="is-locked">
+  <script>
+    (() => {
+      try {
+        const q = new URLSearchParams(location.search);
+        const isMacApp = q.get("app") === "macos" || /\bElectron\b/i.test(navigator.userAgent || "");
+        if (isMacApp) document.body.classList.add("is-macos-app");
+      } catch {}
+    })();
+  </script>
   <div class="login-gate" id="loginGate" aria-label="账号登录">
     <div class="login-panel">
       <div class="login-brand">
