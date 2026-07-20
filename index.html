@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-pie-legend -->
+  <!-- deploy-bust: 20260720-admin-dialog -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -2493,17 +2493,23 @@
       border: 1px solid rgba(13, 148, 136, .18);
     }
 
-    .admin-dialog,
-    .password-dialog {
-      width: min(720px, calc(100vw - 28px));
+    .admin-dialog {
+      width: min(980px, calc(100vw - 32px));
+      min-width: min(680px, calc(100vw - 32px));
+      max-height: min(92vh, 920px);
       border-radius: 14px;
       border: 1px solid var(--line);
       padding: 0;
-      overflow: hidden;
+      overflow: auto;
+      resize: both;
     }
 
     .password-dialog {
       width: min(420px, calc(100vw - 28px));
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      padding: 0;
+      overflow: hidden;
     }
 
     .move-dialog {
@@ -2536,19 +2542,38 @@
 
     .admin-dialog .modal-body,
     .password-dialog .modal-body {
-      display: grid;
-      gap: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .admin-dialog .modal-body {
+      padding: 20px 24px 24px;
+      max-height: none;
+      overflow: visible;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    .admin-dialog .admin-hint {
+      flex: 0 0 auto;
     }
 
     .admin-user-form {
       display: grid;
-      grid-template-columns: 1.1fr 1.2fr auto;
-      gap: 10px;
+      grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) auto;
+      gap: 12px 16px;
       align-items: end;
-      padding: 12px;
+      padding: 16px;
       border: 1px solid var(--line);
       border-radius: 10px;
       background: #f8fafc;
+      flex: 0 0 auto;
+    }
+
+    .admin-user-form #addUserSubmit {
+      align-self: end;
+      min-width: 108px;
     }
 
     .admin-user-form .admin-cat-field {
@@ -2556,9 +2581,9 @@
     }
 
     .admin-cat-checkboxes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 14px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+      gap: 8px 12px;
       padding: 8px 0 2px;
     }
 
@@ -2610,14 +2635,55 @@
       border: 1px solid var(--line);
       border-radius: 10px;
       overflow: auto;
-      max-height: 420px;
+      flex: 1 1 auto;
+      min-height: 240px;
+      max-height: min(58vh, 620px);
       background: #fff;
     }
 
     .admin-user-table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 640px;
+      min-width: 860px;
+      table-layout: fixed;
+    }
+
+    .admin-user-table th:nth-child(1),
+    .admin-user-table td:nth-child(1) {
+      width: 12%;
+    }
+
+    .admin-user-table th:nth-child(2),
+    .admin-user-table td:nth-child(2) {
+      width: 10%;
+    }
+
+    .admin-user-table th:nth-child(3),
+    .admin-user-table td:nth-child(3) {
+      width: 42%;
+    }
+
+    .admin-user-table th:nth-child(4),
+    .admin-user-table td:nth-child(4) {
+      width: 36%;
+    }
+
+    .admin-user-table .row-ops {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .admin-user-table .row-ops .btn {
+      min-height: 30px;
+      padding: 0 12px;
+      font-size: var(--fs-xs);
+    }
+
+    .admin-user-table td:nth-child(3) > div:first-child {
+      margin-bottom: 4px;
+      line-height: 1.45;
     }
 
     .admin-user-table th,
@@ -2651,8 +2717,22 @@
     }
 
     @media (max-width: 760px) {
+      .admin-dialog {
+        resize: none;
+        width: calc(100vw - 20px);
+        min-width: 0;
+      }
+
       .admin-user-form {
         grid-template-columns: 1fr;
+      }
+
+      .admin-user-form #addUserSubmit {
+        width: 100%;
+      }
+
+      .admin-cat-checkboxes {
+        grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
       }
     }
   </style>
