@@ -4953,6 +4953,14 @@
       return years ? `${years.toFixed(1)} 年` : "-";
     }
 
+    function formatTenureYears(dateValue) {
+      // 司龄：按入职公司时间（joinDate）计算，缺失则显示 "-"
+      const iso = normalizeDate(dateValue);
+      if (!iso) return "-";
+      const years = yearsSince(iso);
+      return `${years.toFixed(1)} 年`;
+    }
+
     function formatDate(dateValue) {
       if (!dateValue) return "-";
       return normalizeDate(dateValue) || "-";
@@ -5804,6 +5812,7 @@
                   ${infoItem("职级", person.jobGrade)}
                   ${infoItem("当前项目", person.currentProject)}
                   ${infoItem("入职时间", formatDate(person.joinDate))}
+                  ${infoItem("司龄", formatTenureYears(person.joinDate))}
                   ${infoItem("常驻基地", person.baseLocation)}
                   ${infoItem("工号", person.employeeNo)}
                   ${infoItem("状态", person.status)}
@@ -6175,7 +6184,7 @@
       const headers = [
         "姓名", "英文名", "工号", "性别", "年龄", "职级", "籍贯", "学历", "英语水平", "当前项目",
         "毕业学校", "专业", "毕业时间", "入职时间", "工作时间", "产品经验开始",
-        "工作年限", "产品经验年限", "产品经验", "所属分类", "子部门", "岗位", "状态",
+        "司龄", "工作年限", "产品经验年限", "产品经验", "所属分类", "子部门", "岗位", "状态",
         "常驻基地", "技能", "证书/资质", "电话", "邮箱", "备注"
       ];
       const rows = list.map(person => [
@@ -6195,6 +6204,7 @@
         formatDate(person.joinDate),
         formatDate(person.firstWorkDate),
         formatDate(person.appleStartDate),
+        formatTenureYears(person.joinDate),
         formatYears(person.firstWorkDate),
         formatYears(person.appleStartDate),
         (person.products || []).map(item => productDisplayName(item)).filter(Boolean).join("、"),
