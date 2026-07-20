@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-brand-size -->
+  <!-- deploy-bust: 20260720-pie-legend -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -802,8 +802,8 @@
     }
 
     .edu-pie-wrap {
-      width: min(420px, 100%);
-      aspect-ratio: 420 / 280;
+      width: min(360px, 100%);
+      aspect-ratio: 360 / 250;
     }
 
     .edu-pie-wrap svg {
@@ -814,7 +814,7 @@
     }
 
     .edu-pie-label {
-      font-size: 11px;
+      font-size: 10.5px;
       fill: #44515f;
       font-family: inherit;
     }
@@ -829,7 +829,9 @@
     .edu-pie-leader {
       fill: none;
       stroke: #94a3b8;
-      stroke-width: 1.2;
+      stroke-width: 1.15;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     .edu-pie-empty {
@@ -843,45 +845,70 @@
       font-size: 13px;
     }
 
-    .edu-legend {
-      width: 100%;
-      max-width: 520px;
-      display: grid;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .edu-legend-item {
-      display: grid;
-      grid-template-columns: 14px minmax(0, 1fr) auto;
-      gap: 10px;
-      align-items: center;
+    .edu-legend-table {
+      width: max-content;
+      max-width: 100%;
+      margin: 4px auto 0;
+      border-collapse: separate;
+      border-spacing: 0;
       font-size: 13px;
       color: var(--ink);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .edu-legend-table th,
+    .edu-legend-table td {
+      padding: 7px 12px;
+      white-space: nowrap;
+      text-align: left;
+      border-bottom: 1px solid #eef2f6;
+      vertical-align: middle;
+    }
+
+    .edu-legend-table thead th {
+      background: #f7fafc;
+      color: #667085;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .edu-legend-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .edu-legend-table tbody tr:hover td {
+      background: #fafcfd;
+    }
+
+    .edu-legend-table .col-swatch {
+      width: 1%;
+      padding-right: 4px;
+    }
+
+    .edu-legend-table .col-count,
+    .edu-legend-table .col-percent {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: var(--muted);
+    }
+
+    .edu-legend-table .col-count strong,
+    .edu-legend-table .col-percent strong {
+      color: var(--ink);
+      font-weight: 700;
     }
 
     .edu-legend-swatch {
-      width: 12px;
-      height: 12px;
+      display: inline-block;
+      width: 10px;
+      height: 10px;
       border-radius: 3px;
-      flex-shrink: 0;
-    }
-
-    .edu-legend-label {
-      min-width: 0;
-    }
-
-    .edu-legend-meta {
-      color: var(--muted);
-      white-space: nowrap;
-      font-size: 12px;
-    }
-
-    .edu-legend-meta strong {
-      color: var(--ink);
-      font-weight: 700;
+      vertical-align: middle;
     }
 
     .edu-empty {
@@ -5222,30 +5249,53 @@
       ].join(" ");
     }
 
+    function pieLegendLabel(label) {
+      if (label === "无障碍沟通听说读写") return "无障碍沟通";
+      if (label === "基本沟通读写") return "基本沟通";
+      return label;
+    }
+
+    function buildPieLegendTableHtml(legendItems, chartTitle) {
+      return `
+        <table class="edu-legend-table" aria-label="${escapeHtml(chartTitle)}明细">
+          <thead>
+            <tr>
+              <th class="col-swatch" aria-hidden="true"></th>
+              <th>分类</th>
+              <th class="col-count">人数</th>
+              <th class="col-percent">占比</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${legendItems.map((item, index) => `
+              <tr>
+                <td class="col-swatch"><span class="edu-legend-swatch" style="background:${sliceColor(item.label, index)}"></span></td>
+                <td>${escapeHtml(pieLegendLabel(item.label))}</td>
+                <td class="col-count"><strong>${item.count}</strong></td>
+                <td class="col-percent"><strong>${item.percent}%</strong></td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
     function buildPieChartHtml(distribution, chartTitle = "分布饼图") {
       const slices = distribution.items.filter(item => item.count > 0);
       const legendItems = distribution.items;
       if (!slices.length) {
         return `
           <div class="edu-pie-empty">暂无数据</div>
-          <ul class="edu-legend" aria-label="${escapeHtml(chartTitle)}备注">
-            ${legendItems.map((item, index) => `
-              <li class="edu-legend-item">
-                <span class="edu-legend-swatch" style="background:${sliceColor(item.label, index)}"></span>
-                <span class="edu-legend-label">${escapeHtml(item.label === "无障碍沟通听说读写" ? "无障碍沟通" : item.label)}</span>
-                <span class="edu-legend-meta"><strong>0</strong> · 0%</span>
-              </li>
-            `).join("")}
-          </ul>
+          ${buildPieLegendTableHtml(legendItems, chartTitle)}
         `;
       }
 
       const total = slices.reduce((sum, item) => sum + item.count, 0) || 1;
-      const cx = 210;
-      const cy = 140;
-      const r = 68;
-      const elbowR = r + 14;
-      const labelR = r + 46;
+      const cx = 180;
+      const cy = 125;
+      const r = 72;
+      const elbowR = r + 8;
+      const labelR = r + 26;
       let angle = -Math.PI / 2;
       const sliceMeta = slices.map((item, index) => {
         const sweep = (item.count / total) * Math.PI * 2;
@@ -5270,7 +5320,7 @@
 
       const planned = sliceMeta.map(item => {
         const onRight = Math.cos(item.mid) >= 0;
-        const startPt = polarToCartesian(cx, cy, r * 0.82, item.mid);
+        const startPt = polarToCartesian(cx, cy, r * 0.9, item.mid);
         const elbow = polarToCartesian(cx, cy, elbowR, item.mid);
         const desiredY = polarToCartesian(cx, cy, labelR, item.mid).y;
         return { item, onRight, startPt, elbow, desiredY, labelY: desiredY };
@@ -5279,8 +5329,8 @@
         const onRight = side === "right";
         const group = planned.filter(entry => entry.onRight === onRight).sort((a, b) => a.desiredY - b.desiredY);
         for (let i = 1; i < group.length; i += 1) {
-          if (group[i].labelY - group[i - 1].labelY < 20) {
-            group[i].labelY = group[i - 1].labelY + 20;
+          if (group[i].labelY - group[i - 1].labelY < 18) {
+            group[i].labelY = group[i - 1].labelY + 18;
           }
         }
       });
@@ -5288,35 +5338,29 @@
       const leaders = planned.map(({ item, onRight, startPt, elbow, labelY }) => {
         const labelX = onRight ? cx + labelR : cx - labelR;
         const anchor = onRight ? "start" : "end";
-        const lineEndX = onRight ? labelX - 4 : labelX + 4;
+        const stub = 6;
+        const lineEndX = onRight ? labelX - 3 : labelX + 3;
+        const elbowX = onRight
+          ? Math.min(elbow.x, labelX - stub)
+          : Math.max(elbow.x, labelX + stub);
         const color = sliceColor(item.label, item.colorIndex);
-        const shortLabel = item.label === "无障碍沟通听说读写" ? "无障碍沟通"
-          : item.label === "基本沟通读写" ? "基本沟通"
-          : item.label;
+        const shortLabel = pieLegendLabel(item.label);
         return `
-          <path class="edu-pie-leader" d="M ${startPt.x.toFixed(1)} ${startPt.y.toFixed(1)} L ${elbow.x.toFixed(1)} ${elbow.y.toFixed(1)} L ${lineEndX.toFixed(1)} ${labelY.toFixed(1)}" stroke="${color}"></path>
-          <circle cx="${startPt.x.toFixed(1)}" cy="${startPt.y.toFixed(1)}" r="2.2" fill="${color}"></circle>
-          <text class="edu-pie-label-strong" x="${labelX.toFixed(1)}" y="${(labelY - 2).toFixed(1)}" text-anchor="${anchor}">${escapeHtml(shortLabel)}</text>
-          <text class="edu-pie-label" x="${labelX.toFixed(1)}" y="${(labelY + 11).toFixed(1)}" text-anchor="${anchor}">${item.percent}% · ${item.count}人</text>
+          <path class="edu-pie-leader" d="M ${startPt.x.toFixed(1)} ${startPt.y.toFixed(1)} L ${elbowX.toFixed(1)} ${elbow.y.toFixed(1)} L ${lineEndX.toFixed(1)} ${labelY.toFixed(1)}" stroke="${color}"></path>
+          <circle cx="${startPt.x.toFixed(1)}" cy="${startPt.y.toFixed(1)}" r="2" fill="${color}"></circle>
+          <text class="edu-pie-label-strong" x="${labelX.toFixed(1)}" y="${(labelY - 1).toFixed(1)}" text-anchor="${anchor}">${escapeHtml(shortLabel)}</text>
+          <text class="edu-pie-label" x="${labelX.toFixed(1)}" y="${(labelY + 10).toFixed(1)}" text-anchor="${anchor}">${item.percent}% · ${item.count}人</text>
         `;
       }).join("");
 
       return `
         <div class="edu-pie-wrap">
-          <svg viewBox="0 0 420 280" role="img" aria-label="${escapeHtml(chartTitle)}">
+          <svg viewBox="0 0 360 250" role="img" aria-label="${escapeHtml(chartTitle)}">
             ${paths}
             ${leaders}
           </svg>
         </div>
-        <ul class="edu-legend" aria-label="${escapeHtml(chartTitle)}备注">
-          ${legendItems.map((item, index) => `
-            <li class="edu-legend-item">
-              <span class="edu-legend-swatch" style="background:${sliceColor(item.label, index)}"></span>
-              <span class="edu-legend-label">${escapeHtml(item.label === "无障碍沟通听说读写" ? "无障碍沟通" : item.label)}</span>
-              <span class="edu-legend-meta"><strong>${item.count}</strong> · ${item.percent}%</span>
-            </li>
-          `).join("")}
-        </ul>
+        ${buildPieLegendTableHtml(legendItems, chartTitle)}
       `;
     }
 
