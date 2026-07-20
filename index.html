@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-layout-fit -->
+  <!-- deploy-bust: 20260720-table-scroll -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -679,6 +679,21 @@
       max-width: 100%;
       min-width: 0;
       -webkit-overflow-scrolling: touch;
+      scrollbar-gutter: stable;
+    }
+
+    .table-wrap::-webkit-scrollbar {
+      height: 10px;
+    }
+
+    .table-wrap::-webkit-scrollbar-thumb {
+      background: #c5ced8;
+      border-radius: 999px;
+    }
+
+    .table-wrap::-webkit-scrollbar-track {
+      background: #eef2f6;
+      border-radius: 999px;
     }
 
     .table-scroll-hint {
@@ -688,21 +703,19 @@
     }
 
     table {
-      width: 100%;
-      min-width: 0;
-      table-layout: fixed;
+      width: max-content;
+      min-width: 100%;
+      table-layout: auto;
       border-collapse: collapse;
     }
 
     th, td {
-      padding: 12px 10px;
+      padding: 12px 12px;
       border-bottom: 1px solid #eef1f5;
       text-align: left;
       vertical-align: middle;
       font-size: var(--fs-sm);
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     th {
@@ -716,21 +729,13 @@
       z-index: 1;
     }
 
-    /* Keep list scannable: secondary fields live in 完整档案 */
-    th.col-secondary,
-    td.col-secondary {
-      display: none;
-    }
-
     th.col-person,
     td.col-person {
       position: sticky;
       left: 0;
       z-index: 2;
       background: #fff;
-      width: 34%;
-      min-width: 180px;
-      max-width: none;
+      min-width: 220px;
       white-space: normal;
       box-shadow: 8px 0 12px rgba(15, 23, 42, .04);
     }
@@ -739,21 +744,6 @@
       background: #f9fafc;
       z-index: 4;
     }
-
-    th.col-gender,
-    td.col-gender { width: 7%; }
-    th.col-age,
-    td.col-age { width: 7%; }
-    th.col-education,
-    td.col-education { width: 10%; }
-    th.col-project,
-    td.col-project {
-      width: 18%;
-      white-space: normal;
-      overflow-wrap: anywhere;
-    }
-    th.col-status,
-    td.col-status { width: 10%; }
 
     th.col-actions,
     td.col-actions {
@@ -2398,7 +2388,7 @@
               </div>
             </section>
 
-            <p class="table-scroll-hint">列表展示关键信息；籍贯、英语、职称、学校、入职等详情请点「操作 → 查看档案」</p>
+            <p class="table-scroll-hint">表格较宽时可左右滑动查看更多字段；人才列与操作列会固定在两侧</p>
             <section class="table-wrap" aria-label="人才列表">
               <table>
                 <thead>
