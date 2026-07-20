@@ -3652,6 +3652,46 @@
       });
     }
 
+    function formatExportDate(date = new Date()) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function getJsPdfConstructor() {
+      if (window.jspdf?.jsPDF) return window.jspdf.jsPDF;
+      if (typeof window.jsPDF === "function") return window.jsPDF;
+      return null;
+    }
+
+    async function saveCanvasAsA4Pdf(canvas, filename) {
+      const JsPDF = getJsPdfConstructor();
+      if (!JsPDF) throw new Error("PDF 组件不可用");
+
+      const pdf = new JsPDF({ orientation: "portrait", unit: "mm", format: "a4", compress: true });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 8;
+      const usableWidth = pageWidth - margin * 2;
+      const usableHeight = pageHeight - margin * 2;
+      const imgWidth = usableWidth;
+      const imgHeight = (canvas.height * usableWidth) / canvas.width;
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+
+      let heightLeft = imgHeight;
+      let pageIndex = 0;
+      while (heightLeft > 0.2) {
+        if (pageIndex > 0) pdf.addPage();
+        const y = margin - pageIndex * usableHeight;
+        pdf.addImage(imgData, "JPEG", margin, y, imgWidth, imgHeight, undefined, "FAST");
+        heightLeft -= usableHeight;
+        pageIndex += 1;
+        if (pageIndex > 40) break;
+      }
+      pdf.save(filename);
+    }
+
     async function exportPersonToPdf(person) {
       if (!person) {
         alert("未找到可导出的人才档案。");
@@ -3659,57 +3699,68 @@
       }
       const safeName = String(person.name || "人才档案").replace(/[\\/:*?"<>|]/g, "_");
       const safeNo = String(person.employeeNo || "no-id").replace(/[\\/:*?"<>|]/g, "_");
-      const filename = `${safeName}-${safeNo}-人才档案.pdf`;
+      const exportDate = formatExportDate();
+      const filename = `${safeName}-${safeNo}-${exportDate}.pdf`;
+      const A4_WIDTH_PX = 794;
 
       const photoDataUrl = await resolvePhotoDataUrl(person.photoUrl || "");
       const sheetHtml = buildProfileSheetHtml(person, { photoSrc: photoDataUrl });
-      const styleText = [...document.querySelectorAll("style")].map(node => node.textContent || "").join("\n");
+      const appStyleText = [...document.querySelectorAll("style")]
+        .map(node => node.textContent || "")
+        .join("\n");
 
       const host = document.createElement("div");
       host.id = "pdf-capture-root";
       host.innerHTML = `
         <style>
-          ${styleText}
-          @page { size: A4 portrait; margin: 10mm; }
-          #pdf-capture-root, #pdf-capture-root * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+          ${appStyleText}
+          #pdf-capture-root, #pdf-capture-root * {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            box-sizing: border-box;
+          }
           #pdf-capture-root {
             background: #f5f5f7;
             color: #1d1d1f;
-            width: 210mm;
-            max-width: 210mm;
+            width: ${A4_WIDTH_PX}px;
+            max-width: ${A4_WIDTH_PX}px;
+            overflow: visible !important;
+            max-height: none !important;
+            height: auto !important;
           }
           #pdf-capture-root .pdf-a4-document {
-            width: 100%;
-            padding: 0;
+            width: ${A4_WIDTH_PX}px;
+            max-width: ${A4_WIDTH_PX}px;
+            padding: 16px;
             background: #f5f5f7;
+            overflow: visible !important;
+            max-height: none !important;
+            height: auto !important;
+          }
+          #pdf-capture-root .profile-sheet,
+          #pdf-capture-root .profile-body,
+          #pdf-capture-root .profile-card,
+          #pdf-capture-root .profile-hero,
+          #pdf-capture-root .profile-section-grid {
+            overflow: visible !important;
+            max-height: none !important;
+            height: auto !important;
           }
           #pdf-capture-root .profile-sheet { background: transparent; width: 100%; }
-          #pdf-capture-root .profile-hero { margin: 0 0 12px; break-inside: avoid; page-break-inside: avoid; }
-          #pdf-capture-root .profile-body { padding: 0 0 8px; gap: 12px; }
-          #pdf-capture-root .profile-stats {
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
-          #pdf-capture-root .profile-card {
-            break-inside: avoid;
-            page-break-inside: avoid;
-          }
+          #pdf-capture-root .profile-hero { margin: 0 0 12px; }
+          #pdf-capture-root .profile-body { padding: 0; gap: 12px; }
           #pdf-capture-root .profile-section-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
           }
-          #pdf-capture-root .profile-section-grid > .profile-card {
-            min-width: 0;
-          }
+          #pdf-capture-root .profile-section-grid > .profile-card { min-width: 0; }
           #pdf-capture-root .pdf-footer {
             margin: 12px 0 0;
             padding-top: 8px;
             border-top: 1px solid #e8eef4;
             color: #6e6e73;
             font-size: 11px;
-            break-inside: avoid;
-            page-break-inside: avoid;
           }
         </style>
         <div class="pdf-a4-document">
@@ -3721,13 +3772,14 @@
         position: "fixed",
         left: "0",
         top: "0",
-        width: "210mm",
-        maxWidth: "210mm",
+        width: `${A4_WIDTH_PX}px`,
         background: "#f5f5f7",
         zIndex: "2147483646",
         opacity: "1",
         pointerEvents: "none",
-        transform: "translateX(0)"
+        overflow: "visible",
+        maxHeight: "none",
+        height: "auto"
       });
 
       const veil = document.createElement("div");
@@ -3748,46 +3800,62 @@
       document.body.appendChild(host);
 
       try {
-        await waitForImages(host);
+        await waitForImages(host, 8000);
         await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         await loadScriptOnce("https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js");
         if (!window.html2pdf) throw new Error("PDF 组件不可用");
 
         const captureTarget = host.querySelector(".pdf-a4-document") || host;
-        const captureHeight = Math.max(captureTarget.scrollHeight, captureTarget.offsetHeight);
-        await window.html2pdf().set({
-          margin: [10, 10, 10, 10],
-          filename,
-          image: { type: "jpeg", quality: 0.95 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            logging: false,
-            backgroundColor: "#f5f5f7",
-            width: 794,
-            height: captureHeight,
-            windowWidth: 794,
-            scrollX: 0,
-            scrollY: 0,
-            onclone: (doc) => {
-              const cloned = doc.getElementById("pdf-capture-root");
-              if (cloned) {
-                cloned.style.opacity = "1";
-                cloned.style.left = "0";
-                cloned.style.top = "0";
-                cloned.style.position = "static";
-                cloned.style.width = "210mm";
-                cloned.style.maxWidth = "210mm";
+        const fullHeight = Math.ceil(Math.max(
+          captureTarget.scrollHeight,
+          captureTarget.offsetHeight,
+          captureTarget.getBoundingClientRect().height
+        ));
+
+        const canvas = await window.html2pdf()
+          .set({
+            html2canvas: {
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              logging: false,
+              backgroundColor: "#f5f5f7",
+              width: A4_WIDTH_PX,
+              height: fullHeight,
+              windowWidth: A4_WIDTH_PX,
+              windowHeight: fullHeight,
+              scrollX: 0,
+              scrollY: 0,
+              x: 0,
+              y: 0,
+              onclone: (doc) => {
+                const clonedRoot = doc.getElementById("pdf-capture-root");
+                if (!clonedRoot) return;
+                clonedRoot.style.position = "static";
+                clonedRoot.style.left = "0";
+                clonedRoot.style.top = "0";
+                clonedRoot.style.opacity = "1";
+                clonedRoot.style.width = `${A4_WIDTH_PX}px`;
+                clonedRoot.style.maxHeight = "none";
+                clonedRoot.style.height = "auto";
+                clonedRoot.style.overflow = "visible";
+                const docEl = clonedRoot.querySelector(".pdf-a4-document");
+                if (docEl) {
+                  docEl.style.maxHeight = "none";
+                  docEl.style.height = "auto";
+                  docEl.style.overflow = "visible";
+                }
               }
             }
-          },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
-          pagebreak: {
-            mode: ["css", "legacy"],
-            avoid: [".profile-hero", ".profile-stats", ".profile-card", ".pdf-footer"]
-          }
-        }).from(captureTarget).save();
+          })
+          .from(captureTarget)
+          .toCanvas()
+          .get("canvas");
+
+        if (!canvas || !canvas.width || !canvas.height) {
+          throw new Error("PDF 截图失败");
+        }
+        await saveCanvasAsA4Pdf(canvas, filename);
       } catch (error) {
         console.error(error);
         try {
@@ -3796,10 +3864,15 @@
           win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(filename)}</title>
             <style>
               @page { size: A4 portrait; margin: 10mm; }
-              ${styleText}
-              body { margin: 0; background: #f5f5f7; width: 210mm; max-width: 210mm; }
-              .profile-dialog, .modal-body { max-height: none !important; overflow: visible !important; }
-              .profile-hero, .profile-stats, .profile-card, .pdf-footer { break-inside: avoid; page-break-inside: avoid; }
+              ${appStyleText}
+              html, body { margin: 0; background: #f5f5f7; }
+              body { width: 210mm; max-width: 210mm; }
+              .profile-dialog, .modal-body, .profile-sheet, .profile-body, .profile-card {
+                max-height: none !important;
+                overflow: visible !important;
+                height: auto !important;
+              }
+              .pdf-a4-document { padding: 8px; }
               .pdf-footer { margin: 12px 0 0; padding-top: 8px; border-top: 1px solid #e8eef4; color: #6e6e73; font-size: 11px; }
             </style></head>
             <body><div class="pdf-a4-document">${sheetHtml}<p class="pdf-footer">导出时间：${new Date().toLocaleString("zh-CN")} · U01-A BG 研发人才库管理系统</p></div></body></html>`);
