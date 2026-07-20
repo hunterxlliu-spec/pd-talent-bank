@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-title-en -->
+  <!-- deploy-bust: 20260720-dash-modes -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -393,6 +393,84 @@
       gap: 14px;
     }
 
+    .dash-toolbar {
+      display: grid;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .dash-mode-switch {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 999px;
+      background: #eef3f7;
+      width: fit-content;
+      max-width: 100%;
+    }
+
+    .dash-mode-btn {
+      min-height: 32px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .dash-mode-btn:hover {
+      color: var(--ink);
+    }
+
+    .dash-mode-btn.active {
+      background: #fff;
+      color: var(--brand-strong);
+      box-shadow: 0 1px 4px rgba(15, 23, 42, .08);
+    }
+
+    .dash-scope-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: 12px;
+    }
+
+    .dash-scope-bar .field {
+      flex: 1 1 160px;
+      max-width: 220px;
+    }
+
+    .dash-scope-hint {
+      margin: 0;
+      flex: 1 1 200px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+      padding-bottom: 6px;
+    }
+
+    .dash-scope-vs {
+      align-self: center;
+      min-width: 36px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: rgba(61, 169, 160, .12);
+      color: var(--brand-strong);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
     .dashboard-hero {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -436,39 +514,61 @@
       color: var(--muted);
     }
 
-    .dashboard-edu-card {
-      padding-bottom: 16px;
-    }
-
     .dashboard-pies {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
       min-width: 0;
+      align-items: stretch;
+    }
+
+    .dashboard-pies.is-compare {
+      position: relative;
     }
 
     .dash-pie-card {
       min-width: 0;
       padding-bottom: 14px;
+      display: grid;
+      gap: 6px;
+      align-content: start;
+    }
+
+    .dash-pie-card.is-compare-left {
+      border-color: rgba(91, 141, 239, .28);
+      box-shadow: 0 8px 22px rgba(91, 141, 239, .06);
+    }
+
+    .dash-pie-card.is-compare-right {
+      border-color: rgba(232, 162, 58, .28);
+      box-shadow: 0 8px 22px rgba(232, 162, 58, .06);
     }
 
     .dash-pie-head {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 10px;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     .dash-pie-head h3 {
       margin: 0;
-      font-size: 13px;
-      font-weight: 650;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .dash-pie-kicker {
+      display: block;
+      margin-top: 2px;
+      font-size: 11px;
+      font-weight: 600;
       color: var(--muted);
     }
 
     .dash-pie-head .field {
-      flex: 0 1 168px;
+      flex: 0 1 150px;
       gap: 2px;
     }
 
@@ -2428,23 +2528,55 @@
           </section>
 
           <section class="dashboard-panel" id="dashboardPanel" hidden aria-label="数据看板">
+            <div class="dash-toolbar">
+              <div class="dash-mode-switch" role="tablist" aria-label="看板分析模式">
+                <button class="dash-mode-btn active" type="button" data-dash-mode="overall" role="tab" aria-selected="true">整体分布</button>
+                <button class="dash-mode-btn" type="button" data-dash-mode="single" role="tab" aria-selected="false">单部门</button>
+                <button class="dash-mode-btn" type="button" data-dash-mode="compare" role="tab" aria-selected="false">部门对比</button>
+              </div>
+              <div class="dash-scope-bar" id="dashScopeBar">
+                <div class="field" id="dashSingleDeptField" hidden>
+                  <label for="dashSingleDept">部门</label>
+                  <select id="dashSingleDept"></select>
+                </div>
+                <div class="field" id="dashCompareLeftField" hidden>
+                  <label for="dashCompareLeft">部门 A</label>
+                  <select id="dashCompareLeft"></select>
+                </div>
+                <span class="dash-scope-vs" id="dashCompareVs" hidden>VS</span>
+                <div class="field" id="dashCompareRightField" hidden>
+                  <label for="dashCompareRight">部门 B</label>
+                  <select id="dashCompareRight"></select>
+                </div>
+                <div class="field" id="dashCompareDimField" hidden>
+                  <label for="dashCompareDim">对比维度</label>
+                  <select id="dashCompareDim"></select>
+                </div>
+                <p class="dash-scope-hint" id="dashScopeHint">查看全部可见人才的整体结构分布</p>
+              </div>
+            </div>
+
             <div class="dashboard-hero">
               <article class="dashboard-card">
-                <h3>人才总人数</h3>
+                <h3 id="dashTotalLabel">人才总人数</h3>
                 <p class="dashboard-metric" id="dashTotal">0</p>
                 <p class="dashboard-card-note" id="dashTotalNote">当前权限范围内可见人才</p>
               </article>
               <article class="dashboard-card">
-                <h3>平均年龄</h3>
+                <h3 id="dashAvgAgeLabel">平均年龄</h3>
                 <p class="dashboard-metric" id="dashAvgAge">0<span class="dashboard-metric-unit">岁</span></p>
                 <p class="dashboard-card-note" id="dashAvgAgeNote">基于有出生日期 / 年龄的档案</p>
               </article>
             </div>
-            <div class="dashboard-pies" aria-label="分布饼图">
-              <article class="dashboard-card dash-pie-card">
+
+            <div class="dashboard-pies" id="dashboardPies" aria-label="分布饼图">
+              <article class="dashboard-card dash-pie-card" id="dashPieCardLeft">
                 <div class="dash-pie-head">
-                  <h3>分布分析 A</h3>
-                  <div class="field">
+                  <div>
+                    <h3 id="dashPieLeftTitle">分布分析 A</h3>
+                    <span class="dash-pie-kicker" id="dashPieLeftKicker">可自由切换维度</span>
+                  </div>
+                  <div class="field" id="dashPieLeftDimField">
                     <label for="dashPieLeftDim">分类维度</label>
                     <select id="dashPieLeftDim"></select>
                   </div>
@@ -2452,10 +2584,13 @@
                 <p class="dash-pie-note" id="dashPieLeftNote">按当前可见人才统计</p>
                 <div class="edu-chart" id="dashPieLeft"></div>
               </article>
-              <article class="dashboard-card dash-pie-card">
+              <article class="dashboard-card dash-pie-card" id="dashPieCardRight">
                 <div class="dash-pie-head">
-                  <h3>分布分析 B</h3>
-                  <div class="field">
+                  <div>
+                    <h3 id="dashPieRightTitle">分布分析 B</h3>
+                    <span class="dash-pie-kicker" id="dashPieRightKicker">可自由切换维度</span>
+                  </div>
+                  <div class="field" id="dashPieRightDimField">
                     <label for="dashPieRightDim">分类维度</label>
                     <select id="dashPieRightDim"></select>
                   </div>
@@ -3275,6 +3410,11 @@
     let photoProcessing = false;
     let dashPieLeftDim = "education";
     let dashPieRightDim = "age";
+    let dashMode = "overall"; // overall | single | compare
+    let dashSingleDept = "";
+    let dashCompareLeft = "";
+    let dashCompareRight = "";
+    let dashCompareDim = "education";
 
     const els = {
       statTotal: document.querySelector("#statTotal"),
@@ -3306,9 +3446,30 @@
       mainTitle: document.querySelector("#mainTitle"),
       mainSubtitle: document.querySelector("#mainSubtitle"),
       dashTotal: document.querySelector("#dashTotal"),
+      dashTotalLabel: document.querySelector("#dashTotalLabel"),
       dashTotalNote: document.querySelector("#dashTotalNote"),
       dashAvgAge: document.querySelector("#dashAvgAge"),
+      dashAvgAgeLabel: document.querySelector("#dashAvgAgeLabel"),
       dashAvgAgeNote: document.querySelector("#dashAvgAgeNote"),
+      dashScopeHint: document.querySelector("#dashScopeHint"),
+      dashSingleDeptField: document.querySelector("#dashSingleDeptField"),
+      dashSingleDept: document.querySelector("#dashSingleDept"),
+      dashCompareLeftField: document.querySelector("#dashCompareLeftField"),
+      dashCompareLeft: document.querySelector("#dashCompareLeft"),
+      dashCompareRightField: document.querySelector("#dashCompareRightField"),
+      dashCompareRight: document.querySelector("#dashCompareRight"),
+      dashCompareVs: document.querySelector("#dashCompareVs"),
+      dashCompareDimField: document.querySelector("#dashCompareDimField"),
+      dashCompareDim: document.querySelector("#dashCompareDim"),
+      dashboardPies: document.querySelector("#dashboardPies"),
+      dashPieCardLeft: document.querySelector("#dashPieCardLeft"),
+      dashPieCardRight: document.querySelector("#dashPieCardRight"),
+      dashPieLeftTitle: document.querySelector("#dashPieLeftTitle"),
+      dashPieRightTitle: document.querySelector("#dashPieRightTitle"),
+      dashPieLeftKicker: document.querySelector("#dashPieLeftKicker"),
+      dashPieRightKicker: document.querySelector("#dashPieRightKicker"),
+      dashPieLeftDimField: document.querySelector("#dashPieLeftDimField"),
+      dashPieRightDimField: document.querySelector("#dashPieRightDimField"),
       dashPieLeft: document.querySelector("#dashPieLeft"),
       dashPieRight: document.querySelector("#dashPieRight"),
       dashPieLeftDim: document.querySelector("#dashPieLeftDim"),
@@ -3977,17 +4138,119 @@
       return { total, avgAge, ageSampleSize: ages.length, education };
     }
 
-    function fillDashDimensionSelects() {
-      const options = DASH_DIMENSIONS.map(item => (
-        `<option value="${escapeHtml(item.id)}">${escapeHtml(item.label)}</option>`
-      )).join("");
-      if (els.dashPieLeftDim) {
-        els.dashPieLeftDim.innerHTML = options;
-        els.dashPieLeftDim.value = dashPieLeftDim;
+    function getDashboardDepartments() {
+      const fromAcl = isSuperAdmin()
+        ? [...new Set([...categories, ...talents.map(item => String(item.category || "").trim()).filter(Boolean)])]
+        : [...authAllowedCategories];
+      return fromAcl
+        .map(name => String(name || "").trim())
+        .filter(Boolean)
+        .filter((name, index, arr) => arr.indexOf(name) === index)
+        .sort((a, b) => a.localeCompare(b, "zh"));
+    }
+
+    function ensureDashDeptDefaults() {
+      const depts = getDashboardDepartments();
+      if (!depts.length) {
+        dashSingleDept = "";
+        dashCompareLeft = "";
+        dashCompareRight = "";
+        return depts;
       }
-      if (els.dashPieRightDim) {
-        els.dashPieRightDim.innerHTML = options;
-        els.dashPieRightDim.value = dashPieRightDim;
+      if (!depts.includes(dashSingleDept)) dashSingleDept = depts[0];
+      if (!depts.includes(dashCompareLeft)) dashCompareLeft = depts[0];
+      if (!depts.includes(dashCompareRight)) {
+        dashCompareRight = depts.find(name => name !== dashCompareLeft) || depts[0];
+      }
+      return depts;
+    }
+
+    function filterTalentsByDept(list, dept) {
+      const name = String(dept || "").trim();
+      if (!name) return [];
+      return list.filter(person => String(person.category || "").trim() === name);
+    }
+
+    function getDashboardScopeList() {
+      if (dashMode === "single") return filterTalentsByDept(talents, dashSingleDept);
+      if (dashMode === "compare") {
+        return [
+          ...filterTalentsByDept(talents, dashCompareLeft),
+          ...filterTalentsByDept(talents, dashCompareRight)
+        ];
+      }
+      return talents;
+    }
+
+    function availableDashDimensions() {
+      if (dashMode === "overall") return DASH_DIMENSIONS;
+      return DASH_DIMENSIONS.filter(item => item.id !== "category");
+    }
+
+    function fillSelectWithOptions(select, options, selected) {
+      if (!select) return;
+      select.innerHTML = options.map(item => {
+        if (typeof item === "string") {
+          return `<option value="${escapeHtml(item)}" ${item === selected ? "selected" : ""}>${escapeHtml(item)}</option>`;
+        }
+        return `<option value="${escapeHtml(item.value)}" ${item.value === selected ? "selected" : ""}>${escapeHtml(item.label)}</option>`;
+      }).join("");
+      if (selected) select.value = selected;
+    }
+
+    function fillDashDimensionSelects() {
+      const dims = availableDashDimensions();
+      if (!dims.some(item => item.id === dashPieLeftDim)) dashPieLeftDim = dims[0]?.id || "education";
+      if (!dims.some(item => item.id === dashPieRightDim)) dashPieRightDim = dims[1]?.id || dims[0]?.id || "age";
+      if (!dims.some(item => item.id === dashCompareDim)) dashCompareDim = dims[0]?.id || "education";
+      const options = dims.map(item => ({ value: item.id, label: item.label }));
+      fillSelectWithOptions(els.dashPieLeftDim, options, dashPieLeftDim);
+      fillSelectWithOptions(els.dashPieRightDim, options, dashPieRightDim);
+      fillSelectWithOptions(els.dashCompareDim, options, dashCompareDim);
+    }
+
+    function syncDashModeChrome() {
+      document.querySelectorAll(".dash-mode-btn").forEach(btn => {
+        const active = btn.dataset.dashMode === dashMode;
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      const isSingle = dashMode === "single";
+      const isCompare = dashMode === "compare";
+      if (els.dashSingleDeptField) els.dashSingleDeptField.hidden = !isSingle;
+      if (els.dashCompareLeftField) els.dashCompareLeftField.hidden = !isCompare;
+      if (els.dashCompareRightField) els.dashCompareRightField.hidden = !isCompare;
+      if (els.dashCompareVs) els.dashCompareVs.hidden = !isCompare;
+      if (els.dashCompareDimField) els.dashCompareDimField.hidden = !isCompare;
+      if (els.dashPieLeftDimField) els.dashPieLeftDimField.hidden = isCompare;
+      if (els.dashPieRightDimField) els.dashPieRightDimField.hidden = isCompare;
+      if (els.dashboardPies) els.dashboardPies.classList.toggle("is-compare", isCompare);
+      if (els.dashPieCardLeft) {
+        els.dashPieCardLeft.classList.toggle("is-compare-left", isCompare);
+      }
+      if (els.dashPieCardRight) {
+        els.dashPieCardRight.classList.toggle("is-compare-right", isCompare);
+      }
+
+      if (dashMode === "overall") {
+        if (els.dashScopeHint) els.dashScopeHint.textContent = "查看全部可见人才的整体结构，左右可分别切换不同维度。";
+        if (els.dashPieLeftTitle) els.dashPieLeftTitle.textContent = "分布分析 A";
+        if (els.dashPieRightTitle) els.dashPieRightTitle.textContent = "分布分析 B";
+        if (els.dashPieLeftKicker) els.dashPieLeftKicker.textContent = "整体 · 可切换维度";
+        if (els.dashPieRightKicker) els.dashPieRightKicker.textContent = "整体 · 可切换维度";
+      } else if (dashMode === "single") {
+        if (els.dashScopeHint) els.dashScopeHint.textContent = `聚焦「${dashSingleDept || "未选择"}」内部结构，左右切换不同维度交叉观察。`;
+        if (els.dashPieLeftTitle) els.dashPieLeftTitle.textContent = dashSingleDept || "单部门";
+        if (els.dashPieRightTitle) els.dashPieRightTitle.textContent = dashSingleDept || "单部门";
+        if (els.dashPieLeftKicker) els.dashPieLeftKicker.textContent = "单部门 · 可切换维度";
+        if (els.dashPieRightKicker) els.dashPieRightKicker.textContent = "单部门 · 可切换维度";
+      } else {
+        const dimLabel = getDashDimension(dashCompareDim).label;
+        if (els.dashScopeHint) els.dashScopeHint.textContent = `同一维度（${dimLabel}）下对比两个部门差异，便于横向看结构。`;
+        if (els.dashPieLeftTitle) els.dashPieLeftTitle.textContent = dashCompareLeft || "部门 A";
+        if (els.dashPieRightTitle) els.dashPieRightTitle.textContent = dashCompareRight || "部门 B";
+        if (els.dashPieLeftKicker) els.dashPieLeftKicker.textContent = `对比 · ${dimLabel}`;
+        if (els.dashPieRightKicker) els.dashPieRightKicker.textContent = `对比 · ${dimLabel}`;
       }
     }
 
@@ -4003,7 +4266,7 @@
       if (els.mainTitle) els.mainTitle.textContent = isDashboard ? "数据看板" : "RD Talents Dashboard";
       if (els.mainSubtitle) {
         els.mainSubtitle.textContent = isDashboard
-          ? "人才总数 · 平均年龄 · 双饼图对比分析"
+          ? "整体分布 · 单部门洞察 · 部门对比"
           : "U01-A BG · 结构 / 硬件 / 声学等研发部门";
       }
       if (isDashboard) {
@@ -4155,33 +4418,71 @@
     }
 
     function renderDashPie(side) {
-      const dimId = side === "left" ? dashPieLeftDim : dashPieRightDim;
+      const isCompare = dashMode === "compare";
+      const list = isCompare
+        ? filterTalentsByDept(talents, side === "left" ? dashCompareLeft : dashCompareRight)
+        : getDashboardScopeList();
+      const dimId = isCompare
+        ? dashCompareDim
+        : (side === "left" ? dashPieLeftDim : dashPieRightDim);
       const noteEl = side === "left" ? els.dashPieLeftNote : els.dashPieRightNote;
       const chartEl = side === "left" ? els.dashPieLeft : els.dashPieRight;
-      const distribution = computeDistribution(talents, dimId);
-      if (noteEl) noteEl.textContent = `按当前可见人才统计 · ${distribution.dim.note}`;
-      if (chartEl) chartEl.innerHTML = buildPieChartHtml(distribution, distribution.dim.label);
+      const distribution = computeDistribution(list, dimId);
+      const scopeLabel = isCompare
+        ? (side === "left" ? dashCompareLeft : dashCompareRight)
+        : (dashMode === "single" ? dashSingleDept : "全部可见人才");
+      if (noteEl) {
+        noteEl.textContent = list.length
+          ? `${scopeLabel} · ${distribution.dim.note} · ${list.length} 人`
+          : `${scopeLabel || "未选择部门"} · 暂无人才数据`;
+      }
+      if (chartEl) chartEl.innerHTML = buildPieChartHtml(distribution, `${scopeLabel || "分布"} · ${distribution.dim.label}`);
     }
 
     function renderDashboard() {
-      const metrics = computeDashboardMetrics(talents);
-      if (els.dashTotal) els.dashTotal.textContent = String(metrics.total);
+      const depts = ensureDashDeptDefaults();
+      fillSelectWithOptions(els.dashSingleDept, depts, dashSingleDept);
+      fillSelectWithOptions(els.dashCompareLeft, depts, dashCompareLeft);
+      fillSelectWithOptions(els.dashCompareRight, depts, dashCompareRight);
+      fillDashDimensionSelects();
+      syncDashModeChrome();
+
+      const heroList = dashMode === "compare"
+        ? [
+            ...filterTalentsByDept(talents, dashCompareLeft),
+            ...filterTalentsByDept(talents, dashCompareRight)
+          ]
+        : getDashboardScopeList();
+      const heroMetrics = computeDashboardMetrics(heroList);
+
+      if (els.dashTotalLabel) {
+        els.dashTotalLabel.textContent = dashMode === "compare" ? "对比范围人数" : "人才总人数";
+      }
+      if (els.dashTotal) els.dashTotal.textContent = String(heroMetrics.total);
       if (els.dashTotalNote) {
-        els.dashTotalNote.textContent = isSuperAdmin()
-          ? "全部人才（超级管理员可见）"
-          : "当前权限范围内可见人才";
+        if (dashMode === "overall") {
+          els.dashTotalNote.textContent = isSuperAdmin()
+            ? "全部人才（超级管理员可见）"
+            : "当前权限范围内可见人才";
+        } else if (dashMode === "single") {
+          els.dashTotalNote.textContent = `部门：${dashSingleDept || "-"}`;
+        } else {
+          els.dashTotalNote.textContent = `${dashCompareLeft || "A"} + ${dashCompareRight || "B"}`;
+        }
+      }
+      if (els.dashAvgAgeLabel) {
+        els.dashAvgAgeLabel.textContent = dashMode === "compare" ? "对比范围平均年龄" : "平均年龄";
       }
       if (els.dashAvgAge) {
-        els.dashAvgAge.innerHTML = metrics.avgAge == null
+        els.dashAvgAge.innerHTML = heroMetrics.avgAge == null
           ? `-<span class="dashboard-metric-unit">岁</span>`
-          : `${metrics.avgAge}<span class="dashboard-metric-unit">岁</span>`;
+          : `${heroMetrics.avgAge}<span class="dashboard-metric-unit">岁</span>`;
       }
       if (els.dashAvgAgeNote) {
-        els.dashAvgAgeNote.textContent = metrics.ageSampleSize
-          ? `基于 ${metrics.ageSampleSize} 份有年龄信息的档案`
+        els.dashAvgAgeNote.textContent = heroMetrics.ageSampleSize
+          ? `基于 ${heroMetrics.ageSampleSize} 份有年龄信息的档案`
           : "暂无可用年龄数据";
       }
-      fillDashDimensionSelects();
       renderDashPie("left");
       renderDashPie("right");
     }
@@ -5240,14 +5541,43 @@
       render();
     });
 
+    document.querySelectorAll(".dash-mode-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        dashMode = btn.dataset.dashMode || "overall";
+        renderDashboard();
+      });
+    });
+
+    els.dashSingleDept?.addEventListener("change", () => {
+      dashSingleDept = els.dashSingleDept.value || "";
+      renderDashboard();
+    });
+
+    els.dashCompareLeft?.addEventListener("change", () => {
+      dashCompareLeft = els.dashCompareLeft.value || "";
+      renderDashboard();
+    });
+
+    els.dashCompareRight?.addEventListener("change", () => {
+      dashCompareRight = els.dashCompareRight.value || "";
+      renderDashboard();
+    });
+
+    els.dashCompareDim?.addEventListener("change", () => {
+      dashCompareDim = els.dashCompareDim.value || "education";
+      renderDashboard();
+    });
+
     els.dashPieLeftDim?.addEventListener("change", () => {
       dashPieLeftDim = els.dashPieLeftDim.value || "education";
       renderDashPie("left");
+      syncDashModeChrome();
     });
 
     els.dashPieRightDim?.addEventListener("change", () => {
       dashPieRightDim = els.dashPieRightDim.value || "age";
       renderDashPie("right");
+      syncDashModeChrome();
     });
 
     els.mobileCategoryBar?.addEventListener("click", event => {
