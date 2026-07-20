@@ -2396,7 +2396,8 @@
     // Shared cloud API (Cloudflare Worker + KV)
     const API_BASE = "https://pd-talent-bank-api.pd-talent-hunter.workers.dev";
     const API_URL = `${API_BASE}/talents`;
-    const SYNC_INTERVAL_MS = 12000;
+    const SYNC_INTERVAL_MS = 6000; // visible tab
+    const SYNC_INTERVAL_HIDDEN_MS = 30000; // background tab — slower, not paused entirely
     const DEFAULT_CATEGORIES = ["结构研发", "硬件研发", "声学研发", "软件研发", "NPI/质量"];
     const ALL_CATEGORY = "__all__";
     const UNCATEGORIZED = "__uncategorized__";
@@ -2887,6 +2888,7 @@
     let remoteUpdatedAt = null;
     let syncing = false;
     let suppressPoll = false;
+    let syncTimer = null;
     let draftPhotoUrl = "";
     let photoProcessing = false;
 
@@ -3231,13 +3233,31 @@
       }
     }
 
+    function isTalentDialogOpen() {
+      return Boolean(els.dialog?.open);
+    }
+
+    function scheduleCloudSync() {
+      if (syncTimer) clearInterval(syncTimer);
+      const ms = document.visibilityState === "visible"
+        ? SYNC_INTERVAL_MS
+        : SYNC_INTERVAL_HIDDEN_MS;
+      syncTimer = setInterval(() => refreshFromCloud(), ms);
+    }
+
     async function refreshFromCloud({ force = false } = {}) {
       if (suppressPoll || syncing || !authToken) return;
+      // Never overwrite the in-progress create/edit form with a poll result.
+      if (isTalentDialogOpen()) return;
       try {
-        const res = await apiFetch(API_URL, { cache: "no-store" });
+        const bust = `_=${Date.now()}`;
+        const url = API_URL.includes("?") ? `${API_URL}&${bust}` : `${API_URL}?${bust}`;
+        const res = await apiFetch(url, { cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
         if (!force && data.updatedAt && data.updatedAt === remoteUpdatedAt) return;
+        // Re-check: dialog may have opened while fetch was in flight.
+        if (isTalentDialogOpen()) return;
         remoteUpdatedAt = data.updatedAt || remoteUpdatedAt;
         talents = applyAclToLocalState(data.talents || [], data.categories || []);
         if (!talents.find(item => item.id === selectedId)) {
@@ -4677,8 +4697,9 @@
       talents = await loadTalents();
       selectedId = talents[0]?.id || null;
       render();
-      setInterval(() => refreshFromCloud(), SYNC_INTERVAL_MS);
+      scheduleCloudSync();
       document.addEventListener("visibilitychange", () => {
+        scheduleCloudSync();
         if (document.visibilityState === "visible") refreshFromCloud({ force: true });
       });
     }
