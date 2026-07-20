@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-job-grade -->
+  <!-- deploy-bust: 20260720-job-grade-num -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -2746,7 +2746,7 @@
           </div>
           <div class="field">
             <label for="jobGrade">职级</label>
-            <select id="jobGrade"></select>
+            <input id="jobGrade" type="number" min="1" step="1" placeholder="如 5">
           </div>
           <div class="field">
             <label for="joinDate">入职时间</label>
@@ -2937,7 +2937,6 @@
       { value: "无障碍沟通听说读写", label: "3. 无障碍沟通，听说读写能力强" }
     ];
     const TITLE_LEVEL_OPTIONS = ["助理工程师", "工程师", "高级工程师", "专家", "其他"];
-    const JOB_GRADE_OPTIONS = ["1级", "2级", "3级", "4级", "5级", "6级", "7级", "8级", "9级", "10级", "其他"];
     const PRODUCT_OPTIONS = [
       "iPhone",
       "AirPods",
@@ -3690,6 +3689,16 @@
       return { value: PRODUCT_OTHER, customName: candidates[0] };
     }
 
+    function normalizeJobGrade(value) {
+      const text = String(value ?? "").trim();
+      if (!text) return "";
+      const match = text.match(/-?\d+(\.\d+)?/);
+      if (!match) return "";
+      const num = Number(match[0]);
+      if (!Number.isFinite(num) || num <= 0) return "";
+      return Number.isInteger(num) ? String(num) : String(num);
+    }
+
     function normalizeTalentList(list) {
       if (!Array.isArray(list)) return [];
       return list.map(item => ({
@@ -3698,7 +3707,7 @@
         category: String(item.category || "").trim(),
         englishName: String(item.englishName || "").trim(),
         currentProject: String(item.currentProject || "").trim(),
-        jobGrade: String(item.jobGrade || "").trim(),
+        jobGrade: normalizeJobGrade(item.jobGrade),
         birthDate: normalizeDate(item.birthDate),
         joinDate: normalizeDate(item.joinDate),
         graduationDate: normalizeDate(item.graduationDate),
@@ -4058,12 +4067,11 @@
       {
         id: "jobGrade",
         label: "职级",
-        note: "1级 ~ 10级",
-        order: [...JOB_GRADE_OPTIONS, "未填写"],
+        note: "按填写的职级数字统计",
+        order: null,
         bucket: person => {
-          const value = String(person.jobGrade || "").trim();
-          if (!value) return "未填写";
-          return JOB_GRADE_OPTIONS.includes(value) ? value : "其他";
+          const value = normalizeJobGrade(person.jobGrade);
+          return value || "未填写";
         }
       },
       {
@@ -5206,12 +5214,12 @@
         labelKey: "label"
       });
       fillSelectOptions("titleLevel", TITLE_LEVEL_OPTIONS, person?.titleLevel || "", { blankLabel: "请选择职称" });
-      fillSelectOptions("jobGrade", JOB_GRADE_OPTIONS, person?.jobGrade || "", { blankLabel: "请选择职级" });
       getField("talentId").value = person?.id || "";
       getField("employeeNo").value = person?.employeeNo || "";
       getField("name").value = person?.name || "";
       getField("englishName").value = person?.englishName || "";
       getField("currentProject").value = person?.currentProject || "";
+      getField("jobGrade").value = person?.jobGrade || "";
       getField("gender").value = person?.gender === "女" ? "女" : "男";
       getField("status").value = person?.status || "在职";
       getField("birthDate").value = normalizeDate(person?.birthDate);
@@ -5500,7 +5508,7 @@
           education: getField("education").value.trim(),
           englishLevel: getField("englishLevel").value.trim(),
           titleLevel: getField("titleLevel").value.trim(),
-          jobGrade: getField("jobGrade").value.trim(),
+          jobGrade: normalizeJobGrade(getField("jobGrade").value),
           joinDate: normalizeDate(getField("joinDate").value),
           baseLocation: getField("baseLocation").value.trim(),
           school: getField("school").value.trim(),
