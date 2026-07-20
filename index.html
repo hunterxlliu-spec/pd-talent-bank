@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-edu-pie -->
+  <!-- deploy-bust: 20260720-edu-pie-labels -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -448,14 +448,34 @@
     }
 
     .edu-pie-wrap {
-      width: min(240px, 100%);
-      aspect-ratio: 1;
+      width: min(420px, 100%);
+      aspect-ratio: 420 / 280;
     }
 
     .edu-pie-wrap svg {
       width: 100%;
       height: auto;
       display: block;
+      overflow: visible;
+    }
+
+    .edu-pie-label {
+      font-size: 11px;
+      fill: #44515f;
+      font-family: inherit;
+    }
+
+    .edu-pie-label-strong {
+      font-size: 11px;
+      font-weight: 700;
+      fill: #2f3a46;
+      font-family: inherit;
+    }
+
+    .edu-pie-leader {
+      fill: none;
+      stroke: #94a3b8;
+      stroke-width: 1.2;
     }
 
     .edu-pie-empty {
@@ -3821,28 +3841,69 @@
       }
 
       const total = slices.reduce((sum, item) => sum + item.count, 0) || 1;
-      const cx = 100;
-      const cy = 100;
-      const r = 86;
+      const cx = 210;
+      const cy = 140;
+      const r = 72;
+      const elbowR = r + 16;
+      const labelR = r + 48;
       let angle = -Math.PI / 2;
-      const paths = slices.map(item => {
+      const sliceMeta = slices.map(item => {
         const sweep = (item.count / total) * Math.PI * 2;
         const start = angle;
         const end = angle + sweep;
+        const mid = start + sweep / 2;
         angle = end;
+        return { ...item, start, end, mid, sweep };
+      });
+
+      const paths = sliceMeta.map(item => {
         if (item.count === total) {
           return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${educationColor(item.label)}">
             <title>${escapeHtml(item.label)}：${item.count}人（${item.percent}%）</title>
           </circle>`;
         }
-        return `<path d="${describePieSlice(cx, cy, r, start, end)}" fill="${educationColor(item.label)}">
+        return `<path d="${describePieSlice(cx, cy, r, item.start, item.end)}" fill="${educationColor(item.label)}">
           <title>${escapeHtml(item.label)}：${item.count}人（${item.percent}%）</title>
         </path>`;
       }).join("");
 
+      // Place callout labels with simple vertical deconflict per side
+      const planned = sliceMeta.map(item => {
+        const onRight = Math.cos(item.mid) >= 0;
+        const startPt = polarToCartesian(cx, cy, r * 0.82, item.mid);
+        const elbow = polarToCartesian(cx, cy, elbowR, item.mid);
+        const desiredY = polarToCartesian(cx, cy, labelR, item.mid).y;
+        return { item, onRight, startPt, elbow, desiredY, labelY: desiredY };
+      });
+      ["left", "right"].forEach(side => {
+        const onRight = side === "right";
+        const group = planned.filter(entry => entry.onRight === onRight).sort((a, b) => a.desiredY - b.desiredY);
+        for (let i = 1; i < group.length; i += 1) {
+          if (group[i].labelY - group[i - 1].labelY < 20) {
+            group[i].labelY = group[i - 1].labelY + 20;
+          }
+        }
+      });
+
+      const leaders = planned.map(({ item, onRight, startPt, elbow, labelY }) => {
+        const labelX = onRight ? cx + labelR : cx - labelR;
+        const anchor = onRight ? "start" : "end";
+        const lineEndX = onRight ? labelX - 4 : labelX + 4;
+        const color = educationColor(item.label);
+        return `
+          <path class="edu-pie-leader" d="M ${startPt.x.toFixed(1)} ${startPt.y.toFixed(1)} L ${elbow.x.toFixed(1)} ${elbow.y.toFixed(1)} L ${lineEndX.toFixed(1)} ${labelY.toFixed(1)}" stroke="${color}"></path>
+          <circle cx="${startPt.x.toFixed(1)}" cy="${startPt.y.toFixed(1)}" r="2.2" fill="${color}"></circle>
+          <text class="edu-pie-label-strong" x="${labelX.toFixed(1)}" y="${(labelY - 2).toFixed(1)}" text-anchor="${anchor}">${escapeHtml(item.label)}</text>
+          <text class="edu-pie-label" x="${labelX.toFixed(1)}" y="${(labelY + 11).toFixed(1)}" text-anchor="${anchor}">${item.percent}% · ${item.count}人</text>
+        `;
+      }).join("");
+
       return `
-        <div class="edu-pie-wrap" aria-hidden="true">
-          <svg viewBox="0 0 200 200" role="img" aria-label="学历分布饼图">${paths}</svg>
+        <div class="edu-pie-wrap">
+          <svg viewBox="0 0 420 280" role="img" aria-label="学历分布饼图">
+            ${paths}
+            ${leaders}
+          </svg>
         </div>
         <ul class="edu-legend" aria-label="学历分布备注">
           ${legendItems.map(item => `
