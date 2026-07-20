@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-remove-title -->
+  <!-- deploy-bust: 20260720-en-level-num -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -266,21 +266,30 @@
 
     .nav-item-actions {
       display: none;
-      gap: 4px;
+      gap: 2px;
+      align-items: center;
     }
 
     .nav-item:hover .nav-item-actions,
-    .nav-item:focus-within .nav-item-actions {
+    .nav-item:focus-within .nav-item-actions,
+    .nav-item.active .nav-item-actions {
       display: inline-flex;
     }
 
     .nav-item-actions .btn {
-      min-height: 26px;
-      width: 26px;
+      min-height: 24px;
+      width: 22px;
       padding: 0;
       background: rgba(255,255,255,.12);
       color: #fff;
       border: 1px solid rgba(255,255,255,.18);
+      font-size: 11px;
+      line-height: 1;
+    }
+
+    .nav-item-actions .btn:disabled {
+      opacity: .35;
+      cursor: default;
     }
 
     .sidebar-dashboard-btn {
@@ -3581,6 +3590,11 @@
       return found ? found.label : (value || "-");
     }
 
+    function englishLevelNumber(value) {
+      const index = ENGLISH_LEVEL_OPTIONS.findIndex(item => item.value === value);
+      return index >= 0 ? String(index + 1) : "";
+    }
+
     function getCategoryItems() {
       return [
         { id: ALL_CATEGORY, title: "全部人才", editable: false },
@@ -3591,18 +3605,30 @@
 
     function getAllowedCategoryItems() {
       if (isSuperAdmin()) return getCategoryItems();
-      const allowed = authAllowedCategories;
+      const allowed = new Set(authAllowedCategories);
+      const ordered = categories.filter(name => allowed.has(name));
+      // Keep any newly assigned ACL categories not yet in local categories order
+      authAllowedCategories.forEach(name => {
+        if (name && !ordered.includes(name)) ordered.push(name);
+      });
       return [
         { id: ALL_CATEGORY, title: "全部人才", editable: false },
-        ...allowed.map(name => ({ id: name, title: name, editable: false }))
+        ...ordered.map(name => ({ id: name, title: name, editable: false })),
+        { id: UNCATEGORIZED, title: "未分类", editable: false }
       ];
     }
 
     function renderCategoryNav() {
       const items = getAllowedCategoryItems();
       const canEditCats = isSuperAdmin();
+      const editableNames = categories;
       if (els.categoryNav) {
-        els.categoryNav.innerHTML = items.map(item => `
+        els.categoryNav.innerHTML = items.map(item => {
+          const editableIndex = editableNames.indexOf(item.id);
+          const canMove = canEditCats && item.editable && editableIndex >= 0;
+          const canUp = canMove && editableIndex > 0;
+          const canDown = canMove && editableIndex < editableNames.length - 1;
+          return `
           <div class="nav-item ${activeCategory === item.id ? "active" : ""}" data-category="${escapeHtml(item.id)}">
             <button class="nav-item-main category-select-btn" type="button" data-category="${escapeHtml(item.id)}">
               <span class="nav-item-title">${escapeHtml(item.title)}</span>
@@ -3610,12 +3636,14 @@
             <span class="nav-item-count">${countByCategory(item.id)}</span>
             ${canEditCats && item.editable ? `
               <span class="nav-item-actions">
+                <button class="btn move-category-up-btn" type="button" title="上移" data-category="${escapeHtml(item.id)}" ${canUp ? "" : "disabled"}>↑</button>
+                <button class="btn move-category-down-btn" type="button" title="下移" data-category="${escapeHtml(item.id)}" ${canDown ? "" : "disabled"}>↓</button>
                 <button class="btn rename-category-btn" type="button" title="重命名" data-category="${escapeHtml(item.id)}">✎</button>
                 <button class="btn danger delete-category-btn" type="button" title="删除" data-category="${escapeHtml(item.id)}">×</button>
               </span>
             ` : ""}
-          </div>
-        `).join("");
+          </div>`;
+        }).join("");
       }
       if (els.mobileCategoryBar) {
         els.mobileCategoryBar.innerHTML = items.map(item => `
@@ -3624,6 +3652,28 @@
             <span>${countByCategory(item.id)}</span>
           </button>
         `).join("");
+      }
+    }
+
+    async function moveCategory(name, delta) {
+      if (!isSuperAdmin()) {
+        alert("仅超级管理员可调整分类顺序");
+        return;
+      }
+      const index = categories.indexOf(name);
+      if (index < 0) return;
+      const next = index + delta;
+      if (next < 0 || next >= categories.length) return;
+      const copy = [...categories];
+      const temp = copy[index];
+      copy[index] = copy[next];
+      copy[next] = temp;
+      categories = copy;
+      try {
+        await saveTalents();
+        render();
+      } catch (error) {
+        alert(error?.message || "分类排序保存失败");
       }
     }
 
@@ -4059,12 +4109,11 @@
       {
         id: "english",
         label: "英语水平",
-        note: "读写 / 基本沟通 / 无障碍沟通",
-        order: [...ENGLISH_LEVEL_OPTIONS.map(item => item.value), "未填写"],
+        note: "1 / 2 / 3",
+        order: ["1", "2", "3", "未填写"],
         bucket: person => {
-          const value = String(person.englishLevel || "").trim();
-          if (!value) return "未填写";
-          return ENGLISH_LEVEL_OPTIONS.some(item => item.value === value) ? value : "其他";
+          const num = englishLevelNumber(person.englishLevel);
+          return num || "未填写";
         }
       },
       {
@@ -4523,7 +4572,7 @@
             <td class="col-secondary">${escapeHtml(person.hometown || "-")}</td>
             <td class="col-education">${escapeHtml(person.education || "-")}</td>
             <td class="col-secondary">
-              <div>${escapeHtml(person.englishLevel ? englishLevelLabel(person.englishLevel).replace(/^\d\.\s*/, "") : "-")}</div>
+              <div>${escapeHtml(englishLevelNumber(person.englishLevel) || "-")}</div>
             </td>
             <td class="col-project">${escapeHtml(person.currentProject || "-")}</td>
             <td class="col-secondary">
@@ -4678,7 +4727,7 @@
                   ${infoItem("年龄", ageText)}
                   ${infoItem("籍贯", person.hometown)}
                   ${infoItem("学历", person.education)}
-                  ${infoItem("英语水平", englishLevelLabel(person.englishLevel))}
+                  ${infoItem("英语水平", englishLevelNumber(person.englishLevel) || "-")}
                   ${infoItem("电话", person.phone)}
                   ${infoItem("邮箱", person.email)}
                 </div>
@@ -5076,7 +5125,7 @@
         person.jobGrade,
         person.hometown,
         person.education,
-        englishLevelLabel(person.englishLevel),
+        englishLevelNumber(person.englishLevel) || englishLevelLabel(person.englishLevel),
         person.currentProject,
         person.school,
         person.major,
@@ -5601,7 +5650,25 @@
     els.categoryNav.addEventListener("click", async event => {
       const renameBtn = event.target.closest(".rename-category-btn");
       const deleteBtn = event.target.closest(".delete-category-btn");
+      const moveUpBtn = event.target.closest(".move-category-up-btn");
+      const moveDownBtn = event.target.closest(".move-category-down-btn");
       const selectBtn = event.target.closest(".category-select-btn") || event.target.closest(".nav-item");
+
+      if (moveUpBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (moveUpBtn.disabled) return;
+        await moveCategory(moveUpBtn.dataset.category, -1);
+        return;
+      }
+
+      if (moveDownBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (moveDownBtn.disabled) return;
+        await moveCategory(moveDownBtn.dataset.category, 1);
+        return;
+      }
 
       if (renameBtn) {
         if (!isSuperAdmin()) {
