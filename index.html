@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-move-visible -->
+  <!-- deploy-bust: 20260720-move-select -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -2483,6 +2483,34 @@
       width: min(420px, calc(100vw - 28px));
     }
 
+    .move-dialog {
+      width: min(420px, calc(100vw - 28px));
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .move-dialog .modal-body {
+      display: grid;
+      gap: 14px;
+    }
+
+    .move-dialog .move-person-line {
+      margin: 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      color: #344054;
+      font-size: var(--fs-sm);
+      line-height: 1.45;
+    }
+
+    .move-dialog .move-person-line strong {
+      color: var(--ink);
+    }
+
     .admin-dialog .modal-body,
     .password-dialog .modal-body {
       display: grid;
@@ -3080,6 +3108,29 @@
     </form>
   </dialog>
 
+  <dialog id="moveDialog" class="move-dialog">
+    <div class="modal-head">
+      <h3>移动部门</h3>
+      <button class="btn icon" type="button" id="closeMoveDialog" aria-label="关闭">×</button>
+    </div>
+    <form class="modal-body" id="moveForm">
+      <p class="move-person-line" id="movePersonLine">选择目标部门</p>
+      <div class="field">
+        <label for="moveCategorySelect">目标部门</label>
+        <select id="moveCategorySelect" required></select>
+      </div>
+      <div class="field" id="moveDepartmentField">
+        <label for="moveDepartmentSelect">子部门</label>
+        <select id="moveDepartmentSelect"></select>
+      </div>
+      <p class="login-error" id="moveError" role="alert" hidden></p>
+      <div class="row-actions">
+        <button class="btn" type="button" id="cancelMoveBtn">取消</button>
+        <button class="btn primary" type="submit" id="confirmMoveBtn">确认移动</button>
+      </div>
+    </form>
+  </dialog>
+
   <script>
     const STORAGE_KEY = "talent-bank-records-v1";
     const CATEGORIES_KEY = "talent-bank-categories-v1";
@@ -3595,6 +3646,7 @@
     let dashCompareLeft = "";
     let dashCompareRight = "";
     let dashCompareDim = "education";
+    let movingTalentId = null;
 
     const els = {
       statTotal: document.querySelector("#statTotal"),
@@ -4108,51 +4160,106 @@
       }
     }
 
-    async function moveTalentToCategory(person) {
+    function syncMoveDepartmentSelect(category, preferredDept = "") {
+      const select = document.querySelector("#moveDepartmentSelect");
+      const field = document.querySelector("#moveDepartmentField");
+      if (!select || !field) return;
+      const cat = String(category || "").trim();
+      const preferred = String(preferredDept || "").trim();
+      const configured = getSubsForCategory(cat);
+      const effective = getEffectiveSubsForCategory(cat);
+      const options = configured.length ? configured.slice() : effective.slice();
+      if (preferred && !options.includes(preferred)) options.push(preferred);
+
+      if (!options.length) {
+        field.hidden = true;
+        select.innerHTML = `<option value="">无子部门</option>`;
+        select.value = "";
+        select.required = false;
+        return;
+      }
+
+      field.hidden = false;
+      select.innerHTML = [
+        `<option value="">不指定子部门</option>`,
+        ...options.map(name => (
+          `<option value="${escapeHtml(name)}" ${name === preferred ? "selected" : ""}>${escapeHtml(name)}</option>`
+        ))
+      ].join("");
+      select.value = preferred && options.includes(preferred) ? preferred : "";
+      select.required = false;
+    }
+
+    function openMoveTalentDialog(person) {
       if (!person) return;
       const options = getCategoryNameList().filter(name => canAccessCategory(name));
       if (!options.length) {
         alert("暂无可移动的目标部门");
         return;
       }
-      const current = String(person.category || "").trim();
-      const nextCat = prompt(
-        `将「${person.name || "该人才"}」移动到哪个部门？\n可选：${options.join("、")}`,
-        current || options[0]
-      );
-      if (nextCat == null) return;
-      const trimmedCat = String(nextCat || "").trim();
+      movingTalentId = person.id;
+      const catSelect = document.querySelector("#moveCategorySelect");
+      const personLine = document.querySelector("#movePersonLine");
+      const errorEl = document.querySelector("#moveError");
+      const currentCat = String(person.category || "").trim();
+      const currentDept = String(person.department || "").trim();
+      if (personLine) {
+        personLine.innerHTML = `将 <strong>${escapeHtml(person.name || "该人才")}</strong> 从「${escapeHtml(currentCat || "未分类")}${currentDept ? " / " + escapeHtml(currentDept) : ""}」移动到：`;
+      }
+      if (errorEl) {
+        errorEl.hidden = true;
+        errorEl.textContent = "";
+      }
+      if (catSelect) {
+        const selectedCat = options.includes(currentCat) ? currentCat : options[0];
+        catSelect.innerHTML = options.map(name => (
+          `<option value="${escapeHtml(name)}" ${name === selectedCat ? "selected" : ""}>${escapeHtml(name)}</option>`
+        )).join("");
+        catSelect.value = selectedCat;
+        syncMoveDepartmentSelect(selectedCat, currentCat === selectedCat ? currentDept : "");
+      }
+      document.querySelector("#moveDialog")?.showModal();
+    }
+
+    async function confirmMoveTalent(event) {
+      event.preventDefault();
+      const person = talents.find(item => item.id === movingTalentId);
+      const errorEl = document.querySelector("#moveError");
+      const catSelect = document.querySelector("#moveCategorySelect");
+      const deptSelect = document.querySelector("#moveDepartmentSelect");
+      const submitBtn = document.querySelector("#confirmMoveBtn");
+      if (!person || !catSelect) return;
+
+      const trimmedCat = String(catSelect.value || "").trim();
+      const nextDept = document.querySelector("#moveDepartmentField")?.hidden
+        ? ""
+        : String(deptSelect?.value || "").trim();
+
       if (!trimmedCat) {
-        alert("部门名称不能为空");
+        if (errorEl) {
+          errorEl.hidden = false;
+          errorEl.textContent = "请选择目标部门";
+        }
         return;
       }
-      if (!options.includes(trimmedCat) && !isSuperAdmin()) {
-        alert("只能移动到你有权限的部门");
+      if (!canAccessCategory(trimmedCat)) {
+        if (errorEl) {
+          errorEl.hidden = false;
+          errorEl.textContent = "只能移动到你有权限的部门";
+        }
         return;
       }
-      if (!findCategoryEntry(trimmedCat) && isSuperAdmin()) {
-        if (!confirm(`分类「${trimmedCat}」不存在，是否新建并移入？`)) return;
-        categories.push({ name: trimmedCat, subs: [] });
-      } else if (!findCategoryEntry(trimmedCat)) {
-        alert("目标部门不存在");
+      if (!findCategoryEntry(trimmedCat)) {
+        if (errorEl) {
+          errorEl.hidden = false;
+          errorEl.textContent = "目标部门不存在";
+        }
         return;
       }
-      let nextDept = "";
-      const subs = getEffectiveSubsForCategory(trimmedCat);
-      if (subs.length) {
-        const deptInput = prompt(
-          `选择「${trimmedCat}」的子部门（可留空）：\n可选：${subs.join("、")}`,
-          String(person.department || "").trim()
-        );
-        if (deptInput == null) return;
-        nextDept = String(deptInput || "").trim();
-      } else {
-        const deptInput = prompt(
-          `子部门（可留空，如 结构研发一部）：`,
-          String(person.department || "").trim()
-        );
-        if (deptInput == null) return;
-        nextDept = String(deptInput || "").trim();
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "移动中…";
       }
       talents = talents.map(item => item.id === person.id
         ? { ...item, category: trimmedCat, department: nextDept }
@@ -4160,14 +4267,35 @@
       );
       try {
         await saveTalents();
+        document.querySelector("#moveDialog")?.close();
+        movingTalentId = null;
         activeCategory = trimmedCat;
         activeDepartment = nextDept;
         if (nextDept) setCategoryExpanded(trimmedCat, true);
         activeView = "list";
         render();
+        if (currentProfileId === person.id && els.profileDialog?.open) {
+          const updated = talents.find(item => item.id === person.id);
+          if (updated) {
+            els.profileTitle.textContent = `${updated.name || "人才"} · 完整档案`;
+            els.profileBody.innerHTML = buildProfileSheetHtml(updated);
+          }
+        }
       } catch (error) {
-        alert(error?.message || "移动失败，请稍后重试");
+        if (errorEl) {
+          errorEl.hidden = false;
+          errorEl.textContent = error?.message || "移动失败，请稍后重试";
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "确认移动";
+        }
       }
+    }
+
+    function moveTalentToCategory(person) {
+      openMoveTalentDialog(person);
     }
 
     function applySidebarWidth(px) {
@@ -6337,14 +6465,29 @@
     document.querySelector("#moveTalentFromProfileBtn")?.addEventListener("click", async () => {
       const person = talents.find(item => item.id === currentProfileId);
       if (!person) return;
-      await moveTalentToCategory(person);
-      if (currentProfileId) {
-        const updated = talents.find(item => item.id === currentProfileId);
-        if (updated) {
-          els.profileTitle.textContent = `${updated.name || "人才"} · 完整档案`;
-          els.profileBody.innerHTML = buildProfileSheetHtml(updated);
-        }
-      }
+      openMoveTalentDialog(person);
+    });
+
+    document.querySelector("#moveCategorySelect")?.addEventListener("change", () => {
+      const person = talents.find(item => item.id === movingTalentId);
+      const cat = document.querySelector("#moveCategorySelect")?.value || "";
+      const preferred = person && String(person.category || "").trim() === cat
+        ? String(person.department || "").trim()
+        : "";
+      syncMoveDepartmentSelect(cat, preferred);
+    });
+
+    document.querySelector("#moveForm")?.addEventListener("submit", confirmMoveTalent);
+    document.querySelector("#closeMoveDialog")?.addEventListener("click", () => {
+      document.querySelector("#moveDialog")?.close();
+      movingTalentId = null;
+    });
+    document.querySelector("#cancelMoveBtn")?.addEventListener("click", () => {
+      document.querySelector("#moveDialog")?.close();
+      movingTalentId = null;
+    });
+    document.querySelector("#moveDialog")?.addEventListener("close", () => {
+      movingTalentId = null;
     });
 
     els.productRows.addEventListener("click", event => {
