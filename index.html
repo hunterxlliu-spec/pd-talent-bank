@@ -895,31 +895,34 @@
       gap: 12px;
     }
 
-    .product-row {
+    .product-multiselect {
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 12px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
       background: #fcfcfd;
       width: 100%;
       min-width: 0;
-      align-items: end;
-      animation: expandRow .18s ease-out;
+      display: grid;
+      gap: 12px;
     }
 
-    .product-row > .field {
-      flex: 1 1 200px;
-      min-width: 0;
+    .product-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
     }
 
-    .product-row > .remove-product {
-      flex: 0 0 auto;
-      align-self: end;
+    .product-checkboxes label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--fs-sm);
+      color: #344054;
+      cursor: pointer;
+      user-select: none;
     }
 
-    .product-row .product-custom-wrap[hidden] {
+    .product-multiselect .product-custom-wrap[hidden] {
       display: none !important;
     }
 
@@ -1493,7 +1496,6 @@
 
       .filters,
       .form-grid,
-      .product-row,
       .custom-row,
       .info-grid,
       .full-info-grid,
@@ -1508,16 +1510,9 @@
         grid-column: 1 / -1;
       }
 
-      .product-row > .field,
-      .product-row > button,
       .custom-row > .field,
       .custom-row > button {
         grid-column: 1 / -1;
-      }
-
-      .product-row > .field,
-      .product-row > button {
-        flex: 1 1 100%;
       }
 
       .section-title {
@@ -2187,7 +2182,6 @@
 
         <div class="section-title">
           <h4>过往产品信息</h4>
-          <button class="btn" type="button" id="addProductBtn">添加产品</button>
         </div>
         <div id="productRows"></div>
 
@@ -3270,7 +3264,7 @@
       if (!list.some(person => person.id === selectedId)) selectedId = list[0]?.id || talents[0]?.id || null;
 
       els.rows.innerHTML = list.map(person => {
-        const products = (person.products || []).slice(0, 2).map(item => {
+        const products = (person.products || []).map(item => {
           const label = productDisplayName(item);
           if (!label) return "";
           return `<span class="tag ${isPresetAppleProduct(item) ? "apple" : ""}">${escapeHtml(label)}</span>`;
@@ -3860,69 +3854,71 @@
       return dataUrl;
     }
 
-    function productRowTemplate(item = {}) {
-      const value = String(item.value || "").trim();
-      const isOther = value === PRODUCT_OTHER;
-      const optionsHtml = [
-        `<option value="">请选择产品</option>`,
-        ...PRODUCT_OPTIONS.map(opt => {
-          const label = opt === PRODUCT_OTHER ? "其他（其他可自行编辑）" : opt;
-          return `<option value="${escapeHtml(opt)}" ${value === opt ? "selected" : ""}>${escapeHtml(label)}</option>`;
-        })
-      ].join("");
-      return `
-        <div class="product-row">
-          <div class="field">
-            <label>产品</label>
-            <select class="product-value">${optionsHtml}</select>
+    function syncProductCustomVisibility() {
+      const otherChecked = Boolean(
+        els.productRows.querySelector(`.product-option[value="${CSS.escape(PRODUCT_OTHER)}"]:checked`)
+      );
+      const wrap = els.productRows.querySelector(".product-custom-wrap");
+      const input = els.productRows.querySelector(".product-custom");
+      if (wrap) wrap.hidden = !otherChecked;
+      if (!otherChecked && input) input.value = "";
+    }
+
+    function renderProductRows(products = []) {
+      const normalized = (Array.isArray(products) ? products : [])
+        .map(normalizeProduct)
+        .filter(Boolean);
+      const selected = new Set();
+      const otherNames = [];
+      normalized.forEach(item => {
+        if (item.value === PRODUCT_OTHER) {
+          selected.add(PRODUCT_OTHER);
+          const custom = String(item.customName || "").trim();
+          if (custom) otherNames.push(custom);
+        } else if (PRODUCT_OPTIONS.includes(item.value)) {
+          selected.add(item.value);
+        }
+      });
+      const customJoined = otherNames.join("、");
+      const optionsHtml = PRODUCT_OPTIONS.map(opt => {
+        const label = opt === PRODUCT_OTHER ? "其他（可自行填写）" : opt;
+        return `
+          <label>
+            <input type="checkbox" class="product-option" value="${escapeHtml(opt)}" ${selected.has(opt) ? "checked" : ""}>
+            <span>${escapeHtml(label)}</span>
+          </label>
+        `;
+      }).join("");
+      els.productRows.innerHTML = `
+        <div class="product-multiselect">
+          <div class="product-checkboxes">${optionsHtml}</div>
+          <div class="field product-custom-wrap" ${selected.has(PRODUCT_OTHER) ? "" : "hidden"}>
+            <label for="productCustomName">自定义产品名称</label>
+            <input id="productCustomName" class="product-custom" placeholder="多个可用顿号或逗号分隔" value="${escapeHtml(customJoined)}">
           </div>
-          <div class="field product-custom-wrap" ${isOther ? "" : "hidden"}>
-            <label>自定义产品名称</label>
-            <input class="product-custom" placeholder="请输入产品名称" value="${escapeHtml(item.customName || "")}">
-          </div>
-          <button class="btn danger remove-product" type="button">删除</button>
         </div>
       `;
     }
 
-    function syncProductCustomVisibility(row) {
-      if (!row) return;
-      const select = row.querySelector(".product-value");
-      const wrap = row.querySelector(".product-custom-wrap");
-      const input = row.querySelector(".product-custom");
-      const isOther = select?.value === PRODUCT_OTHER;
-      if (wrap) wrap.hidden = !isOther;
-      if (!isOther && input) input.value = "";
-    }
-
-    function renderProductRows(products) {
-      els.productRows.innerHTML = products.length
-        ? products.map(product => productRowTemplate(product)).join("")
-        : "";
-    }
-
-    function addProductRow(item = {}) {
-      els.productRows.insertAdjacentHTML("beforeend", productRowTemplate(item));
-      const row = els.productRows.lastElementChild;
-      syncProductCustomVisibility(row);
-      row?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      row?.querySelector(".product-value")?.focus();
-    }
-
     function readProductRows() {
-      return [...els.productRows.querySelectorAll(".product-row")]
-        .map(row => {
-          const value = row.querySelector(".product-value")?.value.trim() || "";
-          if (!value) return null;
-          if (value === PRODUCT_OTHER) {
-            return {
-              value: PRODUCT_OTHER,
-              customName: row.querySelector(".product-custom")?.value.trim() || ""
-            };
-          }
-          return { value };
-        })
+      const checked = [...els.productRows.querySelectorAll(".product-option:checked")]
+        .map(input => input.value.trim())
         .filter(Boolean);
+      const products = [];
+      const seen = new Set();
+      checked.forEach(value => {
+        if (seen.has(value)) return;
+        seen.add(value);
+        if (value === PRODUCT_OTHER) {
+          products.push({
+            value: PRODUCT_OTHER,
+            customName: els.productRows.querySelector(".product-custom")?.value.trim() || ""
+          });
+          return;
+        }
+        if (PRODUCT_OPTIONS.includes(value)) products.push({ value });
+      });
+      return products;
     }
 
     function customFieldRowTemplate(item = {}) {
@@ -4122,9 +4118,6 @@
       }
     });
 
-    document.querySelector("#addProductBtn").addEventListener("click", () => {
-      addProductRow();
-    });
     document.querySelector("#addCustomFieldBtn").addEventListener("click", () => {
       els.customFieldRows.insertAdjacentHTML("beforeend", customFieldRowTemplate());
     });
@@ -4134,18 +4127,11 @@
       await exportPersonToPdf(person);
     });
 
-    els.productRows.addEventListener("click", event => {
-      if (event.target.classList.contains("remove-product")) {
-        event.target.closest(".product-row").remove();
-      }
-    });
-
     els.productRows.addEventListener("change", event => {
-      if (event.target.classList.contains("product-value")) {
-        syncProductCustomVisibility(event.target.closest(".product-row"));
-        if (event.target.value === PRODUCT_OTHER) {
-          event.target.closest(".product-row")?.querySelector(".product-custom")?.focus();
-        }
+      if (!event.target.classList.contains("product-option")) return;
+      syncProductCustomVisibility();
+      if (event.target.value === PRODUCT_OTHER && event.target.checked) {
+        els.productRows.querySelector(".product-custom")?.focus();
       }
     });
 
