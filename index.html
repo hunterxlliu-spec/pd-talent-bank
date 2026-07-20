@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-edu-pie-labels -->
+  <!-- deploy-bust: 20260720-dual-pies -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -440,6 +440,54 @@
       padding-bottom: 16px;
     }
 
+    .dashboard-pies {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .dash-pie-card {
+      min-width: 0;
+      padding-bottom: 14px;
+    }
+
+    .dash-pie-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .dash-pie-head h3 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 650;
+      color: var(--muted);
+    }
+
+    .dash-pie-head .field {
+      flex: 0 1 168px;
+      gap: 2px;
+    }
+
+    .dash-pie-head label {
+      font-size: 11px;
+    }
+
+    .dash-pie-head select {
+      min-height: 32px;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .dash-pie-note {
+      margin: 0 0 4px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
     .edu-chart {
       display: grid;
       gap: 18px;
@@ -547,7 +595,8 @@
       .summary-bar {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-      .dashboard-hero {
+      .dashboard-hero,
+      .dashboard-pies {
         grid-template-columns: 1fr;
       }
       .filters {
@@ -2391,11 +2440,30 @@
                 <p class="dashboard-card-note" id="dashAvgAgeNote">基于有出生日期 / 年龄的档案</p>
               </article>
             </div>
-            <article class="dashboard-card dashboard-edu-card">
-              <h3>学历分布</h3>
-              <p class="dashboard-card-note">按当前可见人才统计（专科 / 本科 / 硕士 / 博士 / 其他）</p>
-              <div class="edu-chart" id="dashEducationBars"></div>
-            </article>
+            <div class="dashboard-pies" aria-label="分布饼图">
+              <article class="dashboard-card dash-pie-card">
+                <div class="dash-pie-head">
+                  <h3>分布分析 A</h3>
+                  <div class="field">
+                    <label for="dashPieLeftDim">分类维度</label>
+                    <select id="dashPieLeftDim"></select>
+                  </div>
+                </div>
+                <p class="dash-pie-note" id="dashPieLeftNote">按当前可见人才统计</p>
+                <div class="edu-chart" id="dashPieLeft"></div>
+              </article>
+              <article class="dashboard-card dash-pie-card">
+                <div class="dash-pie-head">
+                  <h3>分布分析 B</h3>
+                  <div class="field">
+                    <label for="dashPieRightDim">分类维度</label>
+                    <select id="dashPieRightDim"></select>
+                  </div>
+                </div>
+                <p class="dash-pie-note" id="dashPieRightNote">按当前可见人才统计</p>
+                <div class="edu-chart" id="dashPieRight"></div>
+              </article>
+            </div>
           </section>
 
           <div class="list-panel" id="listPanel">
@@ -3205,6 +3273,8 @@
     let syncTimer = null;
     let draftPhotoUrl = "";
     let photoProcessing = false;
+    let dashPieLeftDim = "education";
+    let dashPieRightDim = "age";
 
     const els = {
       statTotal: document.querySelector("#statTotal"),
@@ -3239,7 +3309,12 @@
       dashTotalNote: document.querySelector("#dashTotalNote"),
       dashAvgAge: document.querySelector("#dashAvgAge"),
       dashAvgAgeNote: document.querySelector("#dashAvgAgeNote"),
-      dashEducationBars: document.querySelector("#dashEducationBars")
+      dashPieLeft: document.querySelector("#dashPieLeft"),
+      dashPieRight: document.querySelector("#dashPieRight"),
+      dashPieLeftDim: document.querySelector("#dashPieLeftDim"),
+      dashPieRightDim: document.querySelector("#dashPieRightDim"),
+      dashPieLeftNote: document.querySelector("#dashPieLeftNote"),
+      dashPieRightNote: document.querySelector("#dashPieRightNote")
     };
 
     function setSyncStatus(text) {
@@ -3719,28 +3794,201 @@
       return "其他";
     }
 
+    const DASH_PIE_PALETTE = [
+      "#3da9a0", "#5b8def", "#e8a23a", "#ce673d", "#6b7c8f",
+      "#4f8f6a", "#c47a5a", "#7a8fd4", "#b7c0cc", "#2f8f88"
+    ];
+
+    const DASH_SLICE_COLORS = {
+      "专科": "#5b8def",
+      "本科": "#3da9a0",
+      "硕士": "#e8a23a",
+      "博士": "#ce673d",
+      "其他": "#6b7c8f",
+      "未填写": "#b7c0cc",
+      "25岁以下": "#5b8def",
+      "25~35岁": "#3da9a0",
+      "35岁以上": "#ce673d",
+      "男": "#5b8def",
+      "女": "#e8a23a",
+      "在职": "#3da9a0",
+      "候选": "#e8a23a",
+      "储备": "#5b8def",
+      "离职": "#6b7c8f",
+      "有产品经验": "#3da9a0",
+      "无产品经验": "#b7c0cc",
+      "3年以下": "#5b8def",
+      "3~8年": "#3da9a0",
+      "8年以上": "#ce673d",
+      "仅能读写": "#b7c0cc",
+      "基本沟通读写": "#e8a23a",
+      "无障碍沟通听说读写": "#3da9a0"
+    };
+
+    const DASH_DIMENSIONS = [
+      {
+        id: "education",
+        label: "学历",
+        note: "专科 / 本科 / 硕士 / 博士 / 其他",
+        order: [...EDUCATION_OPTIONS, "未填写"],
+        bucket: person => normalizeEducationLabel(person.education)
+      },
+      {
+        id: "age",
+        label: "年龄层级",
+        note: "25岁以下 / 25~35岁 / 35岁以上",
+        order: ["25岁以下", "25~35岁", "35岁以上", "未填写"],
+        bucket: person => {
+          const age = personAgeNumber(person);
+          if (age == null) return "未填写";
+          if (age < 25) return "25岁以下";
+          if (age <= 35) return "25~35岁";
+          return "35岁以上";
+        }
+      },
+      {
+        id: "gender",
+        label: "性别",
+        note: "男 / 女",
+        order: ["男", "女", "未填写"],
+        bucket: person => {
+          const value = String(person.gender || "").trim();
+          if (value === "男" || value === "女") return value;
+          return "未填写";
+        }
+      },
+      {
+        id: "status",
+        label: "在职状态",
+        note: "在职 / 候选 / 储备 / 离职",
+        order: ["在职", "候选", "储备", "离职", "未填写"],
+        bucket: person => {
+          const value = String(person.status || "").trim();
+          if (["在职", "候选", "储备", "离职"].includes(value)) return value;
+          return value || "未填写";
+        }
+      },
+      {
+        id: "category",
+        label: "研发分类",
+        note: "按当前可见部门分类统计",
+        order: null,
+        bucket: person => String(person.category || "").trim() || "未分类"
+      },
+      {
+        id: "title",
+        label: "职称",
+        note: "助理工程师 / 工程师 / 高级工程师 / 专家",
+        order: [...TITLE_LEVEL_OPTIONS, "未填写"],
+        bucket: person => {
+          const value = String(person.titleLevel || "").trim();
+          if (!value) return "未填写";
+          return TITLE_LEVEL_OPTIONS.includes(value) ? value : "其他";
+        }
+      },
+      {
+        id: "english",
+        label: "英语水平",
+        note: "读写 / 基本沟通 / 无障碍沟通",
+        order: [...ENGLISH_LEVEL_OPTIONS.map(item => item.value), "未填写"],
+        bucket: person => {
+          const value = String(person.englishLevel || "").trim();
+          if (!value) return "未填写";
+          return ENGLISH_LEVEL_OPTIONS.some(item => item.value === value) ? value : "其他";
+        }
+      },
+      {
+        id: "product",
+        label: "产品经验",
+        note: "有产品经验 / 无产品经验",
+        order: ["有产品经验", "无产品经验"],
+        bucket: person => {
+          const has = yearsSince(person.appleStartDate) > 0
+            || (person.products || []).some(item => isPresetAppleProduct(item) || productDisplayName(item));
+          return has ? "有产品经验" : "无产品经验";
+        }
+      },
+      {
+        id: "workYears",
+        label: "工作年限",
+        note: "3年以下 / 3~8年 / 8年以上",
+        order: ["3年以下", "3~8年", "8年以上", "未填写"],
+        bucket: person => {
+          if (!person.firstWorkDate) return "未填写";
+          const years = yearsSince(person.firstWorkDate);
+          if (!Number.isFinite(years) || years < 0) return "未填写";
+          if (years < 3) return "3年以下";
+          if (years <= 8) return "3~8年";
+          return "8年以上";
+        }
+      }
+    ];
+
+    function getDashDimension(id) {
+      return DASH_DIMENSIONS.find(item => item.id === id) || DASH_DIMENSIONS[0];
+    }
+
+    function sliceColor(label, index = 0) {
+      return DASH_SLICE_COLORS[label] || DASH_PIE_PALETTE[index % DASH_PIE_PALETTE.length];
+    }
+
+    function computeDistribution(list, dimensionId) {
+      const dim = getDashDimension(dimensionId);
+      const total = list.length;
+      const counts = new Map();
+      list.forEach(person => {
+        const label = dim.bucket(person);
+        counts.set(label, (counts.get(label) || 0) + 1);
+      });
+      let labels = dim.order ? [...dim.order] : [...counts.keys()].sort((a, b) => {
+        if (a === "未分类" || a === "未填写" || a === "其他") return 1;
+        if (b === "未分类" || b === "未填写" || b === "其他") return -1;
+        return (counts.get(b) || 0) - (counts.get(a) || 0) || a.localeCompare(b, "zh");
+      });
+      labels.forEach(label => {
+        if (!counts.has(label)) counts.set(label, 0);
+      });
+      [...counts.keys()].forEach(label => {
+        if (!labels.includes(label)) labels.push(label);
+      });
+      const items = labels
+        .map(label => {
+          const count = counts.get(label) || 0;
+          return {
+            label,
+            count,
+            percent: total ? Math.round((count / total) * 1000) / 10 : 0
+          };
+        })
+        .filter(item => {
+          if (dim.order) return item.count > 0 || dim.order.includes(item.label);
+          return item.count > 0;
+        });
+      return { dim, items, total };
+    }
+
     function computeDashboardMetrics(list = talents) {
       const total = list.length;
       const ages = list.map(personAgeNumber).filter(age => age != null);
       const avgAge = ages.length
         ? Math.round((ages.reduce((sum, age) => sum + age, 0) / ages.length) * 10) / 10
         : null;
-
-      const eduOrder = [...EDUCATION_OPTIONS, "未填写"];
-      const eduCounts = Object.fromEntries(eduOrder.map(label => [label, 0]));
-      list.forEach(person => {
-        const label = normalizeEducationLabel(person.education);
-        eduCounts[label] = (eduCounts[label] || 0) + 1;
-      });
-      const education = eduOrder
-        .map(label => ({
-          label,
-          count: eduCounts[label] || 0,
-          percent: total ? Math.round(((eduCounts[label] || 0) / total) * 1000) / 10 : 0
-        }))
-        .filter(item => item.count > 0 || EDUCATION_OPTIONS.includes(item.label));
-
+      const education = computeDistribution(list, "education").items;
       return { total, avgAge, ageSampleSize: ages.length, education };
+    }
+
+    function fillDashDimensionSelects() {
+      const options = DASH_DIMENSIONS.map(item => (
+        `<option value="${escapeHtml(item.id)}">${escapeHtml(item.label)}</option>`
+      )).join("");
+      if (els.dashPieLeftDim) {
+        els.dashPieLeftDim.innerHTML = options;
+        els.dashPieLeftDim.value = dashPieLeftDim;
+      }
+      if (els.dashPieRightDim) {
+        els.dashPieRightDim.innerHTML = options;
+        els.dashPieRightDim.value = dashPieRightDim;
+      }
     }
 
     function setActiveView(view) {
@@ -3755,11 +4003,10 @@
       if (els.mainTitle) els.mainTitle.textContent = isDashboard ? "数据看板" : "人才管理";
       if (els.mainSubtitle) {
         els.mainSubtitle.textContent = isDashboard
-          ? "人才总数 · 平均年龄 · 学历分布"
+          ? "人才总数 · 平均年龄 · 双饼图对比分析"
           : "U01-A BG · 结构 / 硬件 / 声学等研发部门";
       }
       if (isDashboard) {
-        // Clear category highlight while on dashboard
         els.categoryNav?.querySelectorAll(".nav-item.active").forEach(node => node.classList.remove("active"));
         els.mobileCategoryBar?.querySelectorAll(".mobile-category-chip.active").forEach(node => node.classList.remove("active"));
       }
@@ -3790,19 +4037,6 @@
       }
     }
 
-    const EDUCATION_COLORS = {
-      "专科": "#5b8def",
-      "本科": "#3da9a0",
-      "硕士": "#e8a23a",
-      "博士": "#ce673d",
-      "其他": "#6b7c8f",
-      "未填写": "#b7c0cc"
-    };
-
-    function educationColor(label) {
-      return EDUCATION_COLORS[label] || "#94a3b8";
-    }
-
     function polarToCartesian(cx, cy, r, angleRad) {
       return {
         x: cx + r * Math.cos(angleRad),
@@ -3822,17 +4056,17 @@
       ].join(" ");
     }
 
-    function buildEducationPieHtml(education) {
-      const slices = education.filter(item => item.count > 0);
-      const legendItems = education.length ? education : [];
+    function buildPieChartHtml(distribution, chartTitle = "分布饼图") {
+      const slices = distribution.items.filter(item => item.count > 0);
+      const legendItems = distribution.items;
       if (!slices.length) {
         return `
-          <div class="edu-pie-empty">暂无学历数据</div>
-          <ul class="edu-legend" aria-label="学历分布备注">
-            ${legendItems.map(item => `
+          <div class="edu-pie-empty">暂无数据</div>
+          <ul class="edu-legend" aria-label="${escapeHtml(chartTitle)}备注">
+            ${legendItems.map((item, index) => `
               <li class="edu-legend-item">
-                <span class="edu-legend-swatch" style="background:${educationColor(item.label)}"></span>
-                <span class="edu-legend-label">${escapeHtml(item.label)}</span>
+                <span class="edu-legend-swatch" style="background:${sliceColor(item.label, index)}"></span>
+                <span class="edu-legend-label">${escapeHtml(item.label === "无障碍沟通听说读写" ? "无障碍沟通" : item.label)}</span>
                 <span class="edu-legend-meta"><strong>0</strong> · 0%</span>
               </li>
             `).join("")}
@@ -3843,31 +4077,31 @@
       const total = slices.reduce((sum, item) => sum + item.count, 0) || 1;
       const cx = 210;
       const cy = 140;
-      const r = 72;
-      const elbowR = r + 16;
-      const labelR = r + 48;
+      const r = 68;
+      const elbowR = r + 14;
+      const labelR = r + 46;
       let angle = -Math.PI / 2;
-      const sliceMeta = slices.map(item => {
+      const sliceMeta = slices.map((item, index) => {
         const sweep = (item.count / total) * Math.PI * 2;
         const start = angle;
         const end = angle + sweep;
         const mid = start + sweep / 2;
         angle = end;
-        return { ...item, start, end, mid, sweep };
+        return { ...item, start, end, mid, sweep, colorIndex: index };
       });
 
       const paths = sliceMeta.map(item => {
+        const color = sliceColor(item.label, item.colorIndex);
         if (item.count === total) {
-          return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${educationColor(item.label)}">
+          return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}">
             <title>${escapeHtml(item.label)}：${item.count}人（${item.percent}%）</title>
           </circle>`;
         }
-        return `<path d="${describePieSlice(cx, cy, r, item.start, item.end)}" fill="${educationColor(item.label)}">
+        return `<path d="${describePieSlice(cx, cy, r, item.start, item.end)}" fill="${color}">
           <title>${escapeHtml(item.label)}：${item.count}人（${item.percent}%）</title>
         </path>`;
       }).join("");
 
-      // Place callout labels with simple vertical deconflict per side
       const planned = sliceMeta.map(item => {
         const onRight = Math.cos(item.mid) >= 0;
         const startPt = polarToCartesian(cx, cy, r * 0.82, item.mid);
@@ -3889,32 +4123,44 @@
         const labelX = onRight ? cx + labelR : cx - labelR;
         const anchor = onRight ? "start" : "end";
         const lineEndX = onRight ? labelX - 4 : labelX + 4;
-        const color = educationColor(item.label);
+        const color = sliceColor(item.label, item.colorIndex);
+        const shortLabel = item.label === "无障碍沟通听说读写" ? "无障碍沟通"
+          : item.label === "基本沟通读写" ? "基本沟通"
+          : item.label;
         return `
           <path class="edu-pie-leader" d="M ${startPt.x.toFixed(1)} ${startPt.y.toFixed(1)} L ${elbow.x.toFixed(1)} ${elbow.y.toFixed(1)} L ${lineEndX.toFixed(1)} ${labelY.toFixed(1)}" stroke="${color}"></path>
           <circle cx="${startPt.x.toFixed(1)}" cy="${startPt.y.toFixed(1)}" r="2.2" fill="${color}"></circle>
-          <text class="edu-pie-label-strong" x="${labelX.toFixed(1)}" y="${(labelY - 2).toFixed(1)}" text-anchor="${anchor}">${escapeHtml(item.label)}</text>
+          <text class="edu-pie-label-strong" x="${labelX.toFixed(1)}" y="${(labelY - 2).toFixed(1)}" text-anchor="${anchor}">${escapeHtml(shortLabel)}</text>
           <text class="edu-pie-label" x="${labelX.toFixed(1)}" y="${(labelY + 11).toFixed(1)}" text-anchor="${anchor}">${item.percent}% · ${item.count}人</text>
         `;
       }).join("");
 
       return `
         <div class="edu-pie-wrap">
-          <svg viewBox="0 0 420 280" role="img" aria-label="学历分布饼图">
+          <svg viewBox="0 0 420 280" role="img" aria-label="${escapeHtml(chartTitle)}">
             ${paths}
             ${leaders}
           </svg>
         </div>
-        <ul class="edu-legend" aria-label="学历分布备注">
-          ${legendItems.map(item => `
+        <ul class="edu-legend" aria-label="${escapeHtml(chartTitle)}备注">
+          ${legendItems.map((item, index) => `
             <li class="edu-legend-item">
-              <span class="edu-legend-swatch" style="background:${educationColor(item.label)}"></span>
-              <span class="edu-legend-label">${escapeHtml(item.label)}</span>
+              <span class="edu-legend-swatch" style="background:${sliceColor(item.label, index)}"></span>
+              <span class="edu-legend-label">${escapeHtml(item.label === "无障碍沟通听说读写" ? "无障碍沟通" : item.label)}</span>
               <span class="edu-legend-meta"><strong>${item.count}</strong> · ${item.percent}%</span>
             </li>
           `).join("")}
         </ul>
       `;
+    }
+
+    function renderDashPie(side) {
+      const dimId = side === "left" ? dashPieLeftDim : dashPieRightDim;
+      const noteEl = side === "left" ? els.dashPieLeftNote : els.dashPieRightNote;
+      const chartEl = side === "left" ? els.dashPieLeft : els.dashPieRight;
+      const distribution = computeDistribution(talents, dimId);
+      if (noteEl) noteEl.textContent = `按当前可见人才统计 · ${distribution.dim.note}`;
+      if (chartEl) chartEl.innerHTML = buildPieChartHtml(distribution, distribution.dim.label);
     }
 
     function renderDashboard() {
@@ -3935,9 +4181,9 @@
           ? `基于 ${metrics.ageSampleSize} 份有年龄信息的档案`
           : "暂无可用年龄数据";
       }
-      if (els.dashEducationBars) {
-        els.dashEducationBars.innerHTML = buildEducationPieHtml(metrics.education);
-      }
+      fillDashDimensionSelects();
+      renderDashPie("left");
+      renderDashPie("right");
     }
 
     function renderTable() {
@@ -4992,6 +5238,16 @@
     els.dashboardNavBtn?.addEventListener("click", () => {
       activeView = "dashboard";
       render();
+    });
+
+    els.dashPieLeftDim?.addEventListener("change", () => {
+      dashPieLeftDim = els.dashPieLeftDim.value || "education";
+      renderDashPie("left");
+    });
+
+    els.dashPieRightDim?.addEventListener("change", () => {
+      dashPieRightDim = els.dashPieRightDim.value || "age";
+      renderDashPie("right");
     });
 
     els.mobileCategoryBar?.addEventListener("click", event => {
