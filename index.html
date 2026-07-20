@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-en-level-num -->
+  <!-- deploy-bust: 20260720-sub-dept -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -2785,8 +2785,9 @@
             <select id="category" required></select>
           </div>
           <div class="field">
-            <label for="department">科室 / 小组</label>
-            <input id="department" placeholder="如 NPI、结构一组">
+            <label for="department">子部门</label>
+            <select id="department"></select>
+            <input id="departmentText" hidden placeholder="如 结构研发一部">
           </div>
           <div class="field">
             <label for="position">岗位</label>
@@ -3017,7 +3018,7 @@
     }
 
     function getPermissionCategoryOptions() {
-      const names = categories.length ? categories : [...DEFAULT_CATEGORIES];
+      const names = categories.length ? getCategoryNameList() : [...DEFAULT_CATEGORIES];
       const unique = [];
       names.forEach(name => {
         const trimmed = String(name || "").trim();
@@ -3404,7 +3405,7 @@
     ];
 
     let talents = [];
-    let categories = [...DEFAULT_CATEGORIES];
+    let categories = normalizeCategories(DEFAULT_CATEGORIES);
     let activeCategory = ALL_CATEGORY;
     let activeView = "list"; // list | dashboard
     let selectedId = null;
@@ -3490,34 +3491,142 @@
       if (els.syncStatus) els.syncStatus.textContent = text;
     }
 
+    function normalizeCategoryEntry(item) {
+      if (item && typeof item === "object" && !Array.isArray(item)) {
+        const name = String(item.name || "").trim();
+        if (!name) return null;
+        const rawSubs = Array.isArray(item.subs) ? item.subs : [];
+        const subs = [];
+        rawSubs.forEach(sub => {
+          const text = String(sub || "").trim();
+          if (text && !subs.includes(text)) subs.push(text);
+        });
+        return { name, subs };
+      }
+      const name = String(item || "").trim();
+      return name ? { name, subs: [] } : null;
+    }
+
     function normalizeCategories(list) {
       const values = Array.isArray(list) ? list : [];
       const unique = [];
+      const seen = new Set();
       values.forEach(item => {
-        const name = String(item || "").trim();
-        if (name && !unique.includes(name)) unique.push(name);
+        const entry = normalizeCategoryEntry(item);
+        if (!entry || seen.has(entry.name)) return;
+        seen.add(entry.name);
+        unique.push(entry);
       });
       return unique;
+    }
+
+    function categoryNameOf(item) {
+      if (item && typeof item === "object") return String(item.name || "").trim();
+      return String(item || "").trim();
+    }
+
+    function getCategoryNameList(list = categories) {
+      return normalizeCategories(list).map(entry => entry.name);
+    }
+
+    function findCategoryEntry(name, list = categories) {
+      const target = String(name || "").trim();
+      if (!target) return null;
+      return normalizeCategories(list).find(entry => entry.name === target) || null;
+    }
+
+    function getSubsForCategory(category, list = categories) {
+      return findCategoryEntry(category, list)?.subs?.slice() || [];
+    }
+
+    function setCategorySubs(category, subs) {
+      const target = String(category || "").trim();
+      if (!target) return;
+      const nextSubs = [];
+      const raw = Array.isArray(subs) ? subs : String(subs || "").split(/[,，、]/);
+      raw.forEach(item => {
+        const text = String(item || "").trim();
+        if (text && !nextSubs.includes(text)) nextSubs.push(text);
+      });
+      let found = false;
+      categories = normalizeCategories(categories).map(entry => {
+        if (entry.name !== target) return entry;
+        found = true;
+        return { name: entry.name, subs: nextSubs };
+      });
+      if (!found) categories.push({ name: target, subs: nextSubs });
+    }
+
+    function syncDepartmentFieldForCategory(category, selectedDept = "") {
+      const select = getField("department");
+      const text = getField("departmentText");
+      const subs = getSubsForCategory(category);
+      const selected = String(selectedDept || "").trim();
+      if (subs.length) {
+        if (select) {
+          select.hidden = false;
+          select.innerHTML = [
+            `<option value="">请选择子部门</option>`,
+            ...subs.map(name => (
+              `<option value="${escapeHtml(name)}" ${name === selected ? "selected" : ""}>${escapeHtml(name)}</option>`
+            ))
+          ].join("");
+          if (selected && !subs.includes(selected)) {
+            select.insertAdjacentHTML(
+              "beforeend",
+              `<option value="${escapeHtml(selected)}" selected>${escapeHtml(selected)}</option>`
+            );
+          }
+          select.value = selected;
+        }
+        if (text) {
+          text.hidden = true;
+          text.value = "";
+        }
+        return;
+      }
+      if (select) {
+        select.hidden = true;
+        select.innerHTML = `<option value=""></option>`;
+        select.value = "";
+      }
+      if (text) {
+        text.hidden = false;
+        text.placeholder = "如 结构研发一部";
+        text.value = selected;
+      }
+    }
+
+    function readDepartmentFieldValue() {
+      const select = getField("department");
+      const text = getField("departmentText");
+      if (select && !select.hidden) return String(select.value || "").trim();
+      if (text && !text.hidden) return String(text.value || "").trim();
+      return String(text?.value || select?.value || "").trim();
     }
 
     function applyAclToLocalState(list = talents, nextCategories = categories) {
       if (isSuperAdmin()) {
         categories = normalizeCategories(nextCategories);
-        if (!categories.length) categories = [...DEFAULT_CATEGORIES];
+        if (!categories.length) categories = normalizeCategories(DEFAULT_CATEGORIES);
         return normalizeTalentList(list);
       }
       const allowed = new Set(authAllowedCategories);
-      categories = normalizeCategories(nextCategories).filter(name => allowed.has(name));
-      if (!categories.length) categories = [...authAllowedCategories];
+      categories = normalizeCategories(nextCategories).filter(entry => allowed.has(entry.name));
+      if (!categories.length) categories = normalizeCategories(authAllowedCategories);
       return normalizeTalentList(list).filter(person => allowed.has(String(person.category || "").trim()));
     }
 
     function ensureCategoriesFromTalents(list = talents) {
       if (!isSuperAdmin()) return;
-      const next = [...categories];
+      const next = normalizeCategories(categories);
+      const seen = new Set(next.map(entry => entry.name));
       list.forEach(person => {
         const name = String(person.category || "").trim();
-        if (name && !next.includes(name)) next.push(name);
+        if (name && !seen.has(name)) {
+          next.push({ name, subs: [] });
+          seen.add(name);
+        }
       });
       categories = next;
     }
@@ -3535,7 +3644,7 @@
       const select = getField("category");
       if (!select) return;
       const options = isSuperAdmin()
-        ? (categories.length ? categories : [...DEFAULT_CATEGORIES])
+        ? (categories.length ? getCategoryNameList() : [...DEFAULT_CATEGORIES])
         : [...authAllowedCategories];
       select.innerHTML = options.map(name => (
         `<option value="${escapeHtml(name)}" ${name === selected ? "selected" : ""}>${escapeHtml(name)}</option>`
@@ -3598,7 +3707,7 @@
     function getCategoryItems() {
       return [
         { id: ALL_CATEGORY, title: "全部人才", editable: false },
-        ...categories.map(name => ({ id: name, title: name, editable: true })),
+        ...getCategoryNameList().map(name => ({ id: name, title: name, editable: true })),
         { id: UNCATEGORIZED, title: "未分类", editable: false }
       ];
     }
@@ -3606,7 +3715,7 @@
     function getAllowedCategoryItems() {
       if (isSuperAdmin()) return getCategoryItems();
       const allowed = new Set(authAllowedCategories);
-      const ordered = categories.filter(name => allowed.has(name));
+      const ordered = getCategoryNameList().filter(name => allowed.has(name));
       // Keep any newly assigned ACL categories not yet in local categories order
       authAllowedCategories.forEach(name => {
         if (name && !ordered.includes(name)) ordered.push(name);
@@ -3621,7 +3730,7 @@
     function renderCategoryNav() {
       const items = getAllowedCategoryItems();
       const canEditCats = isSuperAdmin();
-      const editableNames = categories;
+      const editableNames = getCategoryNameList();
       if (els.categoryNav) {
         els.categoryNav.innerHTML = items.map(item => {
           const editableIndex = editableNames.indexOf(item.id);
@@ -3638,6 +3747,7 @@
               <span class="nav-item-actions">
                 <button class="btn move-category-up-btn" type="button" title="上移" data-category="${escapeHtml(item.id)}" ${canUp ? "" : "disabled"}>↑</button>
                 <button class="btn move-category-down-btn" type="button" title="下移" data-category="${escapeHtml(item.id)}" ${canDown ? "" : "disabled"}>↓</button>
+                <button class="btn edit-subs-btn" type="button" title="子部门" data-category="${escapeHtml(item.id)}">子</button>
                 <button class="btn rename-category-btn" type="button" title="重命名" data-category="${escapeHtml(item.id)}">✎</button>
                 <button class="btn danger delete-category-btn" type="button" title="删除" data-category="${escapeHtml(item.id)}">×</button>
               </span>
@@ -3660,11 +3770,11 @@
         alert("仅超级管理员可调整分类顺序");
         return;
       }
-      const index = categories.indexOf(name);
+      const copy = normalizeCategories(categories);
+      const index = copy.findIndex(entry => entry.name === name);
       if (index < 0) return;
       const next = index + delta;
-      if (next < 0 || next >= categories.length) return;
-      const copy = [...categories];
+      if (next < 0 || next >= copy.length) return;
       const temp = copy[index];
       copy[index] = copy[next];
       copy[next] = temp;
@@ -4198,7 +4308,7 @@
 
     function getDashboardDepartments() {
       const fromAcl = isSuperAdmin()
-        ? [...new Set([...categories, ...talents.map(item => String(item.category || "").trim()).filter(Boolean)])]
+        ? [...new Set([...getCategoryNameList(), ...talents.map(item => String(item.category || "").trim()).filter(Boolean)])]
         : [...authAllowedCategories];
       return fromAcl
         .map(name => String(name || "").trim())
@@ -4562,7 +4672,7 @@
                 ${avatarHtml(person)}
                 <div>
                   <div class="person-name">${escapeHtml(person.name)}${person.englishName ? `<span class="person-name-en">${escapeHtml(person.englishName)}</span>` : ""}</div>
-                  <div class="subtext">${escapeHtml(person.category || "未分类")} · ${escapeHtml(person.employeeNo)}${person.jobGrade ? ` · 职级 ${escapeHtml(person.jobGrade)}` : ""}${person.position ? ` · ${escapeHtml(person.position)}` : ""}</div>
+                  <div class="subtext">${escapeHtml(person.category || "未分类")}${person.department ? ` · ${escapeHtml(person.department)}` : ""} · ${escapeHtml(person.employeeNo)}${person.jobGrade ? ` · 职级 ${escapeHtml(person.jobGrade)}` : ""}${person.position ? ` · ${escapeHtml(person.position)}` : ""}</div>
                 </div>
               </div>
             </td>
@@ -4737,7 +4847,7 @@
                 <h4 class="profile-card-title"><span class="profile-card-kicker">组织信息</span></h4>
                 <div class="full-info-grid cols-2">
                   ${infoItem("所属分类", person.category || "未分类")}
-                  ${infoItem("科室 / 小组", person.department)}
+                  ${infoItem("子部门", person.department)}
                   ${infoItem("岗位", person.position)}
                   ${infoItem("职级", person.jobGrade)}
                   ${infoItem("当前项目", person.currentProject)}
@@ -5113,7 +5223,7 @@
       const headers = [
         "姓名", "英文名", "工号", "性别", "年龄", "职级", "籍贯", "学历", "英语水平", "当前项目",
         "毕业学校", "专业", "毕业时间", "入职时间", "工作时间", "产品经验开始",
-        "工作年限", "产品经验年限", "过往产品", "所属分类", "科室/小组", "岗位", "状态",
+        "工作年限", "产品经验年限", "过往产品", "所属分类", "子部门", "岗位", "状态",
         "常驻基地", "技能", "证书/资质", "电话", "邮箱", "备注"
       ];
       const rows = list.map(person => [
@@ -5225,7 +5335,7 @@
       const editing = Boolean(person);
       els.dialogTitle.textContent = editing ? "编辑人才" : "新增人才";
       const allowedOptions = isSuperAdmin()
-        ? (categories.length ? categories : [...DEFAULT_CATEGORIES])
+        ? (categories.length ? getCategoryNameList() : [...DEFAULT_CATEGORIES])
         : [...authAllowedCategories];
       const defaultCategory = (
         (person?.category && canAccessCategory(person.category) ? person.category : "")
@@ -5258,7 +5368,7 @@
       getField("appleStartDate").value = normalizeDate(person?.appleStartDate);
       getField("joinDate").value = normalizeDate(person?.joinDate);
       getField("baseLocation").value = person?.baseLocation || "";
-      getField("department").value = person?.department || "";
+      syncDepartmentFieldForCategory(defaultCategory, person?.department || "");
       getField("position").value = person?.position || "";
       getField("skills").value = (person?.skills || []).join(", ");
       getField("certificates").value = person?.certificates || "";
@@ -5543,7 +5653,7 @@
           firstWorkDate: normalizeDate(getField("firstWorkDate").value),
           appleStartDate: normalizeDate(getField("appleStartDate").value),
           category,
-          department: getField("department").value.trim(),
+          department: readDepartmentFieldValue(),
           position: getField("position").value.trim(),
           skills: getField("skills").value.split(/[,，]/).map(item => item.trim()).filter(Boolean),
           certificates: getField("certificates").value.trim(),
@@ -5580,11 +5690,11 @@
       const name = prompt("请输入新的研发分类名称：", "");
       const trimmed = (name || "").trim();
       if (!trimmed) return;
-      if (categories.includes(trimmed)) {
+      if (findCategoryEntry(trimmed)) {
         alert("该分类已存在。");
         return;
       }
-      categories.push(trimmed);
+      categories.push({ name: trimmed, subs: [] });
       activeCategory = trimmed;
       activeView = "list";
       try {
@@ -5593,6 +5703,10 @@
       } catch (error) {
         alert(error?.message || "分类保存失败");
       }
+    });
+
+    document.querySelector("#category")?.addEventListener("change", () => {
+      syncDepartmentFieldForCategory(getField("category")?.value || "", "");
     });
 
     els.dashboardNavBtn?.addEventListener("click", () => {
@@ -5652,6 +5766,7 @@
       const deleteBtn = event.target.closest(".delete-category-btn");
       const moveUpBtn = event.target.closest(".move-category-up-btn");
       const moveDownBtn = event.target.closest(".move-category-down-btn");
+      const subsBtn = event.target.closest(".edit-subs-btn");
       const selectBtn = event.target.closest(".category-select-btn") || event.target.closest(".nav-item");
 
       if (moveUpBtn) {
@@ -5670,6 +5785,30 @@
         return;
       }
 
+      if (subsBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!isSuperAdmin()) {
+          alert("仅超级管理员可编辑子部门");
+          return;
+        }
+        const catName = subsBtn.dataset.category;
+        const current = getSubsForCategory(catName);
+        const next = prompt(
+          `编辑「${catName}」的子部门（用逗号或顿号分隔）：`,
+          current.join("、")
+        );
+        if (next == null) return;
+        setCategorySubs(catName, String(next).split(/[,，、]/));
+        try {
+          await saveTalents();
+          render();
+        } catch (error) {
+          alert(error?.message || "子部门保存失败");
+        }
+        return;
+      }
+
       if (renameBtn) {
         if (!isSuperAdmin()) {
           alert("仅超级管理员可重命名分类");
@@ -5679,11 +5818,13 @@
         const nextName = prompt("重命名分类：", oldName);
         const trimmed = (nextName || "").trim();
         if (!trimmed || trimmed === oldName) return;
-        if (categories.includes(trimmed)) {
+        if (findCategoryEntry(trimmed)) {
           alert("该分类已存在。");
           return;
         }
-        categories = categories.map(item => item === oldName ? trimmed : item);
+        categories = normalizeCategories(categories).map(entry => (
+          entry.name === oldName ? { ...entry, name: trimmed } : entry
+        ));
         talents = talents.map(person => person.category === oldName ? { ...person, category: trimmed } : person);
         if (activeCategory === oldName) activeCategory = trimmed;
         activeView = "list";
@@ -5703,7 +5844,7 @@
         }
         const name = deleteBtn.dataset.category;
         if (!confirm(`删除分类「${name}」？该分类下的人才将变为未分类。`)) return;
-        categories = categories.filter(item => item !== name);
+        categories = normalizeCategories(categories).filter(entry => entry.name !== name);
         talents = talents.map(person => person.category === name ? { ...person, category: "" } : person);
         if (activeCategory === name) activeCategory = ALL_CATEGORY;
         activeView = "list";
@@ -6098,7 +6239,9 @@
         return;
       }
       appStarted = true;
-      categories = isSuperAdmin() ? [...DEFAULT_CATEGORIES] : [...authAllowedCategories];
+      categories = isSuperAdmin()
+        ? normalizeCategories(DEFAULT_CATEGORIES)
+        : normalizeCategories(authAllowedCategories);
       renderCategoryNav();
       setSyncStatus("同步中");
       talents = await loadTalents();
