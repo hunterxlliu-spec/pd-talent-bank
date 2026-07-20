@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-dual-pies -->
+  <!-- deploy-bust: 20260720-title-en -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -2392,7 +2392,7 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <h2 id="mainTitle">人才管理</h2>
+          <h2 id="mainTitle">RD Talents Dashboard</h2>
           <p id="mainSubtitle">U01-A BG · 结构 / 硬件 / 声学等研发部门</p>
         </div>
         <div class="actions">
@@ -4000,7 +4000,7 @@
         els.dashboardNavBtn.classList.toggle("active", isDashboard);
         els.dashboardNavBtn.setAttribute("aria-pressed", isDashboard ? "true" : "false");
       }
-      if (els.mainTitle) els.mainTitle.textContent = isDashboard ? "数据看板" : "人才管理";
+      if (els.mainTitle) els.mainTitle.textContent = isDashboard ? "数据看板" : "RD Talents Dashboard";
       if (els.mainSubtitle) {
         els.mainSubtitle.textContent = isDashboard
           ? "人才总数 · 平均年龄 · 双饼图对比分析"
