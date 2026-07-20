@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-restore-profile -->
+  <!-- deploy-bust: 20260720-tenure-column -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -2956,6 +2956,7 @@
                     <th class="col-project">当前项目</th>
                     <th class="col-secondary">毕业学校 / 专业</th>
                     <th class="col-secondary">入职时间</th>
+                    <th class="col-secondary">司龄</th>
                     <th class="col-secondary">常驻基地</th>
                     <th class="col-secondary">工作年限</th>
                     <th class="col-secondary">产品经验年限</th>
@@ -5656,6 +5657,7 @@
               <div class="cell-sub">${escapeHtml(person.major || "-")} · ${formatDate(person.graduationDate)}</div>
             </td>
             <td class="col-secondary">${formatDate(person.joinDate)}</td>
+            <td class="col-secondary">${formatTenureYears(person.joinDate)}</td>
             <td class="col-secondary">${escapeHtml(person.baseLocation || "-")}</td>
             <td class="col-secondary">${formatYears(person.firstWorkDate)}</td>
             <td class="col-secondary"><span class="tag apple">${formatYears(person.appleStartDate)}</span></td>
