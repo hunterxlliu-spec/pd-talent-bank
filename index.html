@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-login2 -->
+  <!-- deploy-bust: 20260720-category-acl -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -1759,18 +1759,73 @@
       background: #f8fafc;
     }
 
+    .admin-user-form .admin-cat-field {
+      grid-column: 1 / -1;
+    }
+
+    .admin-cat-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      padding: 8px 0 2px;
+    }
+
+    .admin-cat-checkboxes label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--fs-sm);
+      color: #344054;
+      cursor: pointer;
+    }
+
+    .perm-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .perm-tag {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: #eef2f6;
+      color: #475467;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .perm-tag.is-all {
+      background: #e8f5f1;
+      color: #0f6b5c;
+    }
+
+    .perm-tag.is-none {
+      background: #fef3f2;
+      color: #b42318;
+    }
+
+    .user-perm-editor {
+      margin-top: 8px;
+      padding: 8px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      background: #fafbfc;
+    }
+
     .admin-user-table-wrap {
       border: 1px solid var(--line);
       border-radius: 10px;
       overflow: auto;
-      max-height: 360px;
+      max-height: 420px;
       background: #fff;
     }
 
     .admin-user-table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 520px;
+      min-width: 640px;
     }
 
     .admin-user-table th,
@@ -2137,8 +2192,8 @@
     </div>
     <div class="modal-body">
       <p class="admin-hint">
-        超级管理员（固定 <strong>admin</strong> 与已授权工号）可添加/删除用户，并将工号设为超级管理员。
-        用户名使用<strong>工号</strong>，默认密码 <strong>RDadmin2026</strong>，首次登录须改密。
+        超级管理员（固定 <strong>admin</strong> 与已授权工号）可添加/删除用户、分配可见部门权限，并将工号设为超级管理员。
+        新用户默认<strong>无部门权限</strong>；用户名使用<strong>工号</strong>，默认密码 <strong>RDadmin2026</strong>，首次登录须改密。
       </p>
       <form class="admin-user-form" id="addUserForm">
         <div class="field">
@@ -2150,6 +2205,11 @@
           <input id="newUserName" required placeholder="如 刘显理" autocomplete="off">
         </div>
         <button class="btn primary" type="submit" id="addUserSubmit">添加用户</button>
+        <div class="field admin-cat-field">
+          <label>可见部门权限</label>
+          <div class="admin-cat-checkboxes" id="newUserCategoryChecks"></div>
+          <p class="admin-hint">默认不勾选；未分配部门的用户登录后看不到任何人才数据。</p>
+        </div>
       </form>
       <div class="admin-user-table-wrap">
         <table class="admin-user-table">
@@ -2157,7 +2217,7 @@
             <tr>
               <th>工号</th>
               <th>姓名</th>
-              <th>角色 / 状态</th>
+              <th>角色 / 权限</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -2226,6 +2286,7 @@
     let authUsername = "";
     let authName = "";
     let authRole = "";
+    let authAllowedCategories = [];
     let mustChangePassword = false;
     let appStarted = false;
     const DEFAULT_USER_PASSWORD = "RDadmin2026";
@@ -2241,10 +2302,21 @@
       }
     }
 
+    function normalizeAllowedList(list) {
+      const values = Array.isArray(list) ? list : [];
+      const unique = [];
+      values.forEach(item => {
+        const name = String(item || "").trim();
+        if (name && !unique.includes(name)) unique.push(name);
+      });
+      return unique;
+    }
+
     function applyAuthProfile(data = {}) {
       authUsername = data.username || "";
       authName = data.name || (authUsername === "admin" ? "超级管理员" : "");
       authRole = data.role || "";
+      authAllowedCategories = normalizeAllowedList(data.allowedCategories);
       mustChangePassword = Boolean(data.mustChangePassword);
       updateAuthChrome();
     }
@@ -2253,6 +2325,7 @@
       authUsername = "";
       authName = "";
       authRole = "";
+      authAllowedCategories = [];
       mustChangePassword = false;
       updateAuthChrome();
     }
@@ -2261,9 +2334,64 @@
       return authRole === "superadmin" || authUsername === "admin";
     }
 
+    function canAccessCategory(category) {
+      if (isSuperAdmin()) return true;
+      const name = String(category || "").trim();
+      if (!name) return false;
+      return authAllowedCategories.includes(name);
+    }
+
+    function hasAnyCategoryAccess() {
+      return isSuperAdmin() || authAllowedCategories.length > 0;
+    }
+
+    function getPermissionCategoryOptions() {
+      const names = categories.length ? categories : [...DEFAULT_CATEGORIES];
+      const unique = [];
+      names.forEach(name => {
+        const trimmed = String(name || "").trim();
+        if (trimmed && !unique.includes(trimmed)) unique.push(trimmed);
+      });
+      DEFAULT_CATEGORIES.forEach(name => {
+        if (!unique.includes(name)) unique.push(name);
+      });
+      return unique;
+    }
+
+    function renderCategoryCheckboxList(container, selected = [], namePrefix = "cat") {
+      if (!container) return;
+      const selectedSet = new Set(normalizeAllowedList(selected));
+      const options = getPermissionCategoryOptions();
+      container.innerHTML = options.map((name, index) => `
+        <label>
+          <input type="checkbox" name="${escapeHtml(namePrefix)}" value="${escapeHtml(name)}" ${selectedSet.has(name) ? "checked" : ""} data-cat-index="${index}">
+          <span>${escapeHtml(name)}</span>
+        </label>
+      `).join("") || `<span class="admin-hint">暂无分类可选</span>`;
+    }
+
+    function readCategoryCheckboxes(container) {
+      if (!container) return [];
+      return normalizeAllowedList(
+        [...container.querySelectorAll('input[type="checkbox"]:checked')].map(input => input.value)
+      );
+    }
+
+    function formatAllowedCategoriesHtml(user) {
+      if (user.role === "superadmin") {
+        return `<span class="perm-tag is-all">全部分类</span>`;
+      }
+      const cats = normalizeAllowedList(user.allowedCategories);
+      if (!cats.length) {
+        return `<span class="perm-tag is-none">无部门权限</span>`;
+      }
+      return `<div class="perm-tags">${cats.map(name => `<span class="perm-tag">${escapeHtml(name)}</span>`).join("")}</div>`;
+    }
+
     function updateAuthChrome() {
       const chip = document.querySelector("#currentUserChip");
       const usersBtn = document.querySelector("#usersAdminBtn");
+      const addCategoryBtn = document.querySelector("#addCategoryBtn");
       if (chip) {
         if (authUsername) {
           chip.hidden = false;
@@ -2276,6 +2404,7 @@
         }
       }
       if (usersBtn) usersBtn.hidden = !isSuperAdmin();
+      if (addCategoryBtn) addCategoryBtn.hidden = !isSuperAdmin();
     }
 
     function authHeaders(extra = {}) {
@@ -2460,6 +2589,7 @@
       const res = await apiFetch(`${API_BASE}/admin/users`, { cache: "no-store" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "加载用户失败");
+      renderCategoryCheckboxList(document.querySelector("#newUserCategoryChecks"), [], "newUserCat");
       const rows = document.querySelector("#adminUserRows");
       const empty = document.querySelector("#adminUserEmpty");
       const users = data.users || [];
@@ -2469,14 +2599,34 @@
         const roleAction = isStoreSuper
           ? `<button class="btn" type="button" data-action="set-role" data-role="user" data-username="${escapeHtml(user.username)}">降为普通</button>`
           : `<button class="btn" type="button" data-action="set-role" data-role="superadmin" data-username="${escapeHtml(user.username)}">设为超管</button>`;
+        const cats = normalizeAllowedList(user.allowedCategories);
+        const editorId = `perm-editor-${escapeHtml(user.username)}`;
         return `
         <tr data-username="${escapeHtml(user.username)}">
           <td><strong>${escapeHtml(user.username)}</strong></td>
           <td>${escapeHtml(user.name || "-")}</td>
-          <td>${escapeHtml(roleLabel)} · ${user.mustChangePassword ? "待改密" : "已激活"}</td>
+          <td>
+            <div>${escapeHtml(roleLabel)} · ${user.mustChangePassword ? "待改密" : "已激活"}</div>
+            ${formatAllowedCategoriesHtml(user)}
+            <div class="user-perm-editor" id="${editorId}" hidden>
+              <div class="admin-cat-checkboxes" data-perm-checks="${escapeHtml(user.username)}">
+                ${getPermissionCategoryOptions().map(name => `
+                  <label>
+                    <input type="checkbox" value="${escapeHtml(name)}" ${cats.includes(name) ? "checked" : ""}>
+                    <span>${escapeHtml(name)}</span>
+                  </label>
+                `).join("")}
+              </div>
+              <div class="row-ops" style="margin-top:8px;">
+                <button class="btn primary" type="button" data-action="save-perms" data-username="${escapeHtml(user.username)}">保存权限</button>
+                <button class="btn" type="button" data-action="cancel-perms" data-username="${escapeHtml(user.username)}">取消</button>
+              </div>
+            </div>
+          </td>
           <td>
             <div class="row-ops">
               ${roleAction}
+              ${isStoreSuper ? "" : `<button class="btn" type="button" data-action="edit-perms" data-username="${escapeHtml(user.username)}">部门权限</button>`}
               <button class="btn danger" type="button" data-action="delete-user" data-username="${escapeHtml(user.username)}">删除</button>
             </div>
           </td>
@@ -2660,10 +2810,23 @@
         const name = String(item || "").trim();
         if (name && !unique.includes(name)) unique.push(name);
       });
-      return unique.length ? unique : [...DEFAULT_CATEGORIES];
+      return unique;
+    }
+
+    function applyAclToLocalState(list = talents, nextCategories = categories) {
+      if (isSuperAdmin()) {
+        categories = normalizeCategories(nextCategories);
+        if (!categories.length) categories = [...DEFAULT_CATEGORIES];
+        return normalizeTalentList(list);
+      }
+      const allowed = new Set(authAllowedCategories);
+      categories = normalizeCategories(nextCategories).filter(name => allowed.has(name));
+      if (!categories.length) categories = [...authAllowedCategories];
+      return normalizeTalentList(list).filter(person => allowed.has(String(person.category || "").trim()));
     }
 
     function ensureCategoriesFromTalents(list = talents) {
+      if (!isSuperAdmin()) return;
       const next = [...categories];
       list.forEach(person => {
         const name = String(person.category || "").trim();
@@ -2674,18 +2837,23 @@
 
     function countByCategory(name) {
       if (name === ALL_CATEGORY) return talents.length;
-      if (name === UNCATEGORIZED) return talents.filter(person => !String(person.category || "").trim()).length;
+      if (name === UNCATEGORIZED) {
+        if (!isSuperAdmin()) return 0;
+        return talents.filter(person => !String(person.category || "").trim()).length;
+      }
       return talents.filter(person => person.category === name).length;
     }
 
     function fillCategorySelect(selected = "") {
       const select = getField("category");
       if (!select) return;
-      const options = categories.length ? categories : [...DEFAULT_CATEGORIES];
+      const options = isSuperAdmin()
+        ? (categories.length ? categories : [...DEFAULT_CATEGORIES])
+        : [...authAllowedCategories];
       select.innerHTML = options.map(name => (
         `<option value="${escapeHtml(name)}" ${name === selected ? "selected" : ""}>${escapeHtml(name)}</option>`
       )).join("");
-      if (selected && !options.includes(selected)) {
+      if (selected && !options.includes(selected) && canAccessCategory(selected)) {
         select.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(selected)}" selected>${escapeHtml(selected)}</option>`);
       }
     }
@@ -2743,8 +2911,18 @@
       ];
     }
 
+    function getAllowedCategoryItems() {
+      if (isSuperAdmin()) return getCategoryItems();
+      const allowed = authAllowedCategories;
+      return [
+        { id: ALL_CATEGORY, title: "全部人才", editable: false },
+        ...allowed.map(name => ({ id: name, title: name, editable: false }))
+      ];
+    }
+
     function renderCategoryNav() {
-      const items = getCategoryItems();
+      const items = getAllowedCategoryItems();
+      const canEditCats = isSuperAdmin();
       if (els.categoryNav) {
         els.categoryNav.innerHTML = items.map(item => `
           <div class="nav-item ${activeCategory === item.id ? "active" : ""}" data-category="${escapeHtml(item.id)}">
@@ -2752,7 +2930,7 @@
               <span class="nav-item-title">${escapeHtml(item.title)}</span>
             </button>
             <span class="nav-item-count">${countByCategory(item.id)}</span>
-            ${item.editable ? `
+            ${canEditCats && item.editable ? `
               <span class="nav-item-actions">
                 <button class="btn rename-category-btn" type="button" title="重命名" data-category="${escapeHtml(item.id)}">✎</button>
                 <button class="btn danger delete-category-btn" type="button" title="删除" data-category="${escapeHtml(item.id)}">×</button>
@@ -2807,14 +2985,11 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
         remoteUpdatedAt = data.updatedAt || null;
-        categories = normalizeCategories(data.categories);
-        let list = normalizeTalentList(data.talents);
-        if (!list.length) {
+        let list = applyAclToLocalState(data.talents || [], data.categories || []);
+        if (!list.length && isSuperAdmin()) {
           list = normalizeTalentList(seedTalents);
           ensureCategoriesFromTalents(list);
           await saveTalents(list, { silent: true });
-        } else {
-          ensureCategoriesFromTalents(list);
         }
         setSyncStatus("已同步");
         return list;
@@ -2826,22 +3001,21 @@
         }
         const saved = localStorage.getItem(STORAGE_KEY);
         const savedCats = localStorage.getItem(CATEGORIES_KEY);
+        let savedCatList = categories;
         if (savedCats) {
-          try { categories = normalizeCategories(JSON.parse(savedCats)); } catch {}
+          try { savedCatList = normalizeCategories(JSON.parse(savedCats)); } catch {}
         }
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed) && parsed.length) {
               setSyncStatus("离线缓存");
-              const list = normalizeTalentList(parsed);
-              ensureCategoriesFromTalents(list);
-              return list;
+              return applyAclToLocalState(parsed, savedCatList);
             }
           } catch {}
         }
         setSyncStatus("同步失败");
-        return [];
+        return applyAclToLocalState([], savedCatList);
       }
     }
 
@@ -2857,7 +3031,9 @@
     }
 
     async function saveTalents(nextTalents = talents, { silent = false } = {}) {
-      talents = normalizeTalentList(nextTalents);
+      talents = isSuperAdmin()
+        ? normalizeTalentList(nextTalents)
+        : applyAclToLocalState(nextTalents, categories);
       ensureCategoriesFromTalents(talents);
       persistLocal();
       if (!silent) setSyncStatus("保存中");
@@ -2871,7 +3047,7 @@
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-        if (Array.isArray(data.categories)) categories = normalizeCategories(data.categories);
+        talents = applyAclToLocalState(data.talents || talents, data.categories || categories);
         remoteUpdatedAt = data.updatedAt || new Date().toISOString();
         if (!silent) setSyncStatus("已同步");
       } catch (error) {
@@ -2892,13 +3068,12 @@
         const data = await res.json();
         if (!force && data.updatedAt && data.updatedAt === remoteUpdatedAt) return;
         remoteUpdatedAt = data.updatedAt || remoteUpdatedAt;
-        if (Array.isArray(data.categories)) categories = normalizeCategories(data.categories);
-        const list = normalizeTalentList(data.talents);
-        if (!list.length) return;
-        talents = list;
-        ensureCategoriesFromTalents(talents);
+        talents = applyAclToLocalState(data.talents || [], data.categories || []);
         if (!talents.find(item => item.id === selectedId)) {
           selectedId = talents[0]?.id || null;
+        }
+        if (activeCategory !== ALL_CATEGORY && !getAllowedCategoryItems().some(item => item.id === activeCategory)) {
+          activeCategory = ALL_CATEGORY;
         }
         persistLocal();
         setSyncStatus("已同步");
@@ -3076,6 +3251,7 @@
         `;
       }).join("");
       els.empty.hidden = list.length > 0;
+      els.empty.textContent = list.length ? "暂无匹配人才" : (hasAnyCategoryAccess() ? "暂无匹配人才" : "暂无部门权限，请联系超级管理员分配");
     }
 
     function infoItem(label, value) {
@@ -3487,6 +3663,25 @@
     }
 
     function render() {
+      if (!hasAnyCategoryAccess()) {
+        activeCategory = ALL_CATEGORY;
+        if (els.categoryNav) {
+          els.categoryNav.innerHTML = `<div class="admin-empty" style="padding:12px 8px;">暂无部门权限</div>`;
+        }
+        if (els.mobileCategoryBar) {
+          els.mobileCategoryBar.innerHTML = "";
+        }
+        els.statTotal.textContent = "0";
+        els.statProduct.textContent = "0";
+        els.statAvg.textContent = "0";
+        els.rows.innerHTML = "";
+        els.empty.hidden = false;
+        els.empty.textContent = "暂无部门权限，请联系超级管理员分配";
+        return;
+      }
+      if (activeCategory !== ALL_CATEGORY && !getAllowedCategoryItems().some(item => item.id === activeCategory)) {
+        activeCategory = ALL_CATEGORY;
+      }
       renderCategoryNav();
       renderStats();
       renderTable();
@@ -3497,13 +3692,20 @@
     }
 
     function openDialog(person) {
+      if (!hasAnyCategoryAccess()) {
+        alert("暂无部门权限，请联系超级管理员分配");
+        return;
+      }
       const editing = Boolean(person);
       els.dialogTitle.textContent = editing ? "编辑人才" : "新增人才";
+      const allowedOptions = isSuperAdmin()
+        ? (categories.length ? categories : [...DEFAULT_CATEGORIES])
+        : [...authAllowedCategories];
       const defaultCategory = (
-        person?.category
-        || (activeCategory !== ALL_CATEGORY && activeCategory !== UNCATEGORIZED ? activeCategory : "")
-        || categories[0]
-        || DEFAULT_CATEGORIES[0]
+        (person?.category && canAccessCategory(person.category) ? person.category : "")
+        || (activeCategory !== ALL_CATEGORY && activeCategory !== UNCATEGORIZED && canAccessCategory(activeCategory) ? activeCategory : "")
+        || allowedOptions[0]
+        || ""
       );
       fillCategorySelect(defaultCategory);
       fillSelectOptions("hometown", CHINA_REGIONS, person?.hometown || "", { blankLabel: "请选择籍贯" });
@@ -3716,6 +3918,11 @@
 
       const id = getField("talentId").value || crypto.randomUUID();
       const employeeNo = getField("employeeNo").value.trim();
+      const category = getField("category").value.trim();
+      if (!canAccessCategory(category)) {
+        alert("无权保存到该部门分类，请选择已授权部门。");
+        return;
+      }
       const duplicate = talents.find(person => person.employeeNo === employeeNo && person.id !== id);
       if (duplicate) {
         alert("工号已存在，请检查后再保存。");
@@ -3751,7 +3958,7 @@
           major: getField("major").value.trim(),
           firstWorkDate: normalizeDate(getField("firstWorkDate").value),
           appleStartDate: normalizeDate(getField("appleStartDate").value),
-          category: getField("category").value.trim(),
+          category,
           department: getField("department").value.trim(),
           position: getField("position").value.trim(),
           skills: getField("skills").value.split(/[,，]/).map(item => item.trim()).filter(Boolean),
@@ -3782,6 +3989,10 @@
     document.querySelector("#birthDate")?.addEventListener("change", updateAgeField);
     document.querySelector("#birthDate")?.addEventListener("input", updateAgeField);
     document.querySelector("#addCategoryBtn").addEventListener("click", async () => {
+      if (!isSuperAdmin()) {
+        alert("仅超级管理员可新增分类");
+        return;
+      }
       const name = prompt("请输入新的研发分类名称：", "");
       const trimmed = (name || "").trim();
       if (!trimmed) return;
@@ -3812,6 +4023,10 @@
       const selectBtn = event.target.closest(".category-select-btn") || event.target.closest(".nav-item");
 
       if (renameBtn) {
+        if (!isSuperAdmin()) {
+          alert("仅超级管理员可重命名分类");
+          return;
+        }
         const oldName = renameBtn.dataset.category;
         const nextName = prompt("重命名分类：", oldName);
         const trimmed = (nextName || "").trim();
@@ -3833,6 +4048,10 @@
       }
 
       if (deleteBtn) {
+        if (!isSuperAdmin()) {
+          alert("仅超级管理员可删除分类");
+          return;
+        }
         const name = deleteBtn.dataset.category;
         if (!confirm(`删除分类「${name}」？该分类下的人才将变为未分类。`)) return;
         categories = categories.filter(item => item !== name);
@@ -4002,7 +4221,13 @@
       exportFilteredToExcel();
     });
 
-    document.querySelector("#importBtn").addEventListener("click", () => els.importFile.click());
+    document.querySelector("#importBtn").addEventListener("click", () => {
+      if (!hasAnyCategoryAccess()) {
+        alert("暂无部门权限，请联系超级管理员分配");
+        return;
+      }
+      els.importFile.click();
+    });
     els.importFile.addEventListener("change", event => {
       const file = event.target.files[0];
       if (!file) return;
@@ -4011,7 +4236,15 @@
         try {
           const imported = JSON.parse(reader.result);
           if (!Array.isArray(imported)) throw new Error("not array");
-          talents = normalizeTalentList(imported);
+          let list = normalizeTalentList(imported);
+          if (!isSuperAdmin()) {
+            list = list.filter(person => canAccessCategory(person.category));
+            if (!list.length) {
+              alert("导入文件中没有您有权限的部门人才。");
+              return;
+            }
+          }
+          talents = list;
           selectedId = talents[0]?.id || null;
           await saveTalents();
           render();
@@ -4045,19 +4278,20 @@
       event.preventDefault();
       const employeeNo = document.querySelector("#newUserEmployeeNo").value.trim();
       const name = document.querySelector("#newUserName").value.trim();
+      const allowedCategories = readCategoryCheckboxes(document.querySelector("#newUserCategoryChecks"));
       const submitBtn = document.querySelector("#addUserSubmit");
       submitBtn.disabled = true;
       try {
         const res = await apiFetch(`${API_BASE}/admin/users`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: employeeNo, name })
+          body: JSON.stringify({ username: employeeNo, name, allowedCategories })
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || "添加失败");
         document.querySelector("#addUserForm").reset();
         await loadAdminUsers();
-        alert(`已添加 ${name}（${employeeNo}）\n默认密码：${data.defaultPassword || DEFAULT_USER_PASSWORD}\n请提醒对方首次登录后修改密码。`);
+        alert(`已添加 ${name}（${employeeNo}）\n默认密码：${data.defaultPassword || DEFAULT_USER_PASSWORD}\n可见部门：${allowedCategories.length ? allowedCategories.join("、") : "无"}\n请提醒对方首次登录后修改密码。`);
       } catch (error) {
         alert(error?.message || "添加失败");
       } finally {
@@ -4066,6 +4300,43 @@
     });
 
     document.querySelector("#adminUserRows").addEventListener("click", async event => {
+      const editPermsBtn = event.target.closest("[data-action='edit-perms']");
+      if (editPermsBtn) {
+        const username = editPermsBtn.dataset.username;
+        const editor = document.querySelector(`#perm-editor-${CSS.escape(username)}`);
+        if (editor) editor.hidden = !editor.hidden;
+        return;
+      }
+
+      const cancelPermsBtn = event.target.closest("[data-action='cancel-perms']");
+      if (cancelPermsBtn) {
+        const username = cancelPermsBtn.dataset.username;
+        const editor = document.querySelector(`#perm-editor-${CSS.escape(username)}`);
+        if (editor) editor.hidden = true;
+        return;
+      }
+
+      const savePermsBtn = event.target.closest("[data-action='save-perms']");
+      if (savePermsBtn) {
+        const username = savePermsBtn.dataset.username;
+        if (!username) return;
+        const checks = document.querySelector(`[data-perm-checks="${CSS.escape(username)}"]`);
+        const allowedCategories = readCategoryCheckboxes(checks);
+        try {
+          const res = await apiFetch(`${API_BASE}/admin/users/${encodeURIComponent(username)}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ allowedCategories })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || "保存权限失败");
+          await loadAdminUsers();
+        } catch (error) {
+          alert(error?.message || "保存权限失败");
+        }
+        return;
+      }
+
       const roleBtn = event.target.closest("[data-action='set-role']");
       if (roleBtn) {
         const username = roleBtn.dataset.username;
@@ -4148,7 +4419,7 @@
         return;
       }
       appStarted = true;
-      categories = [...DEFAULT_CATEGORIES];
+      categories = isSuperAdmin() ? [...DEFAULT_CATEGORIES] : [...authAllowedCategories];
       renderCategoryNav();
       setSyncStatus("同步中");
       talents = await loadTalents();
