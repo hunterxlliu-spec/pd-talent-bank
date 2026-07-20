@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-table-scroll -->
+  <!-- deploy-bust: 20260720-edu-pie -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -437,51 +437,75 @@
     }
 
     .dashboard-edu-card {
-      padding-bottom: 12px;
+      padding-bottom: 16px;
     }
 
-    .edu-bars {
+    .edu-chart {
       display: grid;
-      gap: 12px;
-      margin-top: 14px;
+      gap: 18px;
+      margin-top: 16px;
+      justify-items: center;
     }
 
-    .edu-bar-row {
+    .edu-pie-wrap {
+      width: min(240px, 100%);
+      aspect-ratio: 1;
+    }
+
+    .edu-pie-wrap svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .edu-pie-empty {
+      width: min(240px, 100%);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #eef2f6;
       display: grid;
-      grid-template-columns: 52px minmax(0, 1fr) 64px;
+      place-items: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .edu-legend {
+      width: 100%;
+      max-width: 520px;
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .edu-legend-item {
+      display: grid;
+      grid-template-columns: 14px minmax(0, 1fr) auto;
       gap: 10px;
       align-items: center;
-    }
-
-    .edu-bar-label {
       font-size: 13px;
-      font-weight: 650;
       color: var(--ink);
     }
 
-    .edu-bar-track {
-      height: 10px;
-      border-radius: 999px;
-      background: #eef2f6;
-      overflow: hidden;
+    .edu-legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
     }
 
-    .edu-bar-fill {
-      height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, #3da9a0, #2f8f88);
+    .edu-legend-label {
       min-width: 0;
-      transition: width .25s ease;
     }
 
-    .edu-bar-meta {
-      text-align: right;
-      font-size: 12px;
+    .edu-legend-meta {
       color: var(--muted);
       white-space: nowrap;
+      font-size: 12px;
     }
 
-    .edu-bar-meta strong {
+    .edu-legend-meta strong {
       color: var(--ink);
       font-weight: 700;
     }
@@ -490,6 +514,7 @@
       margin: 18px 0 8px;
       color: var(--muted);
       font-size: 13px;
+      text-align: center;
     }
 
     @media (max-width: 1100px) {
@@ -2349,7 +2374,7 @@
             <article class="dashboard-card dashboard-edu-card">
               <h3>学历分布</h3>
               <p class="dashboard-card-note">按当前可见人才统计（专科 / 本科 / 硕士 / 博士 / 其他）</p>
-              <div class="edu-bars" id="dashEducationBars"></div>
+              <div class="edu-chart" id="dashEducationBars"></div>
             </article>
           </section>
 
@@ -3745,6 +3770,92 @@
       }
     }
 
+    const EDUCATION_COLORS = {
+      "专科": "#5b8def",
+      "本科": "#3da9a0",
+      "硕士": "#e8a23a",
+      "博士": "#ce673d",
+      "其他": "#6b7c8f",
+      "未填写": "#b7c0cc"
+    };
+
+    function educationColor(label) {
+      return EDUCATION_COLORS[label] || "#94a3b8";
+    }
+
+    function polarToCartesian(cx, cy, r, angleRad) {
+      return {
+        x: cx + r * Math.cos(angleRad),
+        y: cy + r * Math.sin(angleRad)
+      };
+    }
+
+    function describePieSlice(cx, cy, r, startAngle, endAngle) {
+      const start = polarToCartesian(cx, cy, r, endAngle);
+      const end = polarToCartesian(cx, cy, r, startAngle);
+      const largeArc = endAngle - startAngle > Math.PI ? 1 : 0;
+      return [
+        `M ${cx} ${cy}`,
+        `L ${start.x} ${start.y}`,
+        `A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`,
+        "Z"
+      ].join(" ");
+    }
+
+    function buildEducationPieHtml(education) {
+      const slices = education.filter(item => item.count > 0);
+      const legendItems = education.length ? education : [];
+      if (!slices.length) {
+        return `
+          <div class="edu-pie-empty">暂无学历数据</div>
+          <ul class="edu-legend" aria-label="学历分布备注">
+            ${legendItems.map(item => `
+              <li class="edu-legend-item">
+                <span class="edu-legend-swatch" style="background:${educationColor(item.label)}"></span>
+                <span class="edu-legend-label">${escapeHtml(item.label)}</span>
+                <span class="edu-legend-meta"><strong>0</strong> · 0%</span>
+              </li>
+            `).join("")}
+          </ul>
+        `;
+      }
+
+      const total = slices.reduce((sum, item) => sum + item.count, 0) || 1;
+      const cx = 100;
+      const cy = 100;
+      const r = 86;
+      let angle = -Math.PI / 2;
+      const paths = slices.map(item => {
+        const sweep = (item.count / total) * Math.PI * 2;
+        const start = angle;
+        const end = angle + sweep;
+        angle = end;
+        if (item.count === total) {
+          return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${educationColor(item.label)}">
+            <title>${escapeHtml(item.label)}：${item.count}人（${item.percent}%）</title>
+          </circle>`;
+        }
+        return `<path d="${describePieSlice(cx, cy, r, start, end)}" fill="${educationColor(item.label)}">
+          <title>${escapeHtml(item.label)}：${item.count}人（${item.percent}%）</title>
+        </path>`;
+      }).join("");
+
+      return `
+        <div class="edu-pie-wrap" aria-hidden="true">
+          <svg viewBox="0 0 200 200" role="img" aria-label="学历分布饼图">${paths}</svg>
+        </div>
+        <ul class="edu-legend" aria-label="学历分布备注">
+          ${legendItems.map(item => `
+            <li class="edu-legend-item">
+              <span class="edu-legend-swatch" style="background:${educationColor(item.label)}"></span>
+              <span class="edu-legend-label">${escapeHtml(item.label)}</span>
+              <span class="edu-legend-meta"><strong>${item.count}</strong> · ${item.percent}%</span>
+            </li>
+          `).join("")}
+        </ul>
+      `;
+    }
+
     function renderDashboard() {
       const metrics = computeDashboardMetrics(talents);
       if (els.dashTotal) els.dashTotal.textContent = String(metrics.total);
@@ -3764,20 +3875,7 @@
           : "暂无可用年龄数据";
       }
       if (els.dashEducationBars) {
-        const maxCount = Math.max(...metrics.education.map(item => item.count), 1);
-        const rows = metrics.education.map(item => {
-          const width = Math.max(item.count ? (item.count / maxCount) * 100 : 0, 0);
-          return `
-            <div class="edu-bar-row">
-              <div class="edu-bar-label">${escapeHtml(item.label)}</div>
-              <div class="edu-bar-track" aria-hidden="true">
-                <div class="edu-bar-fill" style="width:${width.toFixed(1)}%"></div>
-              </div>
-              <div class="edu-bar-meta"><strong>${item.count}</strong> · ${item.percent}%</div>
-            </div>
-          `;
-        }).join("");
-        els.dashEducationBars.innerHTML = rows || `<p class="edu-empty">暂无学历数据</p>`;
+        els.dashEducationBars.innerHTML = buildEducationPieHtml(metrics.education);
       }
     }
 
