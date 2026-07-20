@@ -1999,7 +1999,8 @@
     </div>
     <div class="modal-body">
       <p class="admin-hint">
-        仅超级管理员 <strong>admin</strong> 可添加/删除用户。用户名使用<strong>工号</strong>，默认密码 <strong>RDadmin2026</strong>，首次登录须改密。
+        超级管理员（固定 <strong>admin</strong> 与已授权工号）可添加/删除用户，并将工号设为超级管理员。
+        用户名使用<strong>工号</strong>，默认密码 <strong>RDadmin2026</strong>，首次登录须改密。
       </p>
       <form class="admin-user-form" id="addUserForm">
         <div class="field">
@@ -2018,7 +2019,7 @@
             <tr>
               <th>工号</th>
               <th>姓名</th>
-              <th>状态</th>
+              <th>角色 / 状态</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -2324,16 +2325,25 @@
       const rows = document.querySelector("#adminUserRows");
       const empty = document.querySelector("#adminUserEmpty");
       const users = data.users || [];
-      rows.innerHTML = users.map(user => `
+      rows.innerHTML = users.map(user => {
+        const isStoreSuper = user.role === "superadmin";
+        const roleLabel = isStoreSuper ? "超级管理员" : "普通用户";
+        const roleAction = isStoreSuper
+          ? `<button class="btn" type="button" data-action="set-role" data-role="user" data-username="${escapeHtml(user.username)}">降为普通</button>`
+          : `<button class="btn" type="button" data-action="set-role" data-role="superadmin" data-username="${escapeHtml(user.username)}">设为超管</button>`;
+        return `
         <tr data-username="${escapeHtml(user.username)}">
           <td><strong>${escapeHtml(user.username)}</strong></td>
           <td>${escapeHtml(user.name || "-")}</td>
-          <td>${user.mustChangePassword ? "待改密" : "已激活"}</td>
+          <td>${escapeHtml(roleLabel)} · ${user.mustChangePassword ? "待改密" : "已激活"}</td>
           <td>
-            <button class="btn danger" type="button" data-action="delete-user" data-username="${escapeHtml(user.username)}">删除</button>
+            <div class="row-ops">
+              ${roleAction}
+              <button class="btn danger" type="button" data-action="delete-user" data-username="${escapeHtml(user.username)}">删除</button>
+            </div>
           </td>
-        </tr>
-      `).join("");
+        </tr>`;
+      }).join("");
       empty.hidden = users.length > 0;
       return data;
     }
@@ -3878,6 +3888,28 @@
     });
 
     document.querySelector("#adminUserRows").addEventListener("click", async event => {
+      const roleBtn = event.target.closest("[data-action='set-role']");
+      if (roleBtn) {
+        const username = roleBtn.dataset.username;
+        const role = roleBtn.dataset.role;
+        if (!username || !role) return;
+        const label = role === "superadmin" ? "超级管理员" : "普通用户";
+        if (!confirm(`确认将 ${username} 设为「${label}」吗？`)) return;
+        try {
+          const res = await apiFetch(`${API_BASE}/admin/users/${encodeURIComponent(username)}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ role })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || "更新角色失败");
+          await loadAdminUsers();
+        } catch (error) {
+          alert(error?.message || "更新角色失败");
+        }
+        return;
+      }
+
       const btn = event.target.closest("[data-action='delete-user']");
       if (!btn) return;
       const username = btn.dataset.username;
