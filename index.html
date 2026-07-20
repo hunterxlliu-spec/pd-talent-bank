@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-product-exp -->
+  <!-- deploy-bust: 20260720-no-move-btn -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -1171,22 +1171,6 @@
       gap: 6px;
       align-items: center;
       justify-content: flex-end;
-    }
-
-    td.col-actions .btn-move {
-      min-height: 30px;
-      padding: 0 10px;
-      font-size: 12px;
-      font-weight: 650;
-      background: #eef8f6;
-      border-color: #b7e2db;
-      color: #0f766e;
-      white-space: nowrap;
-    }
-
-    td.col-actions .btn-move:hover {
-      background: #d9f3ee;
-      transform: none;
     }
 
     td.col-actions .action-more {
@@ -5460,7 +5444,6 @@
             <td class="col-status"><span class="tag warn">${escapeHtml(person.status || "-")}</span></td>
             <td class="col-actions">
               <div class="row-ops">
-                <button class="btn btn-move" type="button" data-action="talent-move" data-id="${person.id}" title="移动到其他部门">移动</button>
                 <button class="btn action-more" type="button" data-action="talent-more" data-id="${person.id}" title="更多操作（也可右键）" aria-haspopup="menu">⋯</button>
               </div>
             </td>
@@ -6749,16 +6732,6 @@
     });
 
     els.rows.addEventListener("click", async event => {
-      const moveBtn = event.target.closest("[data-action='talent-move']");
-      if (moveBtn) {
-        event.preventDefault();
-        event.stopPropagation();
-        hideContextMenu();
-        const person = talents.find(item => item.id === moveBtn.dataset.id);
-        await moveTalentToCategory(person);
-        return;
-      }
-
       const moreBtn = event.target.closest("[data-action='talent-more']");
       if (moreBtn) {
         event.preventDefault();
