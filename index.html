@@ -899,13 +899,43 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 12px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
       background: #fcfcfd;
       width: 100%;
       min-width: 0;
+      align-items: end;
       animation: expandRow .18s ease-out;
+    }
+
+    .product-row > .field {
+      flex: 1 1 200px;
+      min-width: 0;
+    }
+
+    .product-row > .remove-product {
+      flex: 0 0 auto;
+      align-self: end;
+    }
+
+    .product-row .product-custom-wrap[hidden] {
+      display: none !important;
+    }
+
+    .product-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .product-pill {
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #ecf9f5;
+      color: #3f918b;
+      font-size: 13px;
+      font-weight: 700;
     }
 
     .custom-row {
@@ -1479,14 +1509,15 @@
       }
 
       .product-row > .field,
-      .product-row > .row-actions,
+      .product-row > button,
       .custom-row > .field,
       .custom-row > button {
         grid-column: 1 / -1;
       }
 
-      .product-row textarea {
-        min-height: 96px;
+      .product-row > .field,
+      .product-row > button {
+        flex: 1 1 100%;
       }
 
       .section-title {
@@ -2156,7 +2187,7 @@
 
         <div class="section-title">
           <h4>过往产品信息</h4>
-          <button class="btn" type="button" id="addProductBtn">添加产品经历</button>
+          <button class="btn" type="button" id="addProductBtn">添加产品</button>
         </div>
         <div id="productRows"></div>
 
@@ -2281,6 +2312,18 @@
       { value: "无障碍沟通听说读写", label: "3. 无障碍沟通，听说读写能力强" }
     ];
     const TITLE_LEVEL_OPTIONS = ["助理工程师", "工程师", "高级工程师", "专家", "其他"];
+    const PRODUCT_OPTIONS = [
+      "iPhone",
+      "AirPods",
+      "AirPods Max",
+      "Apple Vision Pro",
+      "Apple Watch",
+      "Macbook",
+      "iPad",
+      "AirTag",
+      "其他"
+    ];
+    const PRODUCT_OTHER = "其他";
 
     let authToken = sessionStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem(AUTH_TOKEN_KEY) || "";
     let authUsername = "";
@@ -2671,17 +2714,7 @@
           { name: "往年绩效情况", value: "2023 A；2024 A-" }
         ],
         products: [
-          {
-            name: "iPhone 结构件项目",
-            type: "iPhone",
-            company: "某精密制造厂",
-            role: "NPI 工程师",
-            startDate: "2020-03-01",
-            endDate: "2022-12-31",
-            appleRelated: true,
-            responsibilities: "负责试产问题追踪、DOE 验证和量产导入。",
-            achievements: "将关键外观不良率降低 18%。"
-          }
+          { value: "iPhone" }
         ]
       },
       {
@@ -2709,17 +2742,7 @@
           { name: "往年绩效情况", value: "2022 B+；2023 A；2024 A" }
         ],
         products: [
-          {
-            name: "AirPods 声学模组",
-            type: "AirPods",
-            company: "某电子科技公司",
-            role: "质量工程师",
-            startDate: "2021-06-01",
-            endDate: "2024-04-30",
-            appleRelated: true,
-            responsibilities: "供应商过程审核、异常分析和改善验证。",
-            achievements: "建立来料质量周报机制。"
-          }
+          { value: "AirPods" }
         ]
       },
       {
@@ -2747,17 +2770,7 @@
           { name: "往年绩效情况", value: "2023 B+；2024 A-" }
         ],
         products: [
-          {
-            name: "智能穿戴装配线",
-            type: "Wearable",
-            company: "某智能硬件公司",
-            role: "IE 工程师",
-            startDate: "2020-08-01",
-            endDate: "2023-09-30",
-            appleRelated: false,
-            responsibilities: "产线节拍测算、工站布局和人力配置。",
-            achievements: "单线 UPH 提升 12%。"
-          }
+          { value: "其他", customName: "智能穿戴装配线" }
         ]
       }
     ];
@@ -2949,6 +2962,62 @@
       }
     }
 
+    function matchProductOption(raw) {
+      const text = String(raw || "").trim();
+      if (!text) return "";
+      const normalized = text.replace(/vison/gi, "Vision");
+      if (PRODUCT_OPTIONS.includes(normalized)) return normalized;
+      if (PRODUCT_OPTIONS.includes(text)) return text;
+      const found = PRODUCT_OPTIONS.find(opt => opt !== PRODUCT_OTHER && (normalized === opt || text === opt || normalized.includes(opt) || text.includes(opt)));
+      return found || "";
+    }
+
+    function productDisplayName(product) {
+      if (!product || typeof product !== "object") return "";
+      if (product.value === PRODUCT_OTHER) {
+        return String(product.customName || "").trim() || PRODUCT_OTHER;
+      }
+      return String(product.value || "").trim();
+    }
+
+    function isPresetAppleProduct(product) {
+      const value = String(product?.value || "").trim();
+      return Boolean(value && value !== PRODUCT_OTHER && PRODUCT_OPTIONS.includes(value));
+    }
+
+    function normalizeProduct(product) {
+      if (product == null) return null;
+      if (typeof product === "string") {
+        const text = product.trim();
+        if (!text) return null;
+        const matched = matchProductOption(text);
+        if (matched && matched !== PRODUCT_OTHER) return { value: matched };
+        return { value: PRODUCT_OTHER, customName: text };
+      }
+      if (typeof product !== "object") return null;
+
+      const rawValue = String(product.value || "").trim();
+      if (rawValue) {
+        const matched = matchProductOption(rawValue);
+        if (matched && matched !== PRODUCT_OTHER) return { value: matched };
+        if (rawValue === PRODUCT_OTHER || matched === PRODUCT_OTHER) {
+          const customName = String(product.customName || product.custom || product.name || "").trim();
+          return customName ? { value: PRODUCT_OTHER, customName } : { value: PRODUCT_OTHER, customName: "" };
+        }
+        return { value: PRODUCT_OTHER, customName: rawValue };
+      }
+
+      const candidates = [product.type, product.name, product.customName, product.custom]
+        .map(item => String(item || "").trim())
+        .filter(Boolean);
+      for (const candidate of candidates) {
+        const matched = matchProductOption(candidate);
+        if (matched && matched !== PRODUCT_OTHER) return { value: matched };
+      }
+      if (!candidates.length) return null;
+      return { value: PRODUCT_OTHER, customName: candidates[0] };
+    }
+
     function normalizeTalentList(list) {
       if (!Array.isArray(list)) return [];
       return list.map(item => ({
@@ -2963,11 +3032,9 @@
         firstWorkDate: normalizeDate(item.firstWorkDate),
         appleStartDate: normalizeDate(item.appleStartDate),
         age: item.age || calcAgeFromBirth(item.birthDate) || "",
-        products: (Array.isArray(item.products) ? item.products : []).map(product => ({
-          ...product,
-          startDate: normalizeDate(product.startDate),
-          endDate: normalizeDate(product.endDate)
-        })),
+        products: (Array.isArray(item.products) ? item.products : [])
+          .map(normalizeProduct)
+          .filter(Boolean),
         skills: Array.isArray(item.skills) ? item.skills : [],
         customFields: Array.isArray(item.customFields) ? item.customFields : []
       }));
@@ -3158,7 +3225,7 @@
         if (activeCategory === UNCATEGORIZED && category) return false;
         if (activeCategory !== ALL_CATEGORY && activeCategory !== UNCATEGORIZED && category !== activeCategory) return false;
 
-        const productText = (person.products || []).map(item => `${item.name} ${item.type} ${item.role}`).join(" ");
+        const productText = (person.products || []).map(item => productDisplayName(item)).join(" ");
         const customText = (person.customFields || []).map(item => `${item.name} ${item.value}`).join(" ");
         const haystack = [
           person.employeeNo,
@@ -3180,7 +3247,7 @@
           productText,
           customText
         ].join(" ").toLowerCase();
-        const hasApple = yearsSince(person.appleStartDate) > 0 || (person.products || []).some(item => item.appleRelated);
+        const hasApple = yearsSince(person.appleStartDate) > 0 || (person.products || []).some(item => isPresetAppleProduct(item));
         return (!keyword || haystack.includes(keyword))
           && (!gender || person.gender === gender)
           && (!status || person.status === status)
@@ -3189,7 +3256,7 @@
     }
 
     function renderStats() {
-      const productTalents = talents.filter(person => yearsSince(person.appleStartDate) > 0 || (person.products || []).some(item => item.appleRelated));
+      const productTalents = talents.filter(person => yearsSince(person.appleStartDate) > 0 || (person.products || []).some(item => isPresetAppleProduct(item)));
       const avg = productTalents.length
         ? productTalents.reduce((sum, person) => sum + yearsSince(person.appleStartDate), 0) / productTalents.length
         : 0;
@@ -3203,9 +3270,11 @@
       if (!list.some(person => person.id === selectedId)) selectedId = list[0]?.id || talents[0]?.id || null;
 
       els.rows.innerHTML = list.map(person => {
-        const products = (person.products || []).slice(0, 2).map(item =>
-          `<span class="tag ${item.appleRelated ? "apple" : ""}">${escapeHtml(item.type || item.name)}</span>`
-        ).join("");
+        const products = (person.products || []).slice(0, 2).map(item => {
+          const label = productDisplayName(item);
+          if (!label) return "";
+          return `<span class="tag ${isPresetAppleProduct(item) ? "apple" : ""}">${escapeHtml(label)}</span>`;
+        }).filter(Boolean).join("");
         return `
           <tr class="${person.id === selectedId ? "active" : ""}" data-id="${person.id}">
             <td class="col-person">
@@ -3326,18 +3395,10 @@
         ? `<div class="skill-pills">${skills.map(skill => `<span class="skill-pill">${escapeHtml(skill)}</span>`).join("")}</div>`
         : `<div class="profile-empty">暂无技能标签</div>`;
 
-      const productItems = (person.products || []).map(item => `
-        <div class="experience-item">
-          <div class="experience-top">
-            <strong>${escapeHtml(item.name || "-")}</strong>
-            <span class="experience-tag ${item.appleRelated ? "" : "is-muted"}">${item.appleRelated ? "产品相关" : "其他产品"}</span>
-          </div>
-          <div class="experience-sub">${escapeHtml(item.type || "-")} · ${escapeHtml(item.company || "-")} · ${escapeHtml(item.role || "-")}</div>
-          <div class="experience-sub">${formatDate(item.startDate)} 至 ${formatDate(item.endDate)}</div>
-          <div class="experience-copy">${escapeHtml(item.responsibilities || "暂无职责描述")}</div>
-          <div class="experience-sub">成果：${escapeHtml(item.achievements || "暂无项目成果")}</div>
-        </div>
-      `).join("");
+      const productLabels = (person.products || []).map(item => productDisplayName(item)).filter(Boolean);
+      const productItems = productLabels.length
+        ? `<div class="product-pills">${productLabels.map(label => `<span class="product-pill">${escapeHtml(label)}</span>`).join("")}</div>`
+        : "";
 
       const customItems = (person.customFields || []).map(item => infoItem(item.name || "-", item.value || "-")).join("");
       const roleLine = [person.category, person.department, person.position].filter(Boolean).join(" · ") || "岗位待完善";
@@ -3371,7 +3432,7 @@
             <div class="profile-stats">
               <div class="profile-stat"><span>工作年限</span><strong>${escapeHtml(formatYears(person.firstWorkDate))}</strong></div>
               <div class="profile-stat"><span>产品经验</span><strong>${escapeHtml(formatYears(person.appleStartDate))}</strong></div>
-              <div class="profile-stat"><span>产品经历</span><strong>${(person.products || []).length}</strong></div>
+              <div class="profile-stat"><span>过往产品</span><strong>${productLabels.length}</strong></div>
               <div class="profile-stat"><span>技能标签</span><strong>${skills.length}</strong></div>
             </div>
 
@@ -3426,7 +3487,7 @@
 
             <section class="profile-card">
               <h4 class="profile-card-title"><span class="profile-card-kicker">过往产品信息</span></h4>
-              <div class="experience-list">${productItems || "<div class='profile-empty'>暂无产品经历</div>"}</div>
+              <div class="experience-list">${productItems || "<div class='profile-empty'>暂无过往产品</div>"}</div>
             </section>
 
             <section class="profile-card">
@@ -3593,7 +3654,7 @@
       const headers = [
         "姓名", "英文名", "工号", "性别", "年龄", "籍贯", "学历", "英语水平", "职称", "当前项目",
         "毕业学校", "专业", "毕业时间", "入职时间", "工作时间", "产品经验开始",
-        "工作年限", "产品经验年限", "所属分类", "科室/小组", "岗位", "状态",
+        "工作年限", "产品经验年限", "过往产品", "所属分类", "科室/小组", "岗位", "状态",
         "常驻基地", "技能", "证书/资质", "电话", "邮箱", "备注"
       ];
       const rows = list.map(person => [
@@ -3615,6 +3676,7 @@
         formatDate(person.appleStartDate),
         formatYears(person.firstWorkDate),
         formatYears(person.appleStartDate),
+        (person.products || []).map(item => productDisplayName(item)).filter(Boolean).join("、"),
         person.category || "未分类",
         person.department,
         person.position,
@@ -3799,53 +3861,38 @@
     }
 
     function productRowTemplate(item = {}) {
+      const value = String(item.value || "").trim();
+      const isOther = value === PRODUCT_OTHER;
+      const optionsHtml = [
+        `<option value="">请选择产品</option>`,
+        ...PRODUCT_OPTIONS.map(opt => {
+          const label = opt === PRODUCT_OTHER ? "其他（其他可自行编辑）" : opt;
+          return `<option value="${escapeHtml(opt)}" ${value === opt ? "selected" : ""}>${escapeHtml(label)}</option>`;
+        })
+      ].join("");
       return `
         <div class="product-row">
           <div class="field">
-            <label>产品名称</label>
-            <input class="product-name" value="${escapeHtml(item.name || "")}">
+            <label>产品</label>
+            <select class="product-value">${optionsHtml}</select>
           </div>
-          <div class="field">
-            <label>产品类型</label>
-            <input class="product-type" placeholder="iPhone / iPad / Mac" value="${escapeHtml(item.type || "")}">
+          <div class="field product-custom-wrap" ${isOther ? "" : "hidden"}>
+            <label>自定义产品名称</label>
+            <input class="product-custom" placeholder="请输入产品名称" value="${escapeHtml(item.customName || "")}">
           </div>
-          <div class="field">
-            <label>公司 / 项目方</label>
-            <input class="product-company" value="${escapeHtml(item.company || "")}">
-          </div>
-          <div class="field">
-            <label>担任角色</label>
-            <input class="product-role" value="${escapeHtml(item.role || "")}">
-          </div>
-          <div class="field">
-            <label>开始时间</label>
-            <input class="product-start" type="date" value="${escapeHtml(normalizeDate(item.startDate))}">
-          </div>
-          <div class="field">
-            <label>结束时间</label>
-            <input class="product-end" type="date" value="${escapeHtml(normalizeDate(item.endDate))}">
-          </div>
-          <div class="field">
-            <label>Apple 相关</label>
-            <select class="product-apple">
-              <option value="true" ${item.appleRelated ? "selected" : ""}>是</option>
-              <option value="false" ${!item.appleRelated ? "selected" : ""}>否</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>操作</label>
-            <button class="btn danger remove-product" type="button">删除经历</button>
-          </div>
-          <div class="field span-2">
-            <label>主要职责</label>
-            <textarea class="product-responsibilities">${escapeHtml(item.responsibilities || "")}</textarea>
-          </div>
-          <div class="field span-2">
-            <label>项目成果</label>
-            <textarea class="product-achievements">${escapeHtml(item.achievements || "")}</textarea>
-          </div>
+          <button class="btn danger remove-product" type="button">删除</button>
         </div>
       `;
+    }
+
+    function syncProductCustomVisibility(row) {
+      if (!row) return;
+      const select = row.querySelector(".product-value");
+      const wrap = row.querySelector(".product-custom-wrap");
+      const input = row.querySelector(".product-custom");
+      const isOther = select?.value === PRODUCT_OTHER;
+      if (wrap) wrap.hidden = !isOther;
+      if (!isOther && input) input.value = "";
     }
 
     function renderProductRows(products) {
@@ -3857,24 +3904,25 @@
     function addProductRow(item = {}) {
       els.productRows.insertAdjacentHTML("beforeend", productRowTemplate(item));
       const row = els.productRows.lastElementChild;
+      syncProductCustomVisibility(row);
       row?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      row?.querySelector(".product-name")?.focus();
+      row?.querySelector(".product-value")?.focus();
     }
 
     function readProductRows() {
       return [...els.productRows.querySelectorAll(".product-row")]
-        .map(row => ({
-          name: row.querySelector(".product-name").value.trim(),
-          type: row.querySelector(".product-type").value.trim(),
-          company: row.querySelector(".product-company").value.trim(),
-          role: row.querySelector(".product-role").value.trim(),
-          startDate: normalizeDate(row.querySelector(".product-start").value),
-          endDate: normalizeDate(row.querySelector(".product-end").value),
-          appleRelated: row.querySelector(".product-apple").value === "true",
-          responsibilities: row.querySelector(".product-responsibilities").value.trim(),
-          achievements: row.querySelector(".product-achievements").value.trim()
-        }))
-        .filter(item => item.name || item.type || item.company || item.role);
+        .map(row => {
+          const value = row.querySelector(".product-value")?.value.trim() || "";
+          if (!value) return null;
+          if (value === PRODUCT_OTHER) {
+            return {
+              value: PRODUCT_OTHER,
+              customName: row.querySelector(".product-custom")?.value.trim() || ""
+            };
+          }
+          return { value };
+        })
+        .filter(Boolean);
     }
 
     function customFieldRowTemplate(item = {}) {
@@ -4089,6 +4137,15 @@
     els.productRows.addEventListener("click", event => {
       if (event.target.classList.contains("remove-product")) {
         event.target.closest(".product-row").remove();
+      }
+    });
+
+    els.productRows.addEventListener("change", event => {
+      if (event.target.classList.contains("product-value")) {
+        syncProductCustomVisibility(event.target.closest(".product-row"));
+        if (event.target.value === PRODUCT_OTHER) {
+          event.target.closest(".product-row")?.querySelector(".product-custom")?.focus();
+        }
       }
     });
 
