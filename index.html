@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-no-move-btn -->
+  <!-- deploy-bust: 20260720-no-profile-move -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -1194,13 +1194,6 @@
     .profile-dialog .modal-head-actions {
       flex-wrap: wrap;
       justify-content: flex-end;
-    }
-
-    .profile-dialog .modal-head .btn-move-profile {
-      background: #eef8f6;
-      border-color: #b7e2db;
-      color: #0f766e;
-      font-weight: 650;
     }
 
     td.col-actions .btn-pdf:hover {
@@ -3032,7 +3025,6 @@
     <div class="modal-head">
       <h3 id="profileTitle">个人完整档案</h3>
       <div class="modal-head-actions">
-        <button class="btn btn-move-profile" type="button" id="moveTalentFromProfileBtn" title="移动到其他部门">移动部门</button>
         <button class="btn primary" type="button" id="exportPdfBtn" title="导出为 PDF">导出 PDF</button>
         <button class="btn icon" type="button" id="closeProfileDialog" aria-label="关闭">×</button>
       </div>
@@ -6578,11 +6570,6 @@
     document.querySelector("#exportPdfBtn").addEventListener("click", async () => {
       const person = talents.find(item => item.id === currentProfileId);
       await exportPersonToPdf(person);
-    });
-    document.querySelector("#moveTalentFromProfileBtn")?.addEventListener("click", async () => {
-      const person = talents.find(item => item.id === currentProfileId);
-      if (!person) return;
-      openMoveTalentDialog(person);
     });
 
     document.querySelector("#moveCategorySelect")?.addEventListener("change", () => {
