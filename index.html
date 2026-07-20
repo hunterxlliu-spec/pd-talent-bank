@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-category-acl -->
+  <!-- deploy-bust: 20260720-product-dropdown -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -896,30 +896,140 @@
     }
 
     .product-multiselect {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 12px;
-      background: #fcfcfd;
       width: 100%;
       min-width: 0;
       display: grid;
       gap: 12px;
     }
 
-    .product-checkboxes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 14px;
+    .product-dropdown {
+      position: relative;
+      width: 100%;
+      min-width: 0;
     }
 
-    .product-checkboxes label {
-      display: inline-flex;
+    .product-dropdown-trigger {
+      width: 100%;
+      display: flex;
       align-items: center;
-      gap: 6px;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--ink);
+      text-align: left;
       font-size: var(--fs-sm);
+      box-shadow: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    .product-dropdown-trigger:hover {
+      border-color: #cfd8e3;
+    }
+
+    .product-dropdown.is-open .product-dropdown-trigger,
+    .product-dropdown-trigger:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, .22);
+      outline: none;
+    }
+
+    .product-dropdown-summary {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .product-dropdown-summary.is-placeholder {
+      color: var(--muted);
+    }
+
+    .product-dropdown-caret {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1;
+      transition: transform .15s ease;
+    }
+
+    .product-dropdown.is-open .product-dropdown-caret {
+      transform: rotate(180deg);
+      color: var(--brand-strong);
+    }
+
+    .product-dropdown-panel {
+      margin-top: 6px;
+      border: 1px solid #d7dee8;
+      border-radius: 10px;
+      background: #f4f6f9;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, .1);
+      padding: 6px;
+      display: grid;
+      gap: 2px;
+      max-height: min(280px, 42vh);
+      overflow: auto;
+    }
+
+    .product-dropdown-panel[hidden] {
+      display: none !important;
+    }
+
+    .product-dropdown-heading {
+      padding: 8px 10px 6px;
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    .product-option {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 36px;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
       color: #344054;
+      text-align: left;
+      font-size: var(--fs-sm);
       cursor: pointer;
-      user-select: none;
+      transition: background .12s ease, color .12s ease;
+    }
+
+    .product-option:hover {
+      background: rgba(61, 169, 160, .12);
+    }
+
+    .product-option.is-selected {
+      background: var(--brand);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .product-option.is-selected:hover {
+      background: var(--brand-strong);
+    }
+
+    .product-option-check {
+      flex: 0 0 auto;
+      width: 16px;
+      text-align: center;
+      opacity: 0;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .product-option.is-selected .product-option-check {
+      opacity: 1;
     }
 
     .product-multiselect .product-custom-wrap[hidden] {
@@ -3854,14 +3964,49 @@
       return dataUrl;
     }
 
+    function getSelectedProductValues() {
+      return [...els.productRows.querySelectorAll(".product-option.is-selected")]
+        .map(btn => btn.dataset.value || "")
+        .filter(Boolean);
+    }
+
+    function updateProductDropdownSummary() {
+      const summary = els.productRows.querySelector(".product-dropdown-summary");
+      if (!summary) return;
+      const selected = getSelectedProductValues();
+      const labels = selected.map(value => {
+        if (value === PRODUCT_OTHER) {
+          const custom = els.productRows.querySelector(".product-custom")?.value.trim();
+          return custom || PRODUCT_OTHER;
+        }
+        return value;
+      });
+      if (!labels.length) {
+        summary.textContent = "请选择产品";
+        summary.classList.add("is-placeholder");
+        return;
+      }
+      summary.textContent = labels.join("、");
+      summary.classList.remove("is-placeholder");
+    }
+
+    function setProductDropdownOpen(open) {
+      const dropdown = els.productRows.querySelector(".product-dropdown");
+      const trigger = els.productRows.querySelector(".product-dropdown-trigger");
+      const panel = els.productRows.querySelector(".product-dropdown-panel");
+      if (!dropdown || !trigger || !panel) return;
+      dropdown.classList.toggle("is-open", open);
+      trigger.setAttribute("aria-expanded", open ? "true" : "false");
+      panel.hidden = !open;
+    }
+
     function syncProductCustomVisibility() {
-      const otherChecked = Boolean(
-        els.productRows.querySelector(`.product-option[value="${CSS.escape(PRODUCT_OTHER)}"]:checked`)
-      );
+      const otherSelected = getSelectedProductValues().includes(PRODUCT_OTHER);
       const wrap = els.productRows.querySelector(".product-custom-wrap");
       const input = els.productRows.querySelector(".product-custom");
-      if (wrap) wrap.hidden = !otherChecked;
-      if (!otherChecked && input) input.value = "";
+      if (wrap) wrap.hidden = !otherSelected;
+      if (!otherSelected && input) input.value = "";
+      updateProductDropdownSummary();
     }
 
     function renderProductRows(products = []) {
@@ -3880,18 +4025,44 @@
         }
       });
       const customJoined = otherNames.join("、");
+      const summaryLabels = [...selected].map(value => {
+        if (value === PRODUCT_OTHER) return customJoined || PRODUCT_OTHER;
+        return value;
+      });
+      const summaryText = summaryLabels.length ? summaryLabels.join("、") : "请选择产品";
       const optionsHtml = PRODUCT_OPTIONS.map(opt => {
         const label = opt === PRODUCT_OTHER ? "其他（可自行填写）" : opt;
+        const isSelected = selected.has(opt);
         return `
-          <label>
-            <input type="checkbox" class="product-option" value="${escapeHtml(opt)}" ${selected.has(opt) ? "checked" : ""}>
-            <span>${escapeHtml(label)}</span>
-          </label>
+          <button
+            type="button"
+            class="product-option${isSelected ? " is-selected" : ""}"
+            role="option"
+            data-value="${escapeHtml(opt)}"
+            aria-selected="${isSelected ? "true" : "false"}"
+          >
+            <span class="product-option-label">${escapeHtml(label)}</span>
+            <span class="product-option-check" aria-hidden="true">✓</span>
+          </button>
         `;
       }).join("");
       els.productRows.innerHTML = `
         <div class="product-multiselect">
-          <div class="product-checkboxes">${optionsHtml}</div>
+          <div class="product-dropdown">
+            <button
+              type="button"
+              class="product-dropdown-trigger"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+            >
+              <span class="product-dropdown-summary${summaryLabels.length ? "" : " is-placeholder"}">${escapeHtml(summaryText)}</span>
+              <span class="product-dropdown-caret" aria-hidden="true">▾</span>
+            </button>
+            <div class="product-dropdown-panel" hidden role="listbox" aria-multiselectable="true" aria-label="请选择产品">
+              <div class="product-dropdown-heading">请选择产品</div>
+              ${optionsHtml}
+            </div>
+          </div>
           <div class="field product-custom-wrap" ${selected.has(PRODUCT_OTHER) ? "" : "hidden"}>
             <label for="productCustomName">自定义产品名称</label>
             <input id="productCustomName" class="product-custom" placeholder="多个可用顿号或逗号分隔" value="${escapeHtml(customJoined)}">
@@ -3901,12 +4072,10 @@
     }
 
     function readProductRows() {
-      const checked = [...els.productRows.querySelectorAll(".product-option:checked")]
-        .map(input => input.value.trim())
-        .filter(Boolean);
+      const values = getSelectedProductValues();
       const products = [];
       const seen = new Set();
-      checked.forEach(value => {
+      values.forEach(value => {
         if (seen.has(value)) return;
         seen.add(value);
         if (value === PRODUCT_OTHER) {
@@ -4127,12 +4296,41 @@
       await exportPersonToPdf(person);
     });
 
-    els.productRows.addEventListener("change", event => {
-      if (!event.target.classList.contains("product-option")) return;
-      syncProductCustomVisibility();
-      if (event.target.value === PRODUCT_OTHER && event.target.checked) {
-        els.productRows.querySelector(".product-custom")?.focus();
+    els.productRows.addEventListener("click", event => {
+      const trigger = event.target.closest(".product-dropdown-trigger");
+      if (trigger && els.productRows.contains(trigger)) {
+        const dropdown = trigger.closest(".product-dropdown");
+        setProductDropdownOpen(!dropdown?.classList.contains("is-open"));
+        return;
       }
+
+      const option = event.target.closest(".product-option");
+      if (option && els.productRows.contains(option)) {
+        const next = !option.classList.contains("is-selected");
+        option.classList.toggle("is-selected", next);
+        option.setAttribute("aria-selected", next ? "true" : "false");
+        syncProductCustomVisibility();
+        if (option.dataset.value === PRODUCT_OTHER && next) {
+          els.productRows.querySelector(".product-custom")?.focus();
+        }
+        return;
+      }
+    });
+
+    els.productRows.addEventListener("input", event => {
+      if (event.target.classList.contains("product-custom")) {
+        updateProductDropdownSummary();
+      }
+    });
+
+    document.addEventListener("click", event => {
+      if (!els.productRows.contains(event.target)) {
+        setProductDropdownOpen(false);
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") setProductDropdownOpen(false);
     });
 
     els.customFieldRows.addEventListener("click", event => {
