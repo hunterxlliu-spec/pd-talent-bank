@@ -256,32 +256,38 @@
 
     .nav-expand-btn {
       flex: 0 0 auto;
-      width: 18px;
-      height: 18px;
+      width: 20px;
+      height: 20px;
       padding: 0;
       border: 0;
-      border-radius: 4px;
-      background: transparent;
-      color: #a8b7c6;
+      border-radius: 5px;
+      background: rgba(255,255,255,.06);
+      color: #e8eef5;
       cursor: pointer;
-      font-size: 10px;
+      font-size: 11px;
       line-height: 1;
+      font-weight: 700;
     }
 
     .nav-expand-btn:hover {
-      background: rgba(255,255,255,.08);
+      background: rgba(45, 212, 191, .22);
       color: #fff;
     }
 
     .nav-expand-btn.is-placeholder {
       visibility: hidden;
       pointer-events: none;
+      background: transparent;
+    }
+
+    .nav-expand-btn.is-open {
+      color: #5eead4;
     }
 
     .nav-subs {
       display: grid;
       gap: 1px;
-      padding: 0 0 4px 18px;
+      padding: 0 0 6px 22px;
     }
 
     .nav-subs[hidden] {
@@ -294,7 +300,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 6px;
-      padding: 5px 8px;
+      padding: 6px 8px;
       border-radius: 7px;
       border: 1px solid transparent;
       background: transparent;
@@ -330,6 +336,20 @@
 
     .nav-item.has-subs-active:not(.active) {
       background: rgba(255,255,255,.04);
+    }
+
+    .nav-item-subhint {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      color: #8fa0b3;
+      line-height: 1.2;
+      margin-top: 1px;
+    }
+
+    .nav-item.active .nav-item-subhint,
+    .nav-item.has-subs-active .nav-item-subhint {
+      color: #9ec8bf;
     }
 
     .nav-item-count {
@@ -3624,6 +3644,23 @@
       return findCategoryEntry(category, list)?.subs?.slice() || [];
     }
 
+    /** Configured subs + departments already used by talents under this category */
+    function getEffectiveSubsForCategory(category, list = categories) {
+      const cat = String(category || "").trim();
+      if (!cat || cat === ALL_CATEGORY || cat === UNCATEGORIZED) return [];
+      const subs = getSubsForCategory(cat, list);
+      const seen = new Set(subs);
+      talents.forEach(person => {
+        if (String(person.category || "").trim() !== cat) return;
+        const dept = String(person.department || "").trim();
+        if (dept && !seen.has(dept)) {
+          seen.add(dept);
+          subs.push(dept);
+        }
+      });
+      return subs;
+    }
+
     function setCategorySubs(category, subs) {
       const target = String(category || "").trim();
       if (!target) return;
@@ -3739,8 +3776,8 @@
       if (Object.prototype.hasOwnProperty.call(expandedCategories, name)) {
         return Boolean(expandedCategories[name]);
       }
-      // Auto-open when filtering a sub under this category
-      return activeCategory === name && Boolean(activeDepartment);
+      // Default open whenever there are sub-departments to show
+      return getEffectiveSubsForCategory(name).length > 0;
     }
 
     function setCategoryExpanded(name, open) {
@@ -3845,12 +3882,13 @@
           const canUp = canMove && editableIndex > 0;
           const canDown = canMove && editableIndex < editableNames.length - 1;
           const subs = (item.id !== ALL_CATEGORY && item.id !== UNCATEGORIZED)
-            ? getSubsForCategory(item.id)
+            ? getEffectiveSubsForCategory(item.id)
             : [];
           const hasSubs = subs.length > 0;
           const expanded = hasSubs && isCategoryExpanded(item.id);
           const parentActive = activeCategory === item.id && !activeDepartment;
           const childActive = activeCategory === item.id && Boolean(activeDepartment);
+          const configuredCount = getSubsForCategory(item.id).length;
           const subsHtml = hasSubs ? `
             <div class="nav-subs" ${expanded ? "" : "hidden"} data-parent="${escapeHtml(item.id)}">
               ${subs.map(sub => `
@@ -3867,6 +3905,7 @@
               <button class="nav-expand-btn ${hasSubs ? "" : "is-placeholder"} ${expanded ? "is-open" : ""}" type="button" title="${expanded ? "收起子部门" : "展开子部门"}" data-category="${escapeHtml(item.id)}" ${hasSubs ? "" : "tabindex='-1'"} aria-expanded="${expanded ? "true" : "false"}">${expanded ? "▾" : "▸"}</button>
               <button class="nav-item-main category-select-btn" type="button" data-category="${escapeHtml(item.id)}">
                 <span class="nav-item-title">${escapeHtml(item.title)}</span>
+                ${hasSubs ? `<span class="nav-item-subhint">${configuredCount || subs.length} 个子部门</span>` : ""}
               </button>
               <span class="nav-item-count">${countByCategory(item.id)}</span>
               ${canEditCats && item.editable ? `
@@ -3893,7 +3932,7 @@
             </button>
           `);
           if (item.id !== ALL_CATEGORY && item.id !== UNCATEGORIZED) {
-            getSubsForCategory(item.id).forEach(sub => {
+            getEffectiveSubsForCategory(item.id).forEach(sub => {
               chips.push(`
                 <button class="mobile-category-chip ${activeCategory === item.id && activeDepartment === sub ? "active" : ""}" type="button" data-category="${escapeHtml(item.id)}" data-department="${escapeHtml(sub)}">
                   ${escapeHtml(sub)}
@@ -4142,7 +4181,7 @@
           activeDepartment
           && activeCategory !== ALL_CATEGORY
           && activeCategory !== UNCATEGORIZED
-          && !getSubsForCategory(activeCategory).includes(activeDepartment)
+          && !getEffectiveSubsForCategory(activeCategory).includes(activeDepartment)
         ) {
           activeDepartment = "";
         }
@@ -5474,7 +5513,7 @@
         activeDepartment
         && activeCategory !== ALL_CATEGORY
         && activeCategory !== UNCATEGORIZED
-        && !getSubsForCategory(activeCategory).includes(activeDepartment)
+        && !getEffectiveSubsForCategory(activeCategory).includes(activeDepartment)
       ) {
         activeDepartment = "";
       }
@@ -5940,7 +5979,7 @@
         event.preventDefault();
         event.stopPropagation();
         const catName = expandBtn.dataset.category;
-        if (!catName || !getSubsForCategory(catName).length) return;
+        if (!catName || !getEffectiveSubsForCategory(catName).length) return;
         setCategoryExpanded(catName, !isCategoryExpanded(catName));
         renderCategoryNav();
         return;
@@ -5989,7 +6028,7 @@
         if (next == null) return;
         setCategorySubs(catName, String(next).split(/[,，、]/));
         setCategoryExpanded(catName, true);
-        if (activeCategory === catName && activeDepartment && !getSubsForCategory(catName).includes(activeDepartment)) {
+        if (activeCategory === catName && activeDepartment && !getEffectiveSubsForCategory(catName).includes(activeDepartment)) {
           activeDepartment = "";
         }
         try {
@@ -6069,7 +6108,7 @@
         if (!category) return;
         activeCategory = category;
         activeDepartment = "";
-        if (getSubsForCategory(category).length) {
+        if (getEffectiveSubsForCategory(category).length) {
           setCategoryExpanded(category, true);
         }
         activeView = "list";
