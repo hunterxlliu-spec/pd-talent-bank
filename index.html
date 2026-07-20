@@ -491,6 +491,12 @@
       background: #fff;
       box-shadow: -8px 0 12px rgba(15, 23, 42, .04);
       white-space: nowrap;
+      width: 76px;
+      min-width: 76px;
+      max-width: 88px;
+      padding-left: 8px;
+      padding-right: 8px;
+      text-align: center;
     }
 
     th.col-actions {
@@ -503,6 +509,72 @@
       flex-wrap: wrap;
       gap: 6px;
       align-items: center;
+    }
+
+    td.col-actions .action-menu {
+      position: relative;
+      display: inline-flex;
+      justify-content: center;
+      width: 100%;
+    }
+
+    td.col-actions .action-menu-toggle {
+      min-width: 56px;
+      min-height: 30px;
+      padding: 0 10px;
+      font-size: var(--fs-xs);
+      font-weight: 600;
+    }
+
+    td.col-actions .action-menu-panel {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      z-index: 20;
+      min-width: 132px;
+      padding: 6px;
+      display: none;
+      flex-direction: column;
+      gap: 2px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+      text-align: left;
+    }
+
+    td.col-actions .action-menu.open .action-menu-panel {
+      display: flex;
+    }
+
+    td.col-actions:has(.action-menu.open) {
+      z-index: 30;
+    }
+
+    td.col-actions .action-menu-panel .menu-item {
+      width: 100%;
+      min-height: 32px;
+      justify-content: flex-start;
+      border: 0;
+      box-shadow: none;
+      background: transparent;
+      border-radius: 8px;
+      padding: 0 10px;
+      font-size: var(--fs-sm);
+      font-weight: 500;
+    }
+
+    td.col-actions .action-menu-panel .menu-item:hover {
+      background: var(--soft);
+      transform: none;
+    }
+
+    td.col-actions .action-menu-panel .menu-item.is-danger {
+      color: var(--danger);
+    }
+
+    td.col-actions .action-menu-panel .menu-item.is-danger:hover {
+      background: #fff5f5;
     }
 
     td.col-actions .btn-pdf {
@@ -2967,11 +3039,14 @@
             <td><div class="tag-list">${products || "<span class='subtext'>-</span>"}</div></td>
             <td><span class="tag warn">${escapeHtml(person.status || "-")}</span></td>
             <td class="col-actions">
-              <div class="row-ops">
-                <button class="btn" type="button" title="查看完整档案" data-id="${person.id}" data-action="view">查看</button>
-                <button class="btn btn-pdf" type="button" title="导出个人档案为 PDF" data-id="${person.id}" data-action="export-pdf">导出PDF</button>
-                <button class="btn icon edit-btn" type="button" title="编辑" data-id="${person.id}">✎</button>
-                <button class="btn icon danger delete-btn" type="button" title="删除" data-id="${person.id}">×</button>
+              <div class="action-menu">
+                <button class="btn action-menu-toggle" type="button" aria-haspopup="menu" aria-expanded="false" data-action="toggle-ops" title="操作">操作 ▾</button>
+                <div class="action-menu-panel" role="menu">
+                  <button class="btn menu-item" type="button" role="menuitem" data-id="${person.id}" data-action="view">查看档案</button>
+                  <button class="btn menu-item" type="button" role="menuitem" data-id="${person.id}" data-action="export-pdf">导出 PDF</button>
+                  <button class="btn menu-item edit-btn" type="button" role="menuitem" data-id="${person.id}">编辑</button>
+                  <button class="btn menu-item is-danger delete-btn" type="button" role="menuitem" data-id="${person.id}">删除</button>
+                </div>
               </div>
             </td>
           </tr>
@@ -3807,7 +3882,30 @@
 
     els.form.addEventListener("submit", handleSubmit);
 
+    function closeAllActionMenus(except = null) {
+      document.querySelectorAll("td.col-actions .action-menu.open").forEach(menu => {
+        if (except && menu === except) return;
+        menu.classList.remove("open");
+        const toggle = menu.querySelector(".action-menu-toggle");
+        if (toggle) toggle.setAttribute("aria-expanded", "false");
+      });
+    }
+
     els.rows.addEventListener("click", async event => {
+      const toggleOps = event.target.closest("[data-action='toggle-ops']");
+      if (toggleOps) {
+        event.preventDefault();
+        event.stopPropagation();
+        const menu = toggleOps.closest(".action-menu");
+        const willOpen = !menu.classList.contains("open");
+        closeAllActionMenus();
+        if (willOpen) {
+          menu.classList.add("open");
+          toggleOps.setAttribute("aria-expanded", "true");
+        }
+        return;
+      }
+
       const profileButton = event.target.closest(".profile-btn");
       const viewButton = event.target.closest("[data-action='view']");
       const pdfButton = event.target.closest("[data-action='export-pdf']");
@@ -3816,6 +3914,7 @@
       const row = event.target.closest("tr");
 
       if (profileButton || viewButton) {
+        closeAllActionMenus();
         const id = (profileButton || viewButton).dataset.id;
         const person = talents.find(item => item.id === id);
         selectedId = person?.id || selectedId;
@@ -3825,18 +3924,21 @@
       }
 
       if (pdfButton) {
+        closeAllActionMenus();
         const person = talents.find(item => item.id === pdfButton.dataset.id);
         await exportPersonToPdf(person);
         return;
       }
 
       if (editButton) {
+        closeAllActionMenus();
         const person = talents.find(item => item.id === editButton.dataset.id);
         openDialog(person);
         return;
       }
 
       if (deleteButton) {
+        closeAllActionMenus();
         const person = talents.find(item => item.id === deleteButton.dataset.id);
         if (person && confirm(`确认删除 ${person.name} 吗？`)) {
           talents = talents.filter(item => item.id !== person.id);
@@ -3851,12 +3953,22 @@
         return;
       }
 
-      if (row) {
+      if (row?.dataset.id) {
+        closeAllActionMenus();
         const person = talents.find(item => item.id === row.dataset.id);
         selectedId = person?.id || selectedId;
         renderTable();
         openProfileDialog(person);
       }
+    });
+
+    document.addEventListener("click", event => {
+      if (event.target.closest("td.col-actions .action-menu")) return;
+      closeAllActionMenus();
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") closeAllActionMenus();
     });
 
     [els.search, els.genderFilter, els.statusFilter, els.appleFilter].forEach(control => {
