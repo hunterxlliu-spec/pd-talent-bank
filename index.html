@@ -249,6 +249,89 @@
       white-space: nowrap;
     }
 
+    .nav-group {
+      display: grid;
+      gap: 2px;
+    }
+
+    .nav-expand-btn {
+      flex: 0 0 auto;
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: #a8b7c6;
+      cursor: pointer;
+      font-size: 10px;
+      line-height: 1;
+    }
+
+    .nav-expand-btn:hover {
+      background: rgba(255,255,255,.08);
+      color: #fff;
+    }
+
+    .nav-expand-btn.is-placeholder {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .nav-subs {
+      display: grid;
+      gap: 1px;
+      padding: 0 0 4px 18px;
+    }
+
+    .nav-subs[hidden] {
+      display: none !important;
+    }
+
+    .nav-sub-item {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 5px 8px;
+      border-radius: 7px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #c5d0db;
+      cursor: pointer;
+      text-align: left;
+      font-size: 12px;
+    }
+
+    .nav-sub-item:hover {
+      background: rgba(255,255,255,.06);
+      color: #fff;
+    }
+
+    .nav-sub-item.active {
+      background: rgba(45, 212, 191, .14);
+      border-color: rgba(45, 212, 191, .24);
+      color: #fff;
+    }
+
+    .nav-sub-item-title {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .nav-sub-item .nav-item-count {
+      min-width: 18px;
+      height: 18px;
+      font-size: 10px;
+    }
+
+    .nav-item.has-subs-active:not(.active) {
+      background: rgba(255,255,255,.04);
+    }
+
     .nav-item-count {
       flex: 0 0 auto;
       min-width: 20px;
@@ -3407,6 +3490,8 @@
     let talents = [];
     let categories = normalizeCategories(DEFAULT_CATEGORIES);
     let activeCategory = ALL_CATEGORY;
+    let activeDepartment = ""; // sub-department filter under activeCategory
+    let expandedCategories = {};
     let activeView = "list"; // list | dashboard
     let selectedId = null;
     let editingId = null;
@@ -3640,6 +3725,28 @@
       return talents.filter(person => person.category === name).length;
     }
 
+    function countBySubDepartment(category, sub) {
+      const cat = String(category || "").trim();
+      const dept = String(sub || "").trim();
+      if (!cat || !dept) return 0;
+      return talents.filter(person =>
+        String(person.category || "").trim() === cat
+        && String(person.department || "").trim() === dept
+      ).length;
+    }
+
+    function isCategoryExpanded(name) {
+      if (Object.prototype.hasOwnProperty.call(expandedCategories, name)) {
+        return Boolean(expandedCategories[name]);
+      }
+      // Auto-open when filtering a sub under this category
+      return activeCategory === name && Boolean(activeDepartment);
+    }
+
+    function setCategoryExpanded(name, open) {
+      expandedCategories = { ...expandedCategories, [name]: Boolean(open) };
+    }
+
     function fillCategorySelect(selected = "") {
       const select = getField("category");
       if (!select) return;
@@ -3737,31 +3844,66 @@
           const canMove = canEditCats && item.editable && editableIndex >= 0;
           const canUp = canMove && editableIndex > 0;
           const canDown = canMove && editableIndex < editableNames.length - 1;
+          const subs = (item.id !== ALL_CATEGORY && item.id !== UNCATEGORIZED)
+            ? getSubsForCategory(item.id)
+            : [];
+          const hasSubs = subs.length > 0;
+          const expanded = hasSubs && isCategoryExpanded(item.id);
+          const parentActive = activeCategory === item.id && !activeDepartment;
+          const childActive = activeCategory === item.id && Boolean(activeDepartment);
+          const subsHtml = hasSubs ? `
+            <div class="nav-subs" ${expanded ? "" : "hidden"} data-parent="${escapeHtml(item.id)}">
+              ${subs.map(sub => `
+                <button class="nav-sub-item ${activeCategory === item.id && activeDepartment === sub ? "active" : ""}" type="button" data-category="${escapeHtml(item.id)}" data-department="${escapeHtml(sub)}">
+                  <span class="nav-sub-item-title">${escapeHtml(sub)}</span>
+                  <span class="nav-item-count">${countBySubDepartment(item.id, sub)}</span>
+                </button>
+              `).join("")}
+            </div>
+          ` : "";
           return `
-          <div class="nav-item ${activeCategory === item.id ? "active" : ""}" data-category="${escapeHtml(item.id)}">
-            <button class="nav-item-main category-select-btn" type="button" data-category="${escapeHtml(item.id)}">
-              <span class="nav-item-title">${escapeHtml(item.title)}</span>
-            </button>
-            <span class="nav-item-count">${countByCategory(item.id)}</span>
-            ${canEditCats && item.editable ? `
-              <span class="nav-item-actions">
-                <button class="btn move-category-up-btn" type="button" title="上移" data-category="${escapeHtml(item.id)}" ${canUp ? "" : "disabled"}>↑</button>
-                <button class="btn move-category-down-btn" type="button" title="下移" data-category="${escapeHtml(item.id)}" ${canDown ? "" : "disabled"}>↓</button>
-                <button class="btn edit-subs-btn" type="button" title="子部门" data-category="${escapeHtml(item.id)}">子</button>
-                <button class="btn rename-category-btn" type="button" title="重命名" data-category="${escapeHtml(item.id)}">✎</button>
-                <button class="btn danger delete-category-btn" type="button" title="删除" data-category="${escapeHtml(item.id)}">×</button>
-              </span>
-            ` : ""}
+          <div class="nav-group" data-nav-group="${escapeHtml(item.id)}">
+            <div class="nav-item ${parentActive ? "active" : ""} ${childActive ? "has-subs-active" : ""}" data-category="${escapeHtml(item.id)}">
+              <button class="nav-expand-btn ${hasSubs ? "" : "is-placeholder"} ${expanded ? "is-open" : ""}" type="button" title="${expanded ? "收起子部门" : "展开子部门"}" data-category="${escapeHtml(item.id)}" ${hasSubs ? "" : "tabindex='-1'"} aria-expanded="${expanded ? "true" : "false"}">${expanded ? "▾" : "▸"}</button>
+              <button class="nav-item-main category-select-btn" type="button" data-category="${escapeHtml(item.id)}">
+                <span class="nav-item-title">${escapeHtml(item.title)}</span>
+              </button>
+              <span class="nav-item-count">${countByCategory(item.id)}</span>
+              ${canEditCats && item.editable ? `
+                <span class="nav-item-actions">
+                  <button class="btn move-category-up-btn" type="button" title="上移" data-category="${escapeHtml(item.id)}" ${canUp ? "" : "disabled"}>↑</button>
+                  <button class="btn move-category-down-btn" type="button" title="下移" data-category="${escapeHtml(item.id)}" ${canDown ? "" : "disabled"}>↓</button>
+                  <button class="btn edit-subs-btn" type="button" title="子部门" data-category="${escapeHtml(item.id)}">子</button>
+                  <button class="btn rename-category-btn" type="button" title="重命名" data-category="${escapeHtml(item.id)}">✎</button>
+                  <button class="btn danger delete-category-btn" type="button" title="删除" data-category="${escapeHtml(item.id)}">×</button>
+                </span>
+              ` : ""}
+            </div>
+            ${subsHtml}
           </div>`;
         }).join("");
       }
       if (els.mobileCategoryBar) {
-        els.mobileCategoryBar.innerHTML = items.map(item => `
-          <button class="mobile-category-chip ${activeCategory === item.id ? "active" : ""}" type="button" data-category="${escapeHtml(item.id)}">
-            ${escapeHtml(item.title)}
-            <span>${countByCategory(item.id)}</span>
-          </button>
-        `).join("");
+        const chips = [];
+        items.forEach(item => {
+          chips.push(`
+            <button class="mobile-category-chip ${activeCategory === item.id && !activeDepartment ? "active" : ""}" type="button" data-category="${escapeHtml(item.id)}" data-department="">
+              ${escapeHtml(item.title)}
+              <span>${countByCategory(item.id)}</span>
+            </button>
+          `);
+          if (item.id !== ALL_CATEGORY && item.id !== UNCATEGORIZED) {
+            getSubsForCategory(item.id).forEach(sub => {
+              chips.push(`
+                <button class="mobile-category-chip ${activeCategory === item.id && activeDepartment === sub ? "active" : ""}" type="button" data-category="${escapeHtml(item.id)}" data-department="${escapeHtml(sub)}">
+                  ${escapeHtml(sub)}
+                  <span>${countBySubDepartment(item.id, sub)}</span>
+                </button>
+              `);
+            });
+          }
+        });
+        els.mobileCategoryBar.innerHTML = chips.join("");
       }
     }
 
@@ -3995,6 +4137,14 @@
         }
         if (activeCategory !== ALL_CATEGORY && !getAllowedCategoryItems().some(item => item.id === activeCategory)) {
           activeCategory = ALL_CATEGORY;
+          activeDepartment = "";
+        } else if (
+          activeDepartment
+          && activeCategory !== ALL_CATEGORY
+          && activeCategory !== UNCATEGORIZED
+          && !getSubsForCategory(activeCategory).includes(activeDepartment)
+        ) {
+          activeDepartment = "";
         }
         persistLocal();
         setSyncStatus("已同步");
@@ -4078,6 +4228,9 @@
         const category = String(person.category || "").trim();
         if (activeCategory === UNCATEGORIZED && category) return false;
         if (activeCategory !== ALL_CATEGORY && activeCategory !== UNCATEGORIZED && category !== activeCategory) return false;
+        if (activeDepartment) {
+          if (String(person.department || "").trim() !== activeDepartment) return false;
+        }
 
         const productText = (person.products || []).map(item => productDisplayName(item)).join(" ");
         const customText = (person.customFields || []).map(item => `${item.name} ${item.value}`).join(" ");
@@ -5296,6 +5449,7 @@
     function render() {
       if (!hasAnyCategoryAccess()) {
         activeCategory = ALL_CATEGORY;
+        activeDepartment = "";
         if (els.categoryNav) {
           els.categoryNav.innerHTML = `<div class="admin-empty" style="padding:12px 8px;">暂无部门权限</div>`;
         }
@@ -5315,6 +5469,14 @@
       }
       if (activeCategory !== ALL_CATEGORY && !getAllowedCategoryItems().some(item => item.id === activeCategory)) {
         activeCategory = ALL_CATEGORY;
+        activeDepartment = "";
+      } else if (
+        activeDepartment
+        && activeCategory !== ALL_CATEGORY
+        && activeCategory !== UNCATEGORIZED
+        && !getSubsForCategory(activeCategory).includes(activeDepartment)
+      ) {
+        activeDepartment = "";
       }
       renderCategoryNav();
       renderStats();
@@ -5696,6 +5858,7 @@
       }
       categories.push({ name: trimmed, subs: [] });
       activeCategory = trimmed;
+      activeDepartment = "";
       activeView = "list";
       try {
         await saveTalents();
@@ -5757,6 +5920,8 @@
       const chip = event.target.closest(".mobile-category-chip");
       if (!chip) return;
       activeCategory = chip.dataset.category || ALL_CATEGORY;
+      activeDepartment = String(chip.dataset.department || "").trim();
+      if (activeDepartment) setCategoryExpanded(activeCategory, true);
       activeView = "list";
       render();
     });
@@ -5767,7 +5932,30 @@
       const moveUpBtn = event.target.closest(".move-category-up-btn");
       const moveDownBtn = event.target.closest(".move-category-down-btn");
       const subsBtn = event.target.closest(".edit-subs-btn");
-      const selectBtn = event.target.closest(".category-select-btn") || event.target.closest(".nav-item");
+      const expandBtn = event.target.closest(".nav-expand-btn:not(.is-placeholder)");
+      const subItemBtn = event.target.closest(".nav-sub-item");
+      const selectBtn = event.target.closest(".category-select-btn");
+
+      if (expandBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        const catName = expandBtn.dataset.category;
+        if (!catName || !getSubsForCategory(catName).length) return;
+        setCategoryExpanded(catName, !isCategoryExpanded(catName));
+        renderCategoryNav();
+        return;
+      }
+
+      if (subItemBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        activeCategory = subItemBtn.dataset.category || ALL_CATEGORY;
+        activeDepartment = String(subItemBtn.dataset.department || "").trim();
+        setCategoryExpanded(activeCategory, true);
+        activeView = "list";
+        render();
+        return;
+      }
 
       if (moveUpBtn) {
         event.preventDefault();
@@ -5800,6 +5988,10 @@
         );
         if (next == null) return;
         setCategorySubs(catName, String(next).split(/[,，、]/));
+        setCategoryExpanded(catName, true);
+        if (activeCategory === catName && activeDepartment && !getSubsForCategory(catName).includes(activeDepartment)) {
+          activeDepartment = "";
+        }
         try {
           await saveTalents();
           render();
@@ -5827,6 +6019,13 @@
         ));
         talents = talents.map(person => person.category === oldName ? { ...person, category: trimmed } : person);
         if (activeCategory === oldName) activeCategory = trimmed;
+        if (Object.prototype.hasOwnProperty.call(expandedCategories, oldName)) {
+          expandedCategories = {
+            ...expandedCategories,
+            [trimmed]: expandedCategories[oldName]
+          };
+          delete expandedCategories[oldName];
+        }
         activeView = "list";
         try {
           await saveTalents();
@@ -5846,7 +6045,15 @@
         if (!confirm(`删除分类「${name}」？该分类下的人才将变为未分类。`)) return;
         categories = normalizeCategories(categories).filter(entry => entry.name !== name);
         talents = talents.map(person => person.category === name ? { ...person, category: "" } : person);
-        if (activeCategory === name) activeCategory = ALL_CATEGORY;
+        if (activeCategory === name) {
+          activeCategory = ALL_CATEGORY;
+          activeDepartment = "";
+        }
+        if (Object.prototype.hasOwnProperty.call(expandedCategories, name)) {
+          const nextExpanded = { ...expandedCategories };
+          delete nextExpanded[name];
+          expandedCategories = nextExpanded;
+        }
         activeView = "list";
         try {
           await saveTalents();
@@ -5861,6 +6068,10 @@
         const category = selectBtn.dataset.category || selectBtn.closest("[data-category]")?.dataset.category;
         if (!category) return;
         activeCategory = category;
+        activeDepartment = "";
+        if (getSubsForCategory(category).length) {
+          setCategoryExpanded(category, true);
+        }
         activeView = "list";
         render();
       }
