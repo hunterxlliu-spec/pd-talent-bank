@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-dash-modes -->
+  <!-- deploy-bust: 20260720-job-grade -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -2644,6 +2644,7 @@
                     <th class="col-person">人才</th>
                     <th class="col-gender">性别</th>
                     <th class="col-age">年龄</th>
+                    <th class="col-grade">职级</th>
                     <th class="col-secondary">籍贯</th>
                     <th class="col-education">学历</th>
                     <th class="col-secondary">英语水平</th>
@@ -2742,6 +2743,10 @@
           <div class="field">
             <label for="titleLevel">职称</label>
             <select id="titleLevel"></select>
+          </div>
+          <div class="field">
+            <label for="jobGrade">职级</label>
+            <select id="jobGrade"></select>
           </div>
           <div class="field">
             <label for="joinDate">入职时间</label>
@@ -2932,6 +2937,7 @@
       { value: "无障碍沟通听说读写", label: "3. 无障碍沟通，听说读写能力强" }
     ];
     const TITLE_LEVEL_OPTIONS = ["助理工程师", "工程师", "高级工程师", "专家", "其他"];
+    const JOB_GRADE_OPTIONS = ["1级", "2级", "3级", "4级", "5级", "6级", "7级", "8级", "9级", "10级", "其他"];
     const PRODUCT_OPTIONS = [
       "iPhone",
       "AirPods",
@@ -3692,6 +3698,7 @@
         category: String(item.category || "").trim(),
         englishName: String(item.englishName || "").trim(),
         currentProject: String(item.currentProject || "").trim(),
+        jobGrade: String(item.jobGrade || "").trim(),
         birthDate: normalizeDate(item.birthDate),
         joinDate: normalizeDate(item.joinDate),
         graduationDate: normalizeDate(item.graduationDate),
@@ -3924,6 +3931,7 @@
           person.baseLocation,
           person.certificates,
           person.titleLevel,
+          person.jobGrade,
           person.category,
           person.department,
           person.position,
@@ -4045,6 +4053,17 @@
           const value = String(person.titleLevel || "").trim();
           if (!value) return "未填写";
           return TITLE_LEVEL_OPTIONS.includes(value) ? value : "其他";
+        }
+      },
+      {
+        id: "jobGrade",
+        label: "职级",
+        note: "1级 ~ 10级",
+        order: [...JOB_GRADE_OPTIONS, "未填写"],
+        bucket: person => {
+          const value = String(person.jobGrade || "").trim();
+          if (!value) return "未填写";
+          return JOB_GRADE_OPTIONS.includes(value) ? value : "其他";
         }
       },
       {
@@ -4504,12 +4523,13 @@
                 ${avatarHtml(person)}
                 <div>
                   <div class="person-name">${escapeHtml(person.name)}${person.englishName ? `<span class="person-name-en">${escapeHtml(person.englishName)}</span>` : ""}</div>
-                  <div class="subtext">${escapeHtml(person.category || "未分类")} · ${escapeHtml(person.employeeNo)} · ${escapeHtml(person.position || "-")}</div>
+                  <div class="subtext">${escapeHtml(person.category || "未分类")} · ${escapeHtml(person.employeeNo)}${person.jobGrade ? ` · 职级 ${escapeHtml(person.jobGrade)}` : ""}${person.position ? ` · ${escapeHtml(person.position)}` : ""}</div>
                 </div>
               </div>
             </td>
             <td class="col-gender">${escapeHtml(person.gender || "-")}</td>
             <td class="col-age">${escapeHtml(person.age || calcAgeFromBirth(person.birthDate) || "-")}</td>
+            <td class="col-grade">${escapeHtml(person.jobGrade || "-")}</td>
             <td class="col-secondary">${escapeHtml(person.hometown || "-")}</td>
             <td class="col-education">${escapeHtml(person.education || "-")}</td>
             <td class="col-secondary">
@@ -4642,6 +4662,7 @@
               <div class="profile-meta-row">
                 <span class="profile-chip profile-status">${escapeHtml(person.status || "-")}</span>
                 <span class="profile-chip">工号 <strong>${escapeHtml(person.employeeNo || "-")}</strong></span>
+                <span class="profile-chip">职级 <strong>${escapeHtml(person.jobGrade || "-")}</strong></span>
                 <span class="profile-chip">${escapeHtml(person.gender || "-")}${ageText !== "-" ? ` · ${escapeHtml(ageText)}岁` : ""}</span>
                 <span class="profile-chip">${escapeHtml(person.hometown || "籍贯待完善")}</span>
                 <span class="profile-chip">${escapeHtml(person.education || "学历待完善")}</span>
@@ -4680,6 +4701,7 @@
                   ${infoItem("所属分类", person.category || "未分类")}
                   ${infoItem("科室 / 小组", person.department)}
                   ${infoItem("岗位", person.position)}
+                  ${infoItem("职级", person.jobGrade)}
                   ${infoItem("职称", person.titleLevel)}
                   ${infoItem("当前项目", person.currentProject)}
                   ${infoItem("入职时间", formatDate(person.joinDate))}
@@ -5052,7 +5074,7 @@
         return;
       }
       const headers = [
-        "姓名", "英文名", "工号", "性别", "年龄", "籍贯", "学历", "英语水平", "职称", "当前项目",
+        "姓名", "英文名", "工号", "性别", "年龄", "职级", "籍贯", "学历", "英语水平", "职称", "当前项目",
         "毕业学校", "专业", "毕业时间", "入职时间", "工作时间", "产品经验开始",
         "工作年限", "产品经验年限", "过往产品", "所属分类", "科室/小组", "岗位", "状态",
         "常驻基地", "技能", "证书/资质", "电话", "邮箱", "备注"
@@ -5063,6 +5085,7 @@
         person.employeeNo,
         person.gender,
         person.age || calcAgeFromBirth(person.birthDate),
+        person.jobGrade,
         person.hometown,
         person.education,
         englishLevelLabel(person.englishLevel),
@@ -5183,6 +5206,7 @@
         labelKey: "label"
       });
       fillSelectOptions("titleLevel", TITLE_LEVEL_OPTIONS, person?.titleLevel || "", { blankLabel: "请选择职称" });
+      fillSelectOptions("jobGrade", JOB_GRADE_OPTIONS, person?.jobGrade || "", { blankLabel: "请选择职级" });
       getField("talentId").value = person?.id || "";
       getField("employeeNo").value = person?.employeeNo || "";
       getField("name").value = person?.name || "";
@@ -5476,6 +5500,7 @@
           education: getField("education").value.trim(),
           englishLevel: getField("englishLevel").value.trim(),
           titleLevel: getField("titleLevel").value.trim(),
+          jobGrade: getField("jobGrade").value.trim(),
           joinDate: normalizeDate(getField("joinDate").value),
           baseLocation: getField("baseLocation").value.trim(),
           school: getField("school").value.trim(),
