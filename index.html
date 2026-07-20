@@ -3670,20 +3670,59 @@
       host.innerHTML = `
         <style>
           ${styleText}
-          #pdf-capture-root, #pdf-capture-root * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          #pdf-capture-root { background: #f5f5f7; color: #1d1d1f; }
-          #pdf-capture-root .profile-sheet { background: transparent; }
-          #pdf-capture-root .profile-hero { margin: 12px; }
-          #pdf-capture-root .profile-body { padding-bottom: 8px; }
+          @page { size: A4 portrait; margin: 10mm; }
+          #pdf-capture-root, #pdf-capture-root * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
+          #pdf-capture-root {
+            background: #f5f5f7;
+            color: #1d1d1f;
+            width: 210mm;
+            max-width: 210mm;
+          }
+          #pdf-capture-root .pdf-a4-document {
+            width: 100%;
+            padding: 0;
+            background: #f5f5f7;
+          }
+          #pdf-capture-root .profile-sheet { background: transparent; width: 100%; }
+          #pdf-capture-root .profile-hero { margin: 0 0 12px; break-inside: avoid; page-break-inside: avoid; }
+          #pdf-capture-root .profile-body { padding: 0 0 8px; gap: 12px; }
+          #pdf-capture-root .profile-stats {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+          #pdf-capture-root .profile-card {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
+          #pdf-capture-root .profile-section-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+          }
+          #pdf-capture-root .profile-section-grid > .profile-card {
+            min-width: 0;
+          }
+          #pdf-capture-root .pdf-footer {
+            margin: 12px 0 0;
+            padding-top: 8px;
+            border-top: 1px solid #e8eef4;
+            color: #6e6e73;
+            font-size: 11px;
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
         </style>
-        ${sheetHtml}
-        <p style="margin:8px 12px 16px;color:#6e6e73;font-size:11px;">导出时间：${new Date().toLocaleString("zh-CN")} · U01-A BG 研发人才库管理系统</p>
+        <div class="pdf-a4-document">
+          ${sheetHtml}
+          <p class="pdf-footer">导出时间：${new Date().toLocaleString("zh-CN")} · U01-A BG 研发人才库管理系统</p>
+        </div>
       `;
       Object.assign(host.style, {
         position: "fixed",
         left: "0",
         top: "0",
-        width: "794px",
+        width: "210mm",
+        maxWidth: "210mm",
         background: "#f5f5f7",
         zIndex: "2147483646",
         opacity: "1",
@@ -3714,18 +3753,23 @@
         await loadScriptOnce("https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js");
         if (!window.html2pdf) throw new Error("PDF 组件不可用");
 
-        const captureTarget = host.querySelector(".profile-sheet") || host;
+        const captureTarget = host.querySelector(".pdf-a4-document") || host;
+        const captureHeight = Math.max(captureTarget.scrollHeight, captureTarget.offsetHeight);
         await window.html2pdf().set({
-          margin: [8, 8, 8, 8],
+          margin: [10, 10, 10, 10],
           filename,
-          image: { type: "jpeg", quality: 0.98 },
+          image: { type: "jpeg", quality: 0.95 },
           html2canvas: {
             scale: 2,
             useCORS: true,
             allowTaint: true,
             logging: false,
             backgroundColor: "#f5f5f7",
+            width: 794,
+            height: captureHeight,
             windowWidth: 794,
+            scrollX: 0,
+            scrollY: 0,
             onclone: (doc) => {
               const cloned = doc.getElementById("pdf-capture-root");
               if (cloned) {
@@ -3733,12 +3777,16 @@
                 cloned.style.left = "0";
                 cloned.style.top = "0";
                 cloned.style.position = "static";
-                cloned.style.width = "794px";
+                cloned.style.width = "210mm";
+                cloned.style.maxWidth = "210mm";
               }
             }
           },
-          jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-          pagebreak: { mode: ["avoid-all", "css", "legacy"] }
+          jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
+          pagebreak: {
+            mode: ["css", "legacy"],
+            avoid: [".profile-hero", ".profile-stats", ".profile-card", ".pdf-footer"]
+          }
         }).from(captureTarget).save();
       } catch (error) {
         console.error(error);
@@ -3746,8 +3794,15 @@
           const win = window.open("", "_blank", "noopener,noreferrer");
           if (!win) throw new Error("弹窗被拦截");
           win.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeHtml(filename)}</title>
-            <style>@page{size:A4;margin:10mm}${styleText}body{margin:0;background:#f5f5f7}.profile-dialog,.modal-body{max-height:none!important;overflow:visible!important}</style></head>
-            <body>${sheetHtml}<p style="margin:8px 12px 16px;color:#6e6e73;font-size:11px;">导出时间：${new Date().toLocaleString("zh-CN")} · U01-A BG 研发人才库管理系统</p></body></html>`);
+            <style>
+              @page { size: A4 portrait; margin: 10mm; }
+              ${styleText}
+              body { margin: 0; background: #f5f5f7; width: 210mm; max-width: 210mm; }
+              .profile-dialog, .modal-body { max-height: none !important; overflow: visible !important; }
+              .profile-hero, .profile-stats, .profile-card, .pdf-footer { break-inside: avoid; page-break-inside: avoid; }
+              .pdf-footer { margin: 12px 0 0; padding-top: 8px; border-top: 1px solid #e8eef4; color: #6e6e73; font-size: 11px; }
+            </style></head>
+            <body><div class="pdf-a4-document">${sheetHtml}<p class="pdf-footer">导出时间：${new Date().toLocaleString("zh-CN")} · U01-A BG 研发人才库管理系统</p></div></body></html>`);
           win.document.close();
           win.focus();
           setTimeout(() => win.print(), 400);
