@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-tenure-column -->
+  <!-- deploy-bust: 20260720-api-goertek -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -3241,12 +3241,13 @@
     const AUTH_TOKEN_KEY = "talent-bank-admin-token-v1";
     const SIDEBAR_MIN_W = 200;
     const SIDEBAR_MAX_W = 440;
-    // Shared cloud API (Cloudflare Worker + KV)
+    // Shared cloud API — 国内优先 api.goertek.com，海外/VPN 自动回退 workers.dev
+    const API_BASE_DOMESTIC = "https://api.goertek.com";
     const API_BASE_DEFAULT = "https://pd-talent-bank-api.pd-talent-hunter.workers.dev";
     const API_FETCH_TIMEOUT_MS = 18000;
     const API_BASE_CANDIDATES = [
+      API_BASE_DOMESTIC,
       API_BASE_DEFAULT,
-      // Add a custom domain here after binding in Cloudflare (see shared-api/wrangler.toml).
     ].filter((url, index, list) => url && list.indexOf(url) === index);
 
     function resolveApiBase() {
@@ -3262,7 +3263,7 @@
         const fromStore = localStorage.getItem("talent-bank-api-base-v1");
         if (fromStore) return fromStore.replace(/\/$/, "");
       } catch {}
-      return API_BASE_DEFAULT;
+      return API_BASE_CANDIDATES[0] || API_BASE_DEFAULT;
     }
 
     let API_BASE = resolveApiBase();
