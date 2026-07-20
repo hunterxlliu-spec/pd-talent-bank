@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-product-dropdown -->
+  <!-- deploy-bust: 20260720-dashboard -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -275,9 +275,45 @@
       border: 1px solid rgba(255,255,255,.18);
     }
 
+    .sidebar-dashboard-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color: #edf3f8;
+      cursor: pointer;
+      text-align: left;
+      flex: 0 0 auto;
+    }
+
+    .sidebar-dashboard-btn:hover {
+      background: rgba(255,255,255,.1);
+    }
+
+    .sidebar-dashboard-btn.active {
+      background: rgba(45, 212, 191, .18);
+      border-color: rgba(45, 212, 191, .32);
+      color: #fff;
+    }
+
+    .sidebar-dashboard-btn strong {
+      font-size: var(--fs-sm);
+      font-weight: 650;
+    }
+
+    .sidebar-dashboard-btn span {
+      font-size: 11px;
+      color: #a8b7c6;
+    }
+
     .summary-bar {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: 1.1fr 1.1fr 1.8fr 1fr;
       gap: 10px;
     }
 
@@ -310,9 +346,148 @@
       font-size: var(--fs-xs);
     }
 
+    .stat-edu-mini {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      margin-top: 2px;
+    }
+
+    .stat-edu-mini-item {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .stat-edu-mini-item em {
+      font-style: normal;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .stat-edu-mini-item strong {
+      font-weight: 700;
+      color: var(--brand-strong);
+    }
+
+    .list-panel[hidden],
+    .dashboard-panel[hidden] {
+      display: none !important;
+    }
+
+    .dashboard-panel {
+      display: grid;
+      gap: 14px;
+    }
+
+    .dashboard-hero {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .dashboard-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .dashboard-card h3 {
+      margin: 0 0 6px;
+      font-size: 13px;
+      font-weight: 650;
+      color: var(--muted);
+    }
+
+    .dashboard-metric {
+      margin: 0;
+      font-size: 36px;
+      line-height: 1.1;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+    }
+
+    .dashboard-metric-unit {
+      margin-left: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .dashboard-card-note {
+      margin: 8px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dashboard-edu-card {
+      padding-bottom: 12px;
+    }
+
+    .edu-bars {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .edu-bar-row {
+      display: grid;
+      grid-template-columns: 52px minmax(0, 1fr) 64px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .edu-bar-label {
+      font-size: 13px;
+      font-weight: 650;
+      color: var(--ink);
+    }
+
+    .edu-bar-track {
+      height: 10px;
+      border-radius: 999px;
+      background: #eef2f6;
+      overflow: hidden;
+    }
+
+    .edu-bar-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #3da9a0, #2f8f88);
+      min-width: 0;
+      transition: width .25s ease;
+    }
+
+    .edu-bar-meta {
+      text-align: right;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .edu-bar-meta strong {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .edu-empty {
+      margin: 18px 0 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
     @media (max-width: 900px) {
       .summary-bar {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .dashboard-hero {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -2043,6 +2218,10 @@
         </div>
       </div>
       <div class="side-nav-block">
+        <button class="sidebar-dashboard-btn" type="button" id="dashboardNavBtn" aria-pressed="false">
+          <strong>数据看板</strong>
+          <span>总览</span>
+        </button>
         <div class="side-nav-head">
           <h3>研发分类</h3>
           <button class="btn" type="button" id="addCategoryBtn" title="新增分类">＋</button>
@@ -2054,8 +2233,8 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <h2>人才管理</h2>
-          <p>U01-A BG · 结构 / 硬件 / 声学等研发部门</p>
+          <h2 id="mainTitle">人才管理</h2>
+          <p id="mainSubtitle">U01-A BG · 结构 / 硬件 / 声学等研发部门</p>
         </div>
         <div class="actions">
           <span class="current-user-chip" id="currentUserChip" hidden>未登录</span>
@@ -2076,79 +2255,102 @@
               <span class="stat-label">人才总数</span>
             </div>
             <div class="stat-tile">
-              <span class="stat-value" id="statProduct">0</span>
-              <span class="stat-label">产品经验人才</span>
+              <span class="stat-value" id="statAvgAge">0</span>
+              <span class="stat-label">平均年龄</span>
             </div>
             <div class="stat-tile">
-              <span class="stat-value" id="statAvg">0</span>
-              <span class="stat-label">平均产品年限</span>
+              <span class="stat-label">学历分布</span>
+              <div class="stat-edu-mini" id="statEducationMini">暂无</div>
             </div>
             <div class="stat-tile">
               <span class="stat-value" id="syncStatus" style="font-size:15px">同步中</span>
               <span class="stat-label">云端共享状态</span>
             </div>
           </section>
-          <div class="mobile-category-bar" id="mobileCategoryBar" aria-label="研发分类"></div>
-          <section class="filters" aria-label="筛选">
-            <div class="field">
-              <label for="searchInput">搜索</label>
-              <input id="searchInput" placeholder="姓名 / 工号 / 学校 / 专业 / 产品">
+
+          <section class="dashboard-panel" id="dashboardPanel" hidden aria-label="数据看板">
+            <div class="dashboard-hero">
+              <article class="dashboard-card">
+                <h3>人才总人数</h3>
+                <p class="dashboard-metric" id="dashTotal">0</p>
+                <p class="dashboard-card-note" id="dashTotalNote">当前权限范围内可见人才</p>
+              </article>
+              <article class="dashboard-card">
+                <h3>平均年龄</h3>
+                <p class="dashboard-metric" id="dashAvgAge">0<span class="dashboard-metric-unit">岁</span></p>
+                <p class="dashboard-card-note" id="dashAvgAgeNote">基于有出生日期 / 年龄的档案</p>
+              </article>
             </div>
-            <div class="field">
-              <label for="genderFilter">性别</label>
-              <select id="genderFilter">
-                <option value="">全部</option>
-                <option>男</option>
-                <option>女</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="statusFilter">状态</label>
-              <select id="statusFilter">
-                <option value="">全部</option>
-                <option>在职</option>
-                <option>候选</option>
-                <option>储备</option>
-                <option>离职</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="appleFilter">产品经验</label>
-              <select id="appleFilter">
-                <option value="">全部</option>
-                <option value="yes">有经验</option>
-                <option value="no">无经验</option>
-              </select>
-            </div>
+            <article class="dashboard-card dashboard-edu-card">
+              <h3>学历分布</h3>
+              <p class="dashboard-card-note">按当前可见人才统计（专科 / 本科 / 硕士 / 博士 / 其他）</p>
+              <div class="edu-bars" id="dashEducationBars"></div>
+            </article>
           </section>
 
-          <p class="table-scroll-hint">表格较宽时可左右滑动查看：当前项目、年龄、籍贯、学历、英语水平、职称、入职时间等</p>
-          <section class="table-wrap" aria-label="人才列表">
-            <table>
-              <thead>
-                <tr>
-                  <th class="col-person">人才</th>
-                  <th>性别</th>
-                  <th>年龄</th>
-                  <th>籍贯</th>
-                  <th>学历</th>
-                  <th>英语水平</th>
-                  <th>职称</th>
-                  <th>当前项目</th>
-                  <th>毕业学校 / 专业</th>
-                  <th>入职时间</th>
-                  <th>常驻基地</th>
-                  <th>工作年限</th>
-                  <th>产品经验</th>
-                  <th>过往产品</th>
-                  <th>状态</th>
-                  <th class="col-actions">操作</th>
-                </tr>
-              </thead>
-              <tbody id="talentRows"></tbody>
-            </table>
+          <div class="list-panel" id="listPanel">
+            <div class="mobile-category-bar" id="mobileCategoryBar" aria-label="研发分类"></div>
+            <section class="filters" aria-label="筛选">
+              <div class="field">
+                <label for="searchInput">搜索</label>
+                <input id="searchInput" placeholder="姓名 / 工号 / 学校 / 专业 / 产品">
+              </div>
+              <div class="field">
+                <label for="genderFilter">性别</label>
+                <select id="genderFilter">
+                  <option value="">全部</option>
+                  <option>男</option>
+                  <option>女</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="statusFilter">状态</label>
+                <select id="statusFilter">
+                  <option value="">全部</option>
+                  <option>在职</option>
+                  <option>候选</option>
+                  <option>储备</option>
+                  <option>离职</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="appleFilter">产品经验</label>
+                <select id="appleFilter">
+                  <option value="">全部</option>
+                  <option value="yes">有经验</option>
+                  <option value="no">无经验</option>
+                </select>
+              </div>
+            </section>
+
+            <p class="table-scroll-hint">表格较宽时可左右滑动查看：当前项目、年龄、籍贯、学历、英语水平、职称、入职时间等</p>
+            <section class="table-wrap" aria-label="人才列表">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="col-person">人才</th>
+                    <th>性别</th>
+                    <th>年龄</th>
+                    <th>籍贯</th>
+                    <th>学历</th>
+                    <th>英语水平</th>
+                    <th>职称</th>
+                    <th>当前项目</th>
+                    <th>毕业学校 / 专业</th>
+                    <th>入职时间</th>
+                    <th>常驻基地</th>
+                    <th>工作年限</th>
+                    <th>产品经验</th>
+                    <th>过往产品</th>
+                    <th>状态</th>
+                    <th class="col-actions">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="talentRows"></tbody>
+              </table>
+            </section>
             <div class="empty" id="emptyState" hidden>暂无匹配人才</div>
-          </section>
+          </div>
         </div>
       </section>
     </main>
@@ -2883,7 +3085,9 @@
     let talents = [];
     let categories = [...DEFAULT_CATEGORIES];
     let activeCategory = ALL_CATEGORY;
+    let activeView = "list"; // list | dashboard
     let selectedId = null;
+    let editingId = null;
     let currentProfileId = null;
     let remoteUpdatedAt = null;
     let syncing = false;
@@ -2894,8 +3098,8 @@
 
     const els = {
       statTotal: document.querySelector("#statTotal"),
-      statProduct: document.querySelector("#statProduct"),
-      statAvg: document.querySelector("#statAvg"),
+      statAvgAge: document.querySelector("#statAvgAge"),
+      statEducationMini: document.querySelector("#statEducationMini"),
       syncStatus: document.querySelector("#syncStatus"),
       rows: document.querySelector("#talentRows"),
       empty: document.querySelector("#emptyState"),
@@ -2915,7 +3119,17 @@
       photoPreview: document.querySelector("#photoPreview"),
       categoryNav: document.querySelector("#categoryNav"),
       mobileCategoryBar: document.querySelector("#mobileCategoryBar"),
-      importFile: document.querySelector("#importFile")
+      importFile: document.querySelector("#importFile"),
+      dashboardNavBtn: document.querySelector("#dashboardNavBtn"),
+      dashboardPanel: document.querySelector("#dashboardPanel"),
+      listPanel: document.querySelector("#listPanel"),
+      mainTitle: document.querySelector("#mainTitle"),
+      mainSubtitle: document.querySelector("#mainSubtitle"),
+      dashTotal: document.querySelector("#dashTotal"),
+      dashTotalNote: document.querySelector("#dashTotalNote"),
+      dashAvgAge: document.querySelector("#dashAvgAge"),
+      dashAvgAgeNote: document.querySelector("#dashAvgAgeNote"),
+      dashEducationBars: document.querySelector("#dashEducationBars")
     };
 
     function setSyncStatus(text) {
@@ -3379,14 +3593,127 @@
       });
     }
 
+    function personAgeNumber(person) {
+      const fromBirth = calcAgeFromBirth(person?.birthDate);
+      if (fromBirth !== "" && fromBirth != null && Number.isFinite(Number(fromBirth))) {
+        return Number(fromBirth);
+      }
+      const raw = Number(person?.age);
+      return Number.isFinite(raw) && raw > 0 ? raw : null;
+    }
+
+    function normalizeEducationLabel(value) {
+      const text = String(value || "").trim();
+      if (!text) return "未填写";
+      if (EDUCATION_OPTIONS.includes(text)) return text;
+      return "其他";
+    }
+
+    function computeDashboardMetrics(list = talents) {
+      const total = list.length;
+      const ages = list.map(personAgeNumber).filter(age => age != null);
+      const avgAge = ages.length
+        ? Math.round((ages.reduce((sum, age) => sum + age, 0) / ages.length) * 10) / 10
+        : null;
+
+      const eduOrder = [...EDUCATION_OPTIONS, "未填写"];
+      const eduCounts = Object.fromEntries(eduOrder.map(label => [label, 0]));
+      list.forEach(person => {
+        const label = normalizeEducationLabel(person.education);
+        eduCounts[label] = (eduCounts[label] || 0) + 1;
+      });
+      const education = eduOrder
+        .map(label => ({
+          label,
+          count: eduCounts[label] || 0,
+          percent: total ? Math.round(((eduCounts[label] || 0) / total) * 1000) / 10 : 0
+        }))
+        .filter(item => item.count > 0 || EDUCATION_OPTIONS.includes(item.label));
+
+      return { total, avgAge, ageSampleSize: ages.length, education };
+    }
+
+    function setActiveView(view) {
+      activeView = view === "dashboard" ? "dashboard" : "list";
+      const isDashboard = activeView === "dashboard";
+      if (els.dashboardPanel) els.dashboardPanel.hidden = !isDashboard;
+      if (els.listPanel) els.listPanel.hidden = isDashboard;
+      if (els.dashboardNavBtn) {
+        els.dashboardNavBtn.classList.toggle("active", isDashboard);
+        els.dashboardNavBtn.setAttribute("aria-pressed", isDashboard ? "true" : "false");
+      }
+      if (els.mainTitle) els.mainTitle.textContent = isDashboard ? "数据看板" : "人才管理";
+      if (els.mainSubtitle) {
+        els.mainSubtitle.textContent = isDashboard
+          ? "人才总数 · 平均年龄 · 学历分布"
+          : "U01-A BG · 结构 / 硬件 / 声学等研发部门";
+      }
+      if (isDashboard) {
+        // Clear category highlight while on dashboard
+        els.categoryNav?.querySelectorAll(".nav-item.active").forEach(node => node.classList.remove("active"));
+        els.mobileCategoryBar?.querySelectorAll(".mobile-category-chip.active").forEach(node => node.classList.remove("active"));
+      }
+    }
+
     function renderStats() {
-      const productTalents = talents.filter(person => yearsSince(person.appleStartDate) > 0 || (person.products || []).some(item => isPresetAppleProduct(item)));
-      const avg = productTalents.length
-        ? productTalents.reduce((sum, person) => sum + yearsSince(person.appleStartDate), 0) / productTalents.length
-        : 0;
-      els.statTotal.textContent = talents.length;
-      els.statProduct.textContent = productTalents.length;
-      els.statAvg.textContent = avg ? avg.toFixed(1) : "0";
+      const metrics = computeDashboardMetrics(talents);
+      if (els.statTotal) els.statTotal.textContent = String(metrics.total);
+      if (els.statAvgAge) {
+        els.statAvgAge.textContent = metrics.avgAge == null ? "-" : String(metrics.avgAge);
+      }
+      if (els.statEducationMini) {
+        const top = metrics.education
+          .filter(item => item.count > 0 && item.label !== "未填写")
+          .slice()
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 4);
+        if (!top.length) {
+          els.statEducationMini.textContent = "暂无";
+        } else {
+          els.statEducationMini.innerHTML = top.map(item => `
+            <span class="stat-edu-mini-item">
+              <em>${escapeHtml(item.label)}</em>
+              <strong>${item.count}</strong>
+            </span>
+          `).join("");
+        }
+      }
+    }
+
+    function renderDashboard() {
+      const metrics = computeDashboardMetrics(talents);
+      if (els.dashTotal) els.dashTotal.textContent = String(metrics.total);
+      if (els.dashTotalNote) {
+        els.dashTotalNote.textContent = isSuperAdmin()
+          ? "全部人才（超级管理员可见）"
+          : "当前权限范围内可见人才";
+      }
+      if (els.dashAvgAge) {
+        els.dashAvgAge.innerHTML = metrics.avgAge == null
+          ? `-<span class="dashboard-metric-unit">岁</span>`
+          : `${metrics.avgAge}<span class="dashboard-metric-unit">岁</span>`;
+      }
+      if (els.dashAvgAgeNote) {
+        els.dashAvgAgeNote.textContent = metrics.ageSampleSize
+          ? `基于 ${metrics.ageSampleSize} 份有年龄信息的档案`
+          : "暂无可用年龄数据";
+      }
+      if (els.dashEducationBars) {
+        const maxCount = Math.max(...metrics.education.map(item => item.count), 1);
+        const rows = metrics.education.map(item => {
+          const width = Math.max(item.count ? (item.count / maxCount) * 100 : 0, 0);
+          return `
+            <div class="edu-bar-row">
+              <div class="edu-bar-label">${escapeHtml(item.label)}</div>
+              <div class="edu-bar-track" aria-hidden="true">
+                <div class="edu-bar-fill" style="width:${width.toFixed(1)}%"></div>
+              </div>
+              <div class="edu-bar-meta"><strong>${item.count}</strong> · ${item.percent}%</div>
+            </div>
+          `;
+        }).join("");
+        els.dashEducationBars.innerHTML = rows || `<p class="edu-empty">暂无学历数据</p>`;
+      }
     }
 
     function renderTable() {
@@ -4035,12 +4362,15 @@
         if (els.mobileCategoryBar) {
           els.mobileCategoryBar.innerHTML = "";
         }
-        els.statTotal.textContent = "0";
-        els.statProduct.textContent = "0";
-        els.statAvg.textContent = "0";
+        if (els.statTotal) els.statTotal.textContent = "0";
+        if (els.statAvgAge) els.statAvgAge.textContent = "-";
+        if (els.statEducationMini) els.statEducationMini.textContent = "暂无";
         els.rows.innerHTML = "";
         els.empty.hidden = false;
         els.empty.textContent = "暂无部门权限，请联系超级管理员分配";
+        setActiveView("list");
+        renderStats();
+        renderDashboard();
         return;
       }
       if (activeCategory !== ALL_CATEGORY && !getAllowedCategoryItems().some(item => item.id === activeCategory)) {
@@ -4048,7 +4378,9 @@
       }
       renderCategoryNav();
       renderStats();
-      renderTable();
+      renderDashboard();
+      setActiveView(activeView);
+      if (activeView === "list") renderTable();
     }
 
     function getField(id) {
@@ -4424,6 +4756,7 @@
       }
       categories.push(trimmed);
       activeCategory = trimmed;
+      activeView = "list";
       try {
         await saveTalents();
         render();
@@ -4432,10 +4765,16 @@
       }
     });
 
+    els.dashboardNavBtn?.addEventListener("click", () => {
+      activeView = "dashboard";
+      render();
+    });
+
     els.mobileCategoryBar?.addEventListener("click", event => {
       const chip = event.target.closest(".mobile-category-chip");
       if (!chip) return;
       activeCategory = chip.dataset.category || ALL_CATEGORY;
+      activeView = "list";
       render();
     });
 
@@ -4460,6 +4799,7 @@
         categories = categories.map(item => item === oldName ? trimmed : item);
         talents = talents.map(person => person.category === oldName ? { ...person, category: trimmed } : person);
         if (activeCategory === oldName) activeCategory = trimmed;
+        activeView = "list";
         try {
           await saveTalents();
           render();
@@ -4479,6 +4819,7 @@
         categories = categories.filter(item => item !== name);
         talents = talents.map(person => person.category === name ? { ...person, category: "" } : person);
         if (activeCategory === name) activeCategory = ALL_CATEGORY;
+        activeView = "list";
         try {
           await saveTalents();
           render();
@@ -4492,6 +4833,7 @@
         const category = selectBtn.dataset.category || selectBtn.closest("[data-category]")?.dataset.category;
         if (!category) return;
         activeCategory = category;
+        activeView = "list";
         render();
       }
     });
