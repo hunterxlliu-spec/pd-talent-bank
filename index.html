@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-sidebar-polish -->
+  <!-- deploy-bust: 20260720-product-exp -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -1345,6 +1345,12 @@
     .tag.warn {
       background: #fff7ed;
       color: var(--accent);
+    }
+
+    .tag.more-tag {
+      background: #eef2f6;
+      color: #667085;
+      font-weight: 650;
     }
 
     .detail-panel,
@@ -2866,8 +2872,8 @@
                     <th class="col-secondary">入职时间</th>
                     <th class="col-secondary">常驻基地</th>
                     <th class="col-secondary">工作年限</th>
+                    <th class="col-secondary">产品经验年限</th>
                     <th class="col-secondary">产品经验</th>
-                    <th class="col-secondary">过往产品</th>
                     <th class="col-status">状态</th>
                     <th class="col-actions">操作</th>
                   </tr>
@@ -3020,7 +3026,7 @@
         </div>
 
         <div class="section-title">
-          <h4>过往产品信息</h4>
+          <h4>产品经验</h4>
         </div>
         <div id="productRows"></div>
 
@@ -5411,11 +5417,17 @@
       if (!list.some(person => person.id === selectedId)) selectedId = list[0]?.id || talents[0]?.id || null;
 
       els.rows.innerHTML = list.map(person => {
-        const products = (person.products || []).map(item => {
+        const productTags = (person.products || []).map(item => {
           const label = productDisplayName(item);
-          if (!label) return "";
+          if (!label) return null;
           return `<span class="tag ${isPresetAppleProduct(item) ? "apple" : ""}">${escapeHtml(label)}</span>`;
-        }).filter(Boolean).join("");
+        }).filter(Boolean);
+        const visibleProductTags = productTags.slice(0, 3);
+        const extraProductCount = productTags.length - visibleProductTags.length;
+        const products = [
+          ...visibleProductTags,
+          extraProductCount > 0 ? `<span class="tag more-tag" title="共 ${productTags.length} 项，详见档案">+${extraProductCount}</span>` : ""
+        ].filter(Boolean).join("");
         return `
           <tr class="talent-row ${person.id === selectedId ? "active" : ""}" data-id="${person.id}">
             <td class="col-person">
@@ -5569,7 +5581,7 @@
             <div class="profile-stats">
               <div class="profile-stat"><span>工作年限</span><strong>${escapeHtml(formatYears(person.firstWorkDate))}</strong></div>
               <div class="profile-stat"><span>产品经验</span><strong>${escapeHtml(formatYears(person.appleStartDate))}</strong></div>
-              <div class="profile-stat"><span>过往产品</span><strong>${productLabels.length}</strong></div>
+              <div class="profile-stat"><span>产品经验</span><strong>${productLabels.length}</strong></div>
               <div class="profile-stat"><span>技能标签</span><strong>${skills.length}</strong></div>
             </div>
 
@@ -5623,8 +5635,8 @@
             </section>
 
             <section class="profile-card">
-              <h4 class="profile-card-title"><span class="profile-card-kicker">过往产品信息</span></h4>
-              <div class="experience-list">${productItems || "<div class='profile-empty'>暂无过往产品</div>"}</div>
+              <h4 class="profile-card-title"><span class="profile-card-kicker">产品经验</span></h4>
+              <div class="experience-list">${productItems || "<div class='profile-empty'>暂无产品经验</div>"}</div>
             </section>
 
             <section class="profile-card">
@@ -5969,7 +5981,7 @@
       const headers = [
         "姓名", "英文名", "工号", "性别", "年龄", "职级", "籍贯", "学历", "英语水平", "当前项目",
         "毕业学校", "专业", "毕业时间", "入职时间", "工作时间", "产品经验开始",
-        "工作年限", "产品经验年限", "过往产品", "所属分类", "子部门", "岗位", "状态",
+        "工作年限", "产品经验年限", "产品经验", "所属分类", "子部门", "岗位", "状态",
         "常驻基地", "技能", "证书/资质", "电话", "邮箱", "备注"
       ];
       const rows = list.map(person => [
