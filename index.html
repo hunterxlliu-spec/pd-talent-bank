@@ -3915,9 +3915,20 @@
     }
 
     function updatePhotoPreview(src, name = "") {
-      els.photoPreview.innerHTML = src
-        ? `<img alt="${escapeHtml(name || "照片")}" src="${src}">`
-        : escapeHtml(initials(name || "照片"));
+      const label = initials(name || "照片");
+      if (!src) {
+        els.photoPreview.innerHTML = escapeHtml(label);
+        return;
+      }
+      // Remote /photos/:id requires auth; <img> cannot send Bearer, so append ?token=
+      const displaySrc = src.startsWith("data:image/") ? src : withAuthPhotoUrl(src);
+      els.photoPreview.innerHTML = `<img alt="${escapeHtml(name || "照片")}" src="${escapeHtml(displaySrc)}">`;
+      const img = els.photoPreview.querySelector("img");
+      if (img) {
+        img.addEventListener("error", () => {
+          els.photoPreview.textContent = label;
+        }, { once: true });
+      }
     }
 
     async function compressImageFile(file, maxBytes = 280_000) {
