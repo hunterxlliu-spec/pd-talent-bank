@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-profile-simple -->
+  <!-- deploy-bust: 20260720-restore-profile -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -1859,32 +1859,6 @@
       letter-spacing: -0.02em;
       font-weight: 600;
       color: var(--ink);
-    }
-
-    /* 精简版个人资料页：只展示头像、英文名、部门、岗位 */
-    .profile-sheet-simple .profile-hero {
-      margin: 12px 12px 0;
-      padding: 16px;
-      border-radius: 14px;
-      grid-template-columns: 72px minmax(0, 1fr);
-      gap: 14px;
-    }
-
-    .profile-sheet-simple .profile-avatar {
-      width: 72px;
-      height: 72px;
-      font-size: 22px;
-    }
-
-    .profile-sheet-simple .profile-role {
-      margin-top: 4px;
-    }
-
-    .profile-sheet-simple .profile-meta-row,
-    .profile-sheet-simple .profile-body,
-    .profile-sheet-simple .profile-stats,
-    .profile-sheet-simple .profile-card {
-      display: none;
     }
 
     .profile-role {
@@ -5656,7 +5630,7 @@
                 ${avatarHtml(person)}
                 <div>
                   <div class="person-name">${escapeHtml(person.name)}${person.englishName ? `<span class="person-name-en">${escapeHtml(person.englishName)}</span>` : ""}</div>
-                  <div class="subtext">${escapeHtml(person.category || "未分类")}${person.department ? ` · ${escapeHtml(person.department)}` : ""} · ${escapeHtml(person.employeeNo)}${person.jobGrade ? ` · 职级 ${escapeHtml(person.jobGrade)}` : ""}${person.position ? ` · ${escapeHtml(person.position)}` : ""}</div>
+                  <div class="subtext">${escapeHtml(person.department || person.category || "未分类")}${person.position ? ` · ${escapeHtml(person.position)}` : ""}</div>
                 </div>
               </div>
             </td>
@@ -5769,8 +5743,7 @@
         : "";
 
       const customItems = (person.customFields || []).map(item => infoItem(item.name || "-", item.value || "-")).join("");
-      // 个人资料页：只展示“部门 · 岗位”，避免信息过载
-      const roleLine = [person.department, person.position].filter(Boolean).join(" · ") || "岗位待完善";
+      const roleLine = [person.category, person.department, person.position].filter(Boolean).join(" · ") || "岗位待完善";
       const ageText = person.age || calcAgeFromBirth(person.birthDate) || "-";
       const photoSrc = Object.prototype.hasOwnProperty.call(options, "photoSrc")
         ? (options.photoSrc || "")
@@ -5780,16 +5753,96 @@
         : escapeHtml(initials(person.name));
 
       return `
-        <div class="profile-sheet profile-sheet-simple">
-          <section class="profile-hero profile-hero-simple">
+        <div class="profile-sheet">
+          <section class="profile-hero">
             <div class="profile-avatar">${photoHtml}</div>
             <div class="profile-hero-main">
-              <h2 class="profile-name-line">
-                <span class="profile-name-en">${escapeHtml(person.englishName || person.name || "-")}</span>
-              </h2>
+              <h2 class="profile-name-line">${escapeHtml(person.name || "-")}${person.englishName ? `<span class="profile-name-en">${escapeHtml(person.englishName)}</span>` : ""}</h2>
               <p class="profile-role">${escapeHtml(roleLine)}</p>
+              <div class="profile-meta-row">
+                <span class="profile-chip profile-status">${escapeHtml(person.status || "-")}</span>
+                <span class="profile-chip">工号 <strong>${escapeHtml(person.employeeNo || "-")}</strong></span>
+                <span class="profile-chip">职级 <strong>${escapeHtml(person.jobGrade || "-")}</strong></span>
+                <span class="profile-chip">${escapeHtml(person.gender || "-")}${ageText !== "-" ? ` · ${escapeHtml(ageText)}岁` : ""}</span>
+                <span class="profile-chip">${escapeHtml(person.hometown || "籍贯待完善")}</span>
+                <span class="profile-chip">${escapeHtml(person.education || "学历待完善")}</span>
+                <span class="profile-chip">${escapeHtml(person.currentProject || "当前项目待完善")}</span>
+              </div>
             </div>
           </section>
+
+          <div class="profile-body">
+            <div class="profile-stats">
+              <div class="profile-stat"><span>工作年限</span><strong>${escapeHtml(formatYears(person.firstWorkDate))}</strong></div>
+              <div class="profile-stat"><span>产品经验</span><strong>${escapeHtml(formatYears(person.appleStartDate))}</strong></div>
+              <div class="profile-stat"><span>产品经验</span><strong>${productLabels.length}</strong></div>
+              <div class="profile-stat"><span>技能标签</span><strong>${skills.length}</strong></div>
+            </div>
+
+            <div class="profile-section-grid">
+              <section class="profile-card">
+                <h4 class="profile-card-title"><span class="profile-card-kicker">身份背景</span></h4>
+                <div class="full-info-grid cols-2">
+                  ${infoItem("英文名", person.englishName)}
+                  ${infoItem("性别", person.gender)}
+                  ${infoItem("出生日期", formatDate(person.birthDate))}
+                  ${infoItem("年龄", ageText)}
+                  ${infoItem("籍贯", person.hometown)}
+                  ${infoItem("学历", person.education)}
+                  ${infoItem("英语水平", englishLevelNumber(person.englishLevel) || "-")}
+                  ${infoItem("电话", person.phone)}
+                  ${infoItem("邮箱", person.email)}
+                </div>
+              </section>
+
+              <section class="profile-card">
+                <h4 class="profile-card-title"><span class="profile-card-kicker">组织信息</span></h4>
+                <div class="full-info-grid cols-2">
+                  ${infoItem("所属分类", person.category || "未分类")}
+                  ${infoItem("子部门", person.department)}
+                  ${infoItem("岗位", person.position)}
+                  ${infoItem("职级", person.jobGrade)}
+                  ${infoItem("当前项目", person.currentProject)}
+                  ${infoItem("入职时间", formatDate(person.joinDate))}
+                  ${infoItem("常驻基地", person.baseLocation)}
+                  ${infoItem("工号", person.employeeNo)}
+                  ${infoItem("状态", person.status)}
+                </div>
+              </section>
+            </div>
+
+            <section class="profile-card">
+              <h4 class="profile-card-title"><span class="profile-card-kicker">教育与经验</span></h4>
+              <div class="full-info-grid">
+                ${infoItem("毕业学校", person.school)}
+                ${infoItem("毕业时间", formatDate(person.graduationDate))}
+                ${infoItem("专业", person.major)}
+                ${infoItem("工作时间", formatDate(person.firstWorkDate))}
+                ${infoItem("产品经验开始", formatDate(person.appleStartDate))}
+                ${infoItem("证书 / 资质", person.certificates)}
+              </div>
+            </section>
+
+            <section class="profile-card">
+              <h4 class="profile-card-title"><span class="profile-card-kicker">技能标签</span></h4>
+              ${skillHtml}
+            </section>
+
+            <section class="profile-card">
+              <h4 class="profile-card-title"><span class="profile-card-kicker">产品经验</span></h4>
+              <div class="experience-list">${productItems || "<div class='profile-empty'>暂无产品经验</div>"}</div>
+            </section>
+
+            <section class="profile-card">
+              <h4 class="profile-card-title"><span class="profile-card-kicker">自定义项目</span></h4>
+              <div class="full-info-grid">${customItems || "<div class='profile-empty'>暂无自定义项目</div>"}</div>
+            </section>
+
+            <section class="profile-card">
+              <h4 class="profile-card-title"><span class="profile-card-kicker">备注</span></h4>
+              <p class="profile-remark">${escapeHtml(person.remark || "暂无备注")}</p>
+            </section>
+          </div>
         </div>
       `;
     }
