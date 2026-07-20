@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-sidebar-ctx -->
+  <!-- deploy-bust: 20260720-move-visible -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -1156,36 +1156,56 @@
 
     td.col-actions .row-ops {
       display: inline-flex;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
       gap: 6px;
       align-items: center;
+      justify-content: flex-end;
+    }
+
+    td.col-actions .btn-move {
+      min-height: 30px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 650;
+      background: #eef8f6;
+      border-color: #b7e2db;
+      color: #0f766e;
+      white-space: nowrap;
+    }
+
+    td.col-actions .btn-move:hover {
+      background: #d9f3ee;
+      transform: none;
+    }
+
+    td.col-actions .action-more {
+      min-width: 30px;
+      min-height: 30px;
+      padding: 0;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--muted);
     }
 
     td.col-actions .action-hint {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 52px;
-      min-height: 30px;
-      padding: 0 8px;
-      border-radius: 8px;
-      border: 1px dashed #d5dee8;
-      background: #f8fafc;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: context-menu;
-      user-select: none;
+      display: none;
     }
 
     tr.talent-row {
       cursor: default;
     }
 
-    tr.talent-row:hover td.col-actions .action-hint {
-      border-color: #b7c6d6;
-      color: var(--ink);
-      background: #fff;
+    .profile-dialog .modal-head-actions {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .profile-dialog .modal-head .btn-move-profile {
+      background: #eef8f6;
+      border-color: #b7e2db;
+      color: #0f766e;
+      font-weight: 650;
     }
 
     td.col-actions .btn-pdf:hover {
@@ -2983,7 +3003,7 @@
     <div class="modal-head">
       <h3 id="profileTitle">个人完整档案</h3>
       <div class="modal-head-actions">
-        <button class="btn" type="button" id="moveTalentFromProfileBtn" title="移动到其他部门">移动部门</button>
+        <button class="btn btn-move-profile" type="button" id="moveTalentFromProfileBtn" title="移动到其他部门">移动部门</button>
         <button class="btn primary" type="button" id="exportPdfBtn" title="导出为 PDF">导出 PDF</button>
         <button class="btn icon" type="button" id="closeProfileDialog" aria-label="关闭">×</button>
       </div>
@@ -4191,6 +4211,7 @@
     }
 
     let ctxMenuPayload = null;
+    let ctxMenuIgnoreCloseUntil = 0;
 
     function hideContextMenu() {
       const menu = document.querySelector("#contextMenu");
@@ -4228,6 +4249,8 @@
         return `<button class="menu-item ${item.danger ? "is-danger" : ""}" type="button" role="menuitem" data-ctx-action="${escapeHtml(item.action)}" ${item.disabled ? "disabled" : ""}>${escapeHtml(item.label)}</button>`;
       }).join("");
       positionContextMenu(menu, clientX, clientY);
+      // Avoid the opening click/contextmenu immediately closing the menu.
+      ctxMenuIgnoreCloseUntil = Date.now() + 250;
     }
 
     function showCategoryContextMenu(event, navItem) {
@@ -5182,7 +5205,10 @@
             <td class="col-secondary"><div class="tag-list">${products || "<span class='subtext'>-</span>"}</div></td>
             <td class="col-status"><span class="tag warn">${escapeHtml(person.status || "-")}</span></td>
             <td class="col-actions">
-              <span class="action-hint" title="右键打开操作菜单">右键</span>
+              <div class="row-ops">
+                <button class="btn btn-move" type="button" data-action="talent-move" data-id="${person.id}" title="移动到其他部门">移动</button>
+                <button class="btn action-more" type="button" data-action="talent-more" data-id="${person.id}" title="更多操作（也可右键）" aria-haspopup="menu">⋯</button>
+              </div>
             </td>
           </tr>
         `;
@@ -6436,20 +6462,29 @@
       }
     });
 
-    els.rows.addEventListener("click", event => {
-      const hint = event.target.closest(".action-hint");
-      if (hint) {
+    els.rows.addEventListener("click", async event => {
+      const moveBtn = event.target.closest("[data-action='talent-move']");
+      if (moveBtn) {
         event.preventDefault();
         event.stopPropagation();
-        const row = hint.closest("tr.talent-row");
-        if (!row?.dataset.id) return;
-        const rect = hint.getBoundingClientRect();
+        hideContextMenu();
+        const person = talents.find(item => item.id === moveBtn.dataset.id);
+        await moveTalentToCategory(person);
+        return;
+      }
+
+      const moreBtn = event.target.closest("[data-action='talent-more']");
+      if (moreBtn) {
+        event.preventDefault();
+        event.stopPropagation();
+        const rect = moreBtn.getBoundingClientRect();
         showTalentContextMenu(
-          { clientX: rect.left, clientY: rect.bottom + 4, preventDefault() {}, stopPropagation() {} },
-          row.dataset.id
+          { clientX: rect.left, clientY: rect.bottom + 4 },
+          moreBtn.dataset.id
         );
         return;
       }
+
       hideContextMenu();
       if (event.target.closest("td.col-actions")) return;
       const row = event.target.closest("tr.talent-row");
@@ -6471,6 +6506,7 @@
     });
 
     document.addEventListener("click", event => {
+      if (Date.now() < ctxMenuIgnoreCloseUntil) return;
       if (event.target.closest("#contextMenu")) return;
       hideContextMenu();
     });
@@ -6479,7 +6515,10 @@
       if (event.key === "Escape") hideContextMenu();
     });
 
-    document.addEventListener("scroll", hideContextMenu, true);
+    document.addEventListener("scroll", () => {
+      if (Date.now() < ctxMenuIgnoreCloseUntil) return;
+      hideContextMenu();
+    }, true);
 
     [els.search, els.genderFilter, els.statusFilter, els.appleFilter].forEach(control => {
       control.addEventListener("input", renderTable);
