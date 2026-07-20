@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-cn-only-api -->
+  <!-- deploy-bust: 20260720-api-goertek-fallback -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -2752,7 +2752,7 @@
       <div class="login-brand">
 <h1 class="login-brand-name">U01-A BG 研发人才库管理系统</h1>
         <p class="login-title">账号登录</p>
-        <p class="login-copy">使用工号登录（前导 0 可省略）。默认密码 RDadmin2026，首次登录需修改。API 地址：api.goertek.com（仅大陆网络）。</p>
+        <p class="login-copy">使用工号登录（前导 0 可省略）。默认密码 RDadmin2026，首次登录需修改。若长时间无响应，多为网络无法访问云端 API，请切换网络或联系管理员。</p>
       </div>
       <form class="login-form" id="loginForm" autocomplete="on">
         <div class="login-field">
@@ -3241,18 +3241,29 @@
     const AUTH_TOKEN_KEY = "talent-bank-admin-token-v1";
     const SIDEBAR_MIN_W = 200;
     const SIDEBAR_MAX_W = 440;
-    // Shared cloud API — 仅国内 api.goertek.com（目标：大陆免 VPN 可用）
-    const API_BASE_FIXED = "https://api.goertek.com";
+    // Shared cloud API — 国内优先 api.goertek.com，海外自动回退 workers.dev
+    const API_BASE_DOMESTIC = "https://api.goertek.com";
+    const API_BASE_DEFAULT = "https://pd-talent-bank-api.pd-talent-hunter.workers.dev";
     const API_FETCH_TIMEOUT_MS = 18000;
+    const API_BASE_CANDIDATES = [
+      API_BASE_DOMESTIC,
+      API_BASE_DEFAULT,
+    ].filter((url, index, list) => url && list.indexOf(url) === index);
 
     function resolveApiBase() {
       try {
         const fromUrl = new URLSearchParams(location.search).get("api");
         if (fromUrl) {
-          return fromUrl.replace(/\/$/, "");
+          const normalized = fromUrl.replace(/\/$/, "");
+          localStorage.setItem("talent-bank-api-base-v1", normalized);
+          return normalized;
         }
       } catch {}
-      return API_BASE_FIXED;
+      try {
+        const fromStore = localStorage.getItem("talent-bank-api-base-v1");
+        if (fromStore) return fromStore.replace(/\/$/, "");
+      } catch {}
+      return API_BASE_CANDIDATES[0] || API_BASE_DEFAULT;
     }
 
     let API_BASE = resolveApiBase();
@@ -3267,7 +3278,8 @@
 
     function formatFetchError(error, { action = "请求" } = {}) {
       if (isNetworkFetchError(error)) {
-        return `${action}失败：无法连接服务器（${Math.round(API_FETCH_TIMEOUT_MS / 1000)} 秒内无响应）。请检查网络或联系管理员确认 api.goertek.com 已部署。`;
+        return `${action}失败：无法连接服务器（${Math.round(API_FETCH_TIMEOUT_MS / 1000)} 秒内无响应）。`
+          + " 请检查网络；若在中国大陆，*.workers.dev 可能被拦截或极慢，可尝试 VPN/切换网络，或联系管理员配置国内可访问的 API 域名。";
       }
       return error?.message || `${action}失败`;
     }
@@ -3290,8 +3302,25 @@
     }
 
     async function fetchApiWithFallback(path, options = {}, timeoutMs = API_FETCH_TIMEOUT_MS) {
-      const url = `${API_BASE}${path}`;
-      return fetchWithTimeout(url, options, timeoutMs);
+      const bases = API_BASE_CANDIDATES.length ? API_BASE_CANDIDATES : [API_BASE];
+      let lastError = null;
+      for (let index = 0; index < bases.length; index += 1) {
+        const base = bases[index];
+        const url = `${base}${path}`;
+        try {
+          const res = await fetchWithTimeout(url, options, timeoutMs);
+          if (index > 0 || base !== API_BASE) {
+            API_BASE = base;
+            API_URL = `${API_BASE}/talents`;
+            try { localStorage.setItem("talent-bank-api-base-v1", API_BASE); } catch {}
+          }
+          return res;
+        } catch (error) {
+          lastError = error;
+          if (!isNetworkFetchError(error) || index === bases.length - 1) throw error;
+        }
+      }
+      throw lastError || new Error("网络请求失败");
     }
     const SYNC_INTERVAL_MS = 6000; // visible tab
     const SYNC_INTERVAL_HIDDEN_MS = 30000; // background tab — slower, not paused entirely
