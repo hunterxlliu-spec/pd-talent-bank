@@ -145,16 +145,12 @@
       -webkit-app-region: no-drag;
     }
 
-    .side-stats {
-      display: grid;
-      gap: 10px;
-    }
-
     .side-nav-block {
       display: grid;
       gap: 10px;
       flex: 1;
       min-height: 0;
+      margin-bottom: 8px;
     }
 
     .side-nav-head {
@@ -270,27 +266,45 @@
       border: 1px solid rgba(255,255,255,.18);
     }
 
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
     .stat-tile {
-      padding: 12px 12px;
-      border: 1px solid rgba(255,255,255,.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      min-height: 64px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
       border-radius: 12px;
-      background: rgba(255,255,255,.04);
-      box-shadow: none;
+      background: #fff;
+      box-shadow: var(--shadow-soft);
     }
 
     .stat-value {
       display: block;
-      font-size: 22px;
-      line-height: 1;
+      font-size: 20px;
+      line-height: 1.1;
       font-weight: 600;
       letter-spacing: -0.03em;
+      color: var(--ink);
     }
 
     .stat-label {
       display: block;
-      margin-top: 6px;
-      color: #b1c0cf;
+      margin-top: 0;
+      color: var(--muted);
       font-size: var(--fs-xs);
+    }
+
+    @media (max-width: 900px) {
+      .summary-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
     .main {
@@ -1835,24 +1849,6 @@
         </div>
         <nav class="side-nav" id="categoryNav" aria-label="研发分类"></nav>
       </div>
-      <div class="side-stats">
-        <div class="stat-tile">
-          <span class="stat-value" id="statTotal">0</span>
-          <span class="stat-label">人才总数</span>
-        </div>
-        <div class="stat-tile">
-          <span class="stat-value" id="statProduct">0</span>
-          <span class="stat-label">产品经验人才</span>
-        </div>
-        <div class="stat-tile">
-          <span class="stat-value" id="statAvg">0</span>
-          <span class="stat-label">平均产品年限</span>
-        </div>
-        <div class="stat-tile">
-          <span class="stat-value" id="syncStatus" style="font-size:14px">同步中</span>
-          <span class="stat-label">云端共享状态</span>
-        </div>
-      </div>
     </aside>
 
     <main class="main">
@@ -1874,6 +1870,24 @@
 
       <section class="content">
         <div class="workspace">
+          <section class="summary-bar" aria-label="数据概览">
+            <div class="stat-tile">
+              <span class="stat-value" id="statTotal">0</span>
+              <span class="stat-label">人才总数</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-value" id="statProduct">0</span>
+              <span class="stat-label">产品经验人才</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-value" id="statAvg">0</span>
+              <span class="stat-label">平均产品年限</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-value" id="syncStatus" style="font-size:15px">同步中</span>
+              <span class="stat-label">云端共享状态</span>
+            </div>
+          </section>
           <div class="mobile-category-bar" id="mobileCategoryBar" aria-label="研发分类"></div>
           <section class="filters" aria-label="筛选">
             <div class="field">
