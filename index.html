@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260720-api-goertek-fallback -->
+  <!-- deploy-bust: 20260723-fixed-sidebar -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -33,15 +33,15 @@
     }
 
     html, body {
+      height: 100%;
       max-width: 100%;
-      overflow-x: hidden;
+      overflow: hidden;
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      min-height: 100vh;
       color: var(--ink);
       background:
         radial-gradient(ellipse 70% 45% at 8% -8%, rgba(45, 212, 191, .12), transparent 55%),
@@ -52,6 +52,11 @@
       line-height: 1.47;
       -webkit-font-smoothing: antialiased;
       letter-spacing: -0.01em;
+    }
+
+    /* Login gate may need page scroll on short viewports */
+    body.is-locked {
+      overflow-y: auto;
     }
 
     .brand h1,
@@ -73,25 +78,29 @@
     }
 
     .app-shell {
-      min-height: 100vh;
+      height: 100vh;
+      height: 100dvh;
       width: 100%;
       max-width: 100vw;
       display: grid;
       grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
-      overflow-x: hidden;
+      overflow: hidden;
     }
 
     .sidebar {
       position: relative;
+      align-self: stretch;
       color: #fff;
       padding: 18px 14px 20px;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      overflow: hidden;
+      min-width: 0;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
       border-right: 1px solid rgba(255, 255, 255, .08);
       backdrop-filter: none;
-      min-width: 0;
       background:
         linear-gradient(175deg, rgba(28, 52, 64, .55) 0%, rgba(20, 38, 48, .72) 100%),
         url("./assets/sidebar-bg.svg") center / cover no-repeat,
@@ -939,10 +948,12 @@
 
     .main {
       min-width: 0;
+      min-height: 0;
       max-width: 100%;
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
+      overflow-y: auto;
     }
 
     .topbar {
@@ -2308,12 +2319,14 @@
 
     /* —— Admin login gate —— */
     .login-gate {
+      min-height: 100%;
       min-height: 100vh;
+      min-height: 100dvh;
       display: grid;
       place-items: center;
       padding: 28px 18px;
       position: relative;
-      overflow: hidden;
+      overflow: auto;
       background:
         radial-gradient(ellipse 90% 70% at 12% 18%, rgba(45, 212, 191, .20), transparent 55%),
         radial-gradient(ellipse 70% 55% at 88% 82%, rgba(13, 148, 136, .28), transparent 50%),
@@ -2752,7 +2765,7 @@
       <div class="login-brand">
 <h1 class="login-brand-name">U01-A BG 研发人才库管理系统</h1>
         <p class="login-title">账号登录</p>
-        <p class="login-copy">使用工号登录（前导 0 可省略）。默认密码 RDadmin2026，首次登录需修改。若长时间无响应，多为网络无法访问云端 API，请切换网络或联系管理员。</p>
+        <p class="login-copy" id="loginCopy">使用工号登录（前导 0 可省略）。默认密码 <strong>RDadmin2026</strong>，首次登录需修改。若长时间无响应，多为网络无法访问云端 API，请切换网络或联系管理员。</p>
       </div>
       <form class="login-form" id="loginForm" autocomplete="on">
         <div class="login-field">
@@ -3242,15 +3255,34 @@
     const SIDEBAR_MIN_W = 200;
     const SIDEBAR_MAX_W = 440;
     // Shared cloud API — 国内优先 api.goertek.com，海外自动回退 workers.dev
+    // Offline Electron：?offline=1 时仅使用本机 origin，不连云端
     const API_BASE_DOMESTIC = "https://api.goertek.com";
     const API_BASE_DEFAULT = "https://pd-talent-bank-api.pd-talent-hunter.workers.dev";
     const API_FETCH_TIMEOUT_MS = 18000;
-    const API_BASE_CANDIDATES = [
-      API_BASE_DOMESTIC,
-      API_BASE_DEFAULT,
-    ].filter((url, index, list) => url && list.indexOf(url) === index);
+    const IS_OFFLINE_APP = (() => {
+      try {
+        if (window.__U01A_OFFLINE__ === 1 || window.__U01A_OFFLINE__ === true) return true;
+        if (new URLSearchParams(location.search).get("offline") === "1") return true;
+        if (document.documentElement.dataset.offline === "1") return true;
+        // Electron offline package always serves from loopback
+        if (/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/i.test(String(location.origin || ""))) return true;
+        return false;
+      } catch {
+        return false;
+      }
+    })();
+    const API_BASE_CANDIDATES = IS_OFFLINE_APP
+      ? [String(location.origin || "").replace(/\/$/, "")].filter(Boolean)
+      : [
+          API_BASE_DOMESTIC,
+          API_BASE_DEFAULT,
+        ].filter((url, index, list) => url && list.indexOf(url) === index);
 
     function resolveApiBase() {
+      if (IS_OFFLINE_APP) {
+        try { localStorage.removeItem("talent-bank-api-base-v1"); } catch {}
+        return String(location.origin || "").replace(/\/$/, "") || API_BASE_CANDIDATES[0] || "";
+      }
       try {
         const fromUrl = new URLSearchParams(location.search).get("api");
         if (fromUrl) {
@@ -3269,6 +3301,21 @@
     let API_BASE = resolveApiBase();
     let API_URL = `${API_BASE}/talents`;
 
+    if (IS_OFFLINE_APP) {
+      document.addEventListener("DOMContentLoaded", () => {
+        document.body.classList.add("is-offline-app");
+        const brand = document.querySelector(".login-brand-name");
+        if (brand) brand.textContent = "U01-A 人力管理系统-Offline";
+        const copy = document.querySelector("#loginCopy");
+        if (copy) {
+          copy.textContent = "离线本机版 · 账号 admin · 密码 RDadmin2026（区分大小写）。数据仅保存在本机。";
+        }
+        const foot = document.querySelector(".login-footnote");
+        if (foot) foot.textContent = "离线模式 · 会话约 7 天有效 · 数据目录见菜单「打开数据目录」";
+        try { document.title = "U01-A 人力管理系统-Offline"; } catch {}
+      });
+    }
+
     function isNetworkFetchError(error) {
       if (!error) return false;
       if (error.name === "AbortError") return true;
@@ -3278,6 +3325,9 @@
 
     function formatFetchError(error, { action = "请求" } = {}) {
       if (isNetworkFetchError(error)) {
+        if (IS_OFFLINE_APP) {
+          return `${action}失败：本机离线服务无响应。请重启「U01-A 人力管理系统-Offline」。`;
+        }
         return `${action}失败：无法连接服务器（${Math.round(API_FETCH_TIMEOUT_MS / 1000)} 秒内无响应）。`
           + " 请检查网络；若在中国大陆，*.workers.dev 可能被拦截或极慢，可尝试 VPN/切换网络，或联系管理员配置国内可访问的 API 域名。";
       }
@@ -3302,14 +3352,15 @@
     }
 
     async function fetchApiWithFallback(path, options = {}, timeoutMs = API_FETCH_TIMEOUT_MS) {
-      const bases = API_BASE_CANDIDATES.length ? API_BASE_CANDIDATES : [API_BASE];
+      const bases = (API_BASE_CANDIDATES.length ? API_BASE_CANDIDATES : [API_BASE])
+        .filter(Boolean);
       let lastError = null;
       for (let index = 0; index < bases.length; index += 1) {
         const base = bases[index];
         const url = `${base}${path}`;
         try {
           const res = await fetchWithTimeout(url, options, timeoutMs);
-          if (index > 0 || base !== API_BASE) {
+          if (!IS_OFFLINE_APP && (index > 0 || base !== API_BASE)) {
             API_BASE = base;
             API_URL = `${API_BASE}/talents`;
             try { localStorage.setItem("talent-bank-api-base-v1", API_BASE); } catch {}
@@ -5262,6 +5313,27 @@
         .sort((a, b) => a.localeCompare(b, "zh"));
     }
 
+    function filterTalentsByDept(list, dept) {
+      const name = String(dept || "").trim();
+      if (!name) return [];
+      return list.filter(person => String(person.category || "").trim() === name);
+    }
+
+    function filterTalentsByCategorySub(list, category, sub) {
+      const cat = String(category || "").trim();
+      const dept = String(sub || "").trim();
+      if (!cat || !dept) return [];
+      return list.filter(person =>
+        String(person.category || "").trim() === cat
+        && String(person.department || "").trim() === dept
+      );
+    }
+
+    /** 单部门模式下：用于对比的子部门列表（仅限当前所选上级部门） */
+    function getDashSubDepartments(category = dashSingleDept) {
+      return getEffectiveSubsForCategory(category);
+    }
+
     function ensureDashDeptDefaults() {
       const depts = getDashboardDepartments();
       if (!depts.length) {
@@ -5271,21 +5343,41 @@
         return depts;
       }
       if (!depts.includes(dashSingleDept)) dashSingleDept = depts[0];
-      if (!depts.includes(dashCompareLeft)) dashCompareLeft = depts[0];
-      if (!depts.includes(dashCompareRight)) {
-        dashCompareRight = depts.find(name => name !== dashCompareLeft) || depts[0];
+
+      if (dashMode === "single") {
+        const subs = getDashSubDepartments(dashSingleDept);
+        if (!subs.length) {
+          dashCompareLeft = "";
+          dashCompareRight = "";
+        } else {
+          if (!subs.includes(dashCompareLeft)) dashCompareLeft = subs[0];
+          if (!subs.includes(dashCompareRight)) {
+            dashCompareRight = subs.find(name => name !== dashCompareLeft) || subs[0];
+          }
+        }
+      } else {
+        if (!depts.includes(dashCompareLeft)) dashCompareLeft = depts[0];
+        if (!depts.includes(dashCompareRight)) {
+          dashCompareRight = depts.find(name => name !== dashCompareLeft) || depts[0];
+        }
       }
       return depts;
     }
 
-    function filterTalentsByDept(list, dept) {
-      const name = String(dept || "").trim();
-      if (!name) return [];
-      return list.filter(person => String(person.category || "").trim() === name);
+    function isDashSubCompareMode() {
+      return dashMode === "single" && getDashSubDepartments(dashSingleDept).length > 0;
     }
 
     function getDashboardScopeList() {
-      if (dashMode === "single") return filterTalentsByDept(talents, dashSingleDept);
+      if (dashMode === "single") {
+        if (isDashSubCompareMode()) {
+          return [
+            ...filterTalentsByCategorySub(talents, dashSingleDept, dashCompareLeft),
+            ...filterTalentsByCategorySub(talents, dashSingleDept, dashCompareRight)
+          ];
+        }
+        return filterTalentsByDept(talents, dashSingleDept);
+      }
       if (dashMode === "compare") {
         return [
           ...filterTalentsByDept(talents, dashCompareLeft),
@@ -5330,20 +5422,27 @@
       });
       const isSingle = dashMode === "single";
       const isCompare = dashMode === "compare";
+      const isSubCompare = isDashSubCompareMode();
+      const showPair = isCompare || isSubCompare;
       if (els.dashSingleDeptField) els.dashSingleDeptField.hidden = !isSingle;
-      if (els.dashCompareLeftField) els.dashCompareLeftField.hidden = !isCompare;
-      if (els.dashCompareRightField) els.dashCompareRightField.hidden = !isCompare;
-      if (els.dashCompareVs) els.dashCompareVs.hidden = !isCompare;
-      if (els.dashCompareDimField) els.dashCompareDimField.hidden = !isCompare;
-      if (els.dashPieLeftDimField) els.dashPieLeftDimField.hidden = isCompare;
-      if (els.dashPieRightDimField) els.dashPieRightDimField.hidden = isCompare;
-      if (els.dashboardPies) els.dashboardPies.classList.toggle("is-compare", isCompare);
+      if (els.dashCompareLeftField) els.dashCompareLeftField.hidden = !showPair;
+      if (els.dashCompareRightField) els.dashCompareRightField.hidden = !showPair;
+      if (els.dashCompareVs) els.dashCompareVs.hidden = !showPair;
+      if (els.dashCompareDimField) els.dashCompareDimField.hidden = !showPair;
+      if (els.dashPieLeftDimField) els.dashPieLeftDimField.hidden = showPair;
+      if (els.dashPieRightDimField) els.dashPieRightDimField.hidden = showPair;
+      if (els.dashboardPies) els.dashboardPies.classList.toggle("is-compare", showPair);
       if (els.dashPieCardLeft) {
-        els.dashPieCardLeft.classList.toggle("is-compare-left", isCompare);
+        els.dashPieCardLeft.classList.toggle("is-compare-left", showPair);
       }
       if (els.dashPieCardRight) {
-        els.dashPieCardRight.classList.toggle("is-compare-right", isCompare);
+        els.dashPieCardRight.classList.toggle("is-compare-right", showPair);
       }
+
+      const leftLabel = els.dashCompareLeftField?.querySelector("label");
+      const rightLabel = els.dashCompareRightField?.querySelector("label");
+      if (leftLabel) leftLabel.textContent = isSubCompare ? "子部门 A" : "部门 A";
+      if (rightLabel) rightLabel.textContent = isSubCompare ? "子部门 B" : "部门 B";
 
       if (dashMode === "overall") {
         if (els.dashScopeHint) els.dashScopeHint.textContent = "查看全部可见人才的整体结构，左右可分别切换不同维度。";
@@ -5352,14 +5451,25 @@
         if (els.dashPieLeftKicker) els.dashPieLeftKicker.textContent = "整体 · 可切换维度";
         if (els.dashPieRightKicker) els.dashPieRightKicker.textContent = "整体 · 可切换维度";
       } else if (dashMode === "single") {
-        if (els.dashScopeHint) els.dashScopeHint.textContent = `聚焦「${dashSingleDept || "未选择"}」内部结构，左右切换不同维度交叉观察。`;
-        if (els.dashPieLeftTitle) els.dashPieLeftTitle.textContent = dashSingleDept || "单部门";
-        if (els.dashPieRightTitle) els.dashPieRightTitle.textContent = dashSingleDept || "单部门";
-        if (els.dashPieLeftKicker) els.dashPieLeftKicker.textContent = "单部门 · 可切换维度";
-        if (els.dashPieRightKicker) els.dashPieRightKicker.textContent = "单部门 · 可切换维度";
+        if (isSubCompare) {
+          const dimLabel = getDashDimension(dashCompareDim).label;
+          if (els.dashScopeHint) {
+            els.dashScopeHint.textContent = `在「${dashSingleDept || "未选择"}」内对比子部门（仅本部门下属），统一维度（${dimLabel}）看结构差异。`;
+          }
+          if (els.dashPieLeftTitle) els.dashPieLeftTitle.textContent = dashCompareLeft || "子部门 A";
+          if (els.dashPieRightTitle) els.dashPieRightTitle.textContent = dashCompareRight || "子部门 B";
+          if (els.dashPieLeftKicker) els.dashPieLeftKicker.textContent = `${dashSingleDept || "单部门"} · ${dimLabel}`;
+          if (els.dashPieRightKicker) els.dashPieRightKicker.textContent = `${dashSingleDept || "单部门"} · ${dimLabel}`;
+        } else {
+          if (els.dashScopeHint) els.dashScopeHint.textContent = `聚焦「${dashSingleDept || "未选择"}」内部结构，左右切换不同维度交叉观察。${getDashSubDepartments(dashSingleDept).length ? "" : "（当前部门暂无子部门，可先在侧栏配置）"}`;
+          if (els.dashPieLeftTitle) els.dashPieLeftTitle.textContent = dashSingleDept || "单部门";
+          if (els.dashPieRightTitle) els.dashPieRightTitle.textContent = dashSingleDept || "单部门";
+          if (els.dashPieLeftKicker) els.dashPieLeftKicker.textContent = "单部门 · 可切换维度";
+          if (els.dashPieRightKicker) els.dashPieRightKicker.textContent = "单部门 · 可切换维度";
+        }
       } else {
         const dimLabel = getDashDimension(dashCompareDim).label;
-        if (els.dashScopeHint) els.dashScopeHint.textContent = `同一维度（${dimLabel}）下对比两个部门差异，便于横向看结构。`;
+        if (els.dashScopeHint) els.dashScopeHint.textContent = `同一维度（${dimLabel}）下对比两个一级部门差异，便于横向看结构。`;
         if (els.dashPieLeftTitle) els.dashPieLeftTitle.textContent = dashCompareLeft || "部门 A";
         if (els.dashPieRightTitle) els.dashPieRightTitle.textContent = dashCompareRight || "部门 B";
         if (els.dashPieLeftKicker) els.dashPieLeftKicker.textContent = `对比 · ${dimLabel}`;
@@ -5549,10 +5659,13 @@
 
     function renderDashPie(side) {
       const isCompare = dashMode === "compare";
+      const isSubCompare = isDashSubCompareMode();
       const list = isCompare
         ? filterTalentsByDept(talents, side === "left" ? dashCompareLeft : dashCompareRight)
-        : getDashboardScopeList();
-      const dimId = isCompare
+        : isSubCompare
+          ? filterTalentsByCategorySub(talents, dashSingleDept, side === "left" ? dashCompareLeft : dashCompareRight)
+          : getDashboardScopeList();
+      const dimId = (isCompare || isSubCompare)
         ? dashCompareDim
         : (side === "left" ? dashPieLeftDim : dashPieRightDim);
       const noteEl = side === "left" ? els.dashPieLeftNote : els.dashPieRightNote;
@@ -5560,7 +5673,9 @@
       const distribution = computeDistribution(list, dimId);
       const scopeLabel = isCompare
         ? (side === "left" ? dashCompareLeft : dashCompareRight)
-        : (dashMode === "single" ? dashSingleDept : "全部可见人才");
+        : isSubCompare
+          ? `${dashSingleDept || ""} · ${side === "left" ? dashCompareLeft : dashCompareRight}`
+          : (dashMode === "single" ? dashSingleDept : "全部可见人才");
       if (noteEl) {
         noteEl.textContent = list.length
           ? `${scopeLabel} · ${distribution.dim.note} · ${list.length} 人`
@@ -5572,11 +5687,15 @@
     function renderDashboard() {
       const depts = ensureDashDeptDefaults();
       fillSelectWithOptions(els.dashSingleDept, depts, dashSingleDept);
-      fillSelectWithOptions(els.dashCompareLeft, depts, dashCompareLeft);
-      fillSelectWithOptions(els.dashCompareRight, depts, dashCompareRight);
+      const pairOptions = dashMode === "single"
+        ? getDashSubDepartments(dashSingleDept)
+        : depts;
+      fillSelectWithOptions(els.dashCompareLeft, pairOptions, dashCompareLeft);
+      fillSelectWithOptions(els.dashCompareRight, pairOptions, dashCompareRight);
       fillDashDimensionSelects();
       syncDashModeChrome();
 
+      const isSubCompare = isDashSubCompareMode();
       const heroList = dashMode === "compare"
         ? [
             ...filterTalentsByDept(talents, dashCompareLeft),
@@ -5586,7 +5705,7 @@
       const heroMetrics = computeDashboardMetrics(heroList);
 
       if (els.dashTotalLabel) {
-        els.dashTotalLabel.textContent = dashMode === "compare" ? "对比范围人数" : "人才总人数";
+        els.dashTotalLabel.textContent = (dashMode === "compare" || isSubCompare) ? "对比范围人数" : "人才总人数";
       }
       if (els.dashTotal) els.dashTotal.textContent = String(heroMetrics.total);
       if (els.dashTotalNote) {
@@ -5595,13 +5714,15 @@
             ? "全部人才（超级管理员可见）"
             : "当前权限范围内可见人才";
         } else if (dashMode === "single") {
-          els.dashTotalNote.textContent = `部门：${dashSingleDept || "-"}`;
+          els.dashTotalNote.textContent = isSubCompare
+            ? `${dashSingleDept || "-"}：${dashCompareLeft || "A"} + ${dashCompareRight || "B"}`
+            : `部门：${dashSingleDept || "-"}`;
         } else {
           els.dashTotalNote.textContent = `${dashCompareLeft || "A"} + ${dashCompareRight || "B"}`;
         }
       }
       if (els.dashAvgAgeLabel) {
-        els.dashAvgAgeLabel.textContent = dashMode === "compare" ? "对比范围平均年龄" : "平均年龄";
+        els.dashAvgAgeLabel.textContent = (dashMode === "compare" || isSubCompare) ? "对比范围平均年龄" : "平均年龄";
       }
       if (els.dashAvgAge) {
         els.dashAvgAge.innerHTML = heroMetrics.avgAge == null
@@ -5897,10 +6018,16 @@
     }
 
     async function ensurePdfLibs() {
-      await loadScriptOnce("https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js");
+      const html2pdfSrc = IS_OFFLINE_APP
+        ? "vendor/html2pdf.bundle.min.js"
+        : "https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js";
+      const jspdfSrc = IS_OFFLINE_APP
+        ? "vendor/jspdf.umd.min.js"
+        : "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
+      await loadScriptOnce(html2pdfSrc);
       if (!window.html2pdf) throw new Error("html2pdf 加载失败");
       if (!getJsPdfConstructor()) {
-        await loadScriptOnce("https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js");
+        await loadScriptOnce(jspdfSrc);
       }
       if (!getJsPdfConstructor()) throw new Error("jsPDF 加载失败");
     }
@@ -6689,16 +6816,24 @@
       render();
     });
 
-    document.querySelectorAll(".dash-mode-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        dashMode = btn.dataset.dashMode || "overall";
-        renderDashboard();
-      });
-    });
-
     els.dashSingleDept?.addEventListener("change", () => {
       dashSingleDept = els.dashSingleDept.value || "";
+      // 切换上级部门后，对比选项重置为该部门子部门
+      dashCompareLeft = "";
+      dashCompareRight = "";
       renderDashboard();
+    });
+
+    document.querySelectorAll(".dash-mode-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const next = btn.dataset.dashMode || "overall";
+        if (next !== dashMode) {
+          dashCompareLeft = "";
+          dashCompareRight = "";
+        }
+        dashMode = next;
+        renderDashboard();
+      });
     });
 
     els.dashCompareLeft?.addEventListener("change", () => {
@@ -7164,11 +7299,17 @@
     document.querySelector("#loginForm").addEventListener("submit", async event => {
       event.preventDefault();
       const username = document.querySelector("#loginUsername").value.trim();
-      const password = document.querySelector("#loginPassword").value;
+      const password = document.querySelector("#loginPassword").value.trim();
       const submitBtn = document.querySelector("#loginSubmit");
       const errorEl = document.querySelector("#loginError");
       const submitLabel = submitBtn.textContent || "进入系统";
       errorEl.textContent = "";
+      if (!password) {
+        errorEl.textContent = IS_OFFLINE_APP
+          ? "请输入密码（离线版默认：RDadmin2026）"
+          : "请输入密码";
+        return;
+      }
       submitBtn.disabled = true;
       submitBtn.textContent = "验证中…";
       try {
