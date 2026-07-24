@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-pie-explode-vivid -->
+  <!-- deploy-bust: 20260724-pie-hover-explode -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -6506,6 +6506,7 @@
     }
 
     const PIE_SLICE_EXPLODE = 8;
+    const PIE_HOVER_MQ = window.matchMedia("(hover: hover) and (pointer: fine)");
 
     function setPieExplodeOffset(el, selected) {
       if (!el) return;
@@ -6524,15 +6525,14 @@
       el.style.setProperty("--ey", `${(Math.sin(mid) * PIE_SLICE_EXPLODE).toFixed(2)}px`);
     }
 
-    function setPieSelection(chartEl, label) {
+    /** Apply explode / vivid / center / table highlight for `label` (empty = idle). */
+    function applyPieActive(chartEl, label) {
       if (!chartEl) return;
       const wrap = chartEl.querySelector(".edu-pie-wrap, .edu-bar-wrap");
       const table = chartEl.querySelector(".edu-legend-table");
       if (!wrap) return;
 
-      const prev = wrap.dataset.selectedLabel || "";
-      const next = label && label === prev ? "" : (label || "");
-      wrap.dataset.selectedLabel = next;
+      const next = label || "";
       wrap.classList.toggle("has-selection", Boolean(next));
 
       let count = 0;
@@ -6599,11 +6599,44 @@
       centerUnit.setAttribute("y", String(cy + 16));
     }
 
+    function pieVisualLabel(wrap) {
+      return (wrap?.dataset.hoverLabel || wrap?.dataset.selectedLabel || "");
+    }
+
+    function refreshPieVisual(chartEl) {
+      const wrap = chartEl?.querySelector(".edu-pie-wrap, .edu-bar-wrap");
+      applyPieActive(chartEl, pieVisualLabel(wrap));
+    }
+
+    /** Sticky pin via click/tap/keyboard (toggle). */
+    function setPieSelection(chartEl, label) {
+      if (!chartEl) return;
+      const wrap = chartEl.querySelector(".edu-pie-wrap, .edu-bar-wrap");
+      if (!wrap) return;
+      const prev = wrap.dataset.selectedLabel || "";
+      const next = label && label === prev ? "" : (label || "");
+      wrap.dataset.selectedLabel = next;
+      refreshPieVisual(chartEl);
+    }
+
+    /** Hover preview; leave clears hover and restores pinned selection if any. */
+    function setPieHover(chartEl, label) {
+      if (!chartEl) return;
+      const wrap = chartEl.querySelector(".edu-pie-wrap, .edu-bar-wrap");
+      if (!wrap) return;
+      const next = label || "";
+      if ((wrap.dataset.hoverLabel || "") === next) return;
+      wrap.dataset.hoverLabel = next;
+      refreshPieVisual(chartEl);
+    }
+
     function bindPieChartInteractions(chartEl) {
       if (!chartEl || chartEl.dataset.pieBound === "1") return;
       chartEl.dataset.pieBound = "1";
 
       const activate = (label) => setPieSelection(chartEl, label || "");
+      const hoverTarget = (event) =>
+        event.target.closest(".edu-pie-slice, .edu-bar-item, .edu-legend-table tbody tr[data-pie-label]");
 
       chartEl.addEventListener("click", event => {
         const slice = event.target.closest(".edu-pie-slice, .edu-bar-item");
@@ -6629,6 +6662,24 @@
         if (!label) return;
         event.preventDefault();
         activate(label);
+      });
+
+      // Desktop: hover drives explode / vivid / bold; touch keeps click/tap only.
+      chartEl.addEventListener("pointerover", event => {
+        if (!PIE_HOVER_MQ.matches || event.pointerType === "touch") return;
+        const el = hoverTarget(event);
+        if (el?.dataset.pieLabel) {
+          setPieHover(chartEl, el.dataset.pieLabel);
+          return;
+        }
+        if (event.target.closest(".edu-pie-wrap, .edu-bar-wrap, .edu-legend-table")) {
+          setPieHover(chartEl, "");
+        }
+      });
+
+      chartEl.addEventListener("pointerleave", () => {
+        if (!PIE_HOVER_MQ.matches) return;
+        setPieHover(chartEl, "");
       });
     }
 
@@ -6738,8 +6789,8 @@
       `;
 
       return `
-        <div class="edu-pie-wrap" data-pie-total="${total}" data-pie-cy="${cy}" data-selected-label="">
-          <svg viewBox="0 0 360 250" role="img" aria-label="${escapeHtml(chartTitle)}。点击扇区可查看分类名称">
+        <div class="edu-pie-wrap" data-pie-total="${total}" data-pie-cy="${cy}" data-selected-label="" data-hover-label="">
+          <svg viewBox="0 0 360 250" role="img" aria-label="${escapeHtml(chartTitle)}。悬停扇区可突出显示，点击可固定选择">
             ${paths}
             ${hole}
             ${leaders}
@@ -6778,9 +6829,9 @@
       }).join("");
 
       return `
-        <div class="edu-bar-wrap" data-pie-total="${total}" data-selected-label="">
+        <div class="edu-bar-wrap" data-pie-total="${total}" data-selected-label="" data-hover-label="">
           <p class="edu-bar-focus">共 ${total} 人</p>
-          <div class="edu-bar-list" role="img" aria-label="${escapeHtml(chartTitle)}。点击条形可查看分类">
+          <div class="edu-bar-list" role="img" aria-label="${escapeHtml(chartTitle)}。悬停条形可突出显示，点击可固定选择">
             ${rows}
           </div>
         </div>
