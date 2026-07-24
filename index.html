@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-import-asset-toast -->
+  <!-- deploy-bust: 20260724-sticky-thead -->
   <script>
     (function preloadSheetJs() {
       function appBasePath() {
@@ -251,6 +251,33 @@
     body.is-macos-app .topbar input,
     body.is-macos-app .topbar a {
       -webkit-app-region: no-drag;
+    }
+
+    /* Electron: drag regions steal clicks from <dialog> top-layer controls */
+    body.is-macos-app dialog,
+    body.is-macos-app dialog *,
+    body.is-offline-app dialog,
+    body.is-offline-app dialog * {
+      -webkit-app-region: no-drag !important;
+    }
+
+    body.is-macos-app .profile-dialog .modal-head,
+    body.is-offline-app .profile-dialog .modal-head {
+      position: relative;
+      z-index: 20;
+    }
+
+    body.is-macos-app .profile-dialog .modal-head .btn,
+    body.is-offline-app .profile-dialog .modal-head .btn {
+      position: relative;
+      z-index: 21;
+      pointer-events: auto;
+    }
+
+    /* While any dialog is open, disable window-drag chrome so close/export clicks work */
+    body.has-modal-open .topbar,
+    body.has-modal-open .brand {
+      -webkit-app-region: no-drag !important;
     }
 
     .side-nav-block {
@@ -1437,6 +1464,27 @@
       overflow-y: auto;
     }
 
+    /* List view: lock chrome, scroll only inside the table so thead stays fixed */
+    .main:has(#listPanel:not([hidden])) {
+      overflow: hidden;
+    }
+
+    .main:has(#listPanel:not([hidden])) .content {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding-bottom: 16px;
+    }
+
+    .main:has(#listPanel:not([hidden])) .workspace {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
     .topbar {
       position: sticky;
       top: 0;
@@ -1540,6 +1588,20 @@
       gap: 14px;
       min-width: 0;
       max-width: 100%;
+    }
+
+    .list-panel:not([hidden]) {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .list-panel:not([hidden]) .filters,
+    .list-panel:not([hidden]) .people-head,
+    .list-panel:not([hidden]) .table-scroll-hint {
+      flex: 0 0 auto;
     }
 
     .people-head {
@@ -1699,8 +1761,7 @@
     }
 
     .table-wrap {
-      overflow-x: auto;
-      overflow-y: visible;
+      overflow: auto;
       background: #fff;
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -1708,12 +1769,20 @@
       position: relative;
       max-width: 100%;
       min-width: 0;
+      min-height: 240px;
       -webkit-overflow-scrolling: touch;
       scrollbar-gutter: stable;
     }
 
+    .list-panel:not([hidden]) .table-wrap {
+      flex: 1 1 auto;
+      min-height: 0;
+      height: 100%;
+    }
+
     .table-wrap::-webkit-scrollbar {
       height: 10px;
+      width: 10px;
     }
 
     .table-wrap::-webkit-scrollbar-thumb {
@@ -1736,7 +1805,8 @@
       width: max-content;
       min-width: 100%;
       table-layout: auto;
-      border-collapse: collapse;
+      border-collapse: separate;
+      border-spacing: 0;
     }
 
     .talent-table th,
@@ -1749,15 +1819,16 @@
       white-space: nowrap;
     }
 
-    .talent-table th {
+    .talent-table thead th {
       position: sticky;
       top: 0;
-      background: #fbfbfd;
+      background: #f4f6f9;
       color: var(--muted);
       font-size: var(--fs-xs);
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 0;
-      z-index: 1;
+      z-index: 5;
+      box-shadow: 0 1px 0 #e5eaf0;
     }
 
     .talent-table th.col-person,
@@ -1772,8 +1843,10 @@
     }
 
     .talent-table th.col-person {
-      background: #f9fafc;
-      z-index: 4;
+      background: #f4f6f9;
+      z-index: 7;
+      top: 0;
+      left: 0;
     }
 
     .talent-table th.col-actions,
@@ -1794,8 +1867,10 @@
     }
 
     .talent-table th.col-actions {
-      background: #f9fafc;
-      z-index: 3;
+      background: #f4f6f9;
+      z-index: 7;
+      top: 0;
+      right: 0;
     }
 
     .talent-table td.col-actions .row-ops {
@@ -2394,6 +2469,12 @@
       background: #fff;
       color: #344054;
       border: 1px solid #d0d5dd;
+      min-width: 36px;
+      min-height: 36px;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      -webkit-app-region: no-drag;
     }
 
     .profile-dialog .modal-head .btn.icon:hover {
@@ -3864,7 +3945,7 @@
               </div>
             </section>
 
-            <p class="table-scroll-hint">表格较宽时可左右滑动查看更多字段；人才列与操作列会固定在两侧</p>
+            <p class="table-scroll-hint">表头、人才列与操作列已固定；表格区域内可上下/左右滑动查看更多信息</p>
             <section class="table-wrap" aria-label="人才列表">
               <table class="talent-table">
                 <thead>
@@ -9178,12 +9259,36 @@
       downloadBlob(blob, `研发人才清单-${new Date().toISOString().slice(0, 10)}.xls`);
     }
 
+    function syncModalOpenClass() {
+      const anyOpen = Boolean(
+        document.querySelector("dialog[open]")
+        || els.profileDialog?.open
+        || els.dialog?.open
+      );
+      document.body.classList.toggle("has-modal-open", anyOpen);
+    }
+
+    function closeProfileDialog() {
+      try {
+        if (els.profileDialog?.open) els.profileDialog.close();
+        else els.profileDialog?.removeAttribute("open");
+      } catch {}
+      currentProfileId = null;
+      syncModalOpenClass();
+    }
+
     function openProfileDialog(person) {
-      if (!person) return;
+      if (!person || !els.profileDialog) return;
       currentProfileId = person.id;
       els.profileTitle.textContent = `${person.name || "人才"} · 完整档案`;
       els.profileBody.innerHTML = buildProfileSheetHtml(person);
-      els.profileDialog.showModal();
+      try {
+        if (typeof els.profileDialog.showModal === "function") els.profileDialog.showModal();
+        else els.profileDialog.setAttribute("open", "");
+      } catch {
+        els.profileDialog.setAttribute("open", "");
+      }
+      syncModalOpenClass();
     }
 
     function render() {
@@ -9755,7 +9860,24 @@
     document.querySelector("#addCustomFieldBtn").addEventListener("click", () => {
       els.customFieldRows.insertAdjacentHTML("beforeend", customFieldRowTemplate());
     });
-    document.querySelector("#closeProfileDialog").addEventListener("click", () => els.profileDialog.close());
+    document.querySelector("#closeProfileDialog")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeProfileDialog();
+    });
+    els.profileDialog?.addEventListener("cancel", (event) => {
+      // Escape — keep default close, then clear state
+      event.preventDefault();
+      closeProfileDialog();
+    });
+    els.profileDialog?.addEventListener("close", () => {
+      currentProfileId = null;
+      syncModalOpenClass();
+    });
+    els.profileDialog?.addEventListener("click", (event) => {
+      // Click on backdrop / dialog padding closes profile
+      if (event.target === els.profileDialog) closeProfileDialog();
+    });
     document.querySelector("#exportPdfBtn").addEventListener("click", async () => {
       const person = talents.find(item => item.id === currentProfileId);
       await exportPersonToPdf(person);
