@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-kpi-compact -->
+  <!-- deploy-bust: 20260724-kpi-height -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -708,15 +708,14 @@
     .dashboard-hero {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-      max-width: 920px;
+      gap: 12px;
     }
 
     .dashboard-card {
       background: #fff;
       border: 1px solid var(--line);
       border-radius: 14px;
-      padding: 14px 14px 12px;
+      padding: 10px 16px 9px;
       box-shadow: var(--shadow-soft);
     }
 
@@ -731,42 +730,43 @@
     }
 
     .dashboard-card--primary .dashboard-metric {
-      font-size: 32px;
+      font-size: 28px;
       color: #1f6f6a;
     }
 
     .dashboard-card h3 {
-      margin: 0 0 4px;
-      font-size: 13px;
+      margin: 0 0 2px;
+      font-size: 12px;
       font-weight: 650;
       color: var(--muted);
     }
 
     .dashboard-metric {
       margin: 0;
-      font-size: 28px;
-      line-height: 1.1;
+      font-size: 24px;
+      line-height: 1.05;
       font-weight: 700;
       letter-spacing: -0.03em;
       color: var(--ink);
     }
 
     .dashboard-metric-unit {
-      margin-left: 6px;
-      font-size: 16px;
+      margin-left: 5px;
+      font-size: 14px;
       font-weight: 600;
       color: var(--muted);
     }
 
     .dashboard-card-note {
-      margin: 6px 0 0;
-      font-size: 12px;
+      margin: 4px 0 0;
+      font-size: 11px;
+      line-height: 1.35;
       color: var(--muted);
     }
 
     .dash-kpi-progress {
-      margin-top: 8px;
-      height: 5px;
+      margin-top: 5px;
+      height: 3px;
       border-radius: 999px;
       background: #eef3f7;
       overflow: hidden;
