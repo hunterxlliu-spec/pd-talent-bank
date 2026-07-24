@@ -7,8 +7,21 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-list-pills-scroll -->
-  <script src="assets/vendor/xlsx.full.min.js"></script>
+  <!-- deploy-bust: 20260724-import-asset-toast -->
+  <script>
+    (function preloadSheetJs() {
+      function appBasePath() {
+        var path = location.pathname || "/";
+        if (/\.html?$/i.test(path)) path = path.replace(/\/[^/]+$/, "/");
+        else if (!path.endsWith("/")) path += "/";
+        return path;
+      }
+      var script = document.createElement("script");
+      script.src = appBasePath() + "assets/vendor/xlsx.full.min.js";
+      script.async = true;
+      document.head.appendChild(script);
+    })();
+  </script>
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -4950,6 +4963,45 @@
       if (els.syncStatus) els.syncStatus.textContent = text;
     }
 
+    function showToast(message, { type = "info", duration = 4200 } = {}) {
+      const host = document.querySelector("#appToastHost");
+      if (!host) {
+        if (type === "error") setImportError?.(message);
+        else alert(message);
+        return;
+      }
+      const el = document.createElement("div");
+      el.className = `app-toast${type === "success" ? " is-success" : type === "error" ? " is-error" : ""}`;
+      el.textContent = String(message || "");
+      host.appendChild(el);
+      const hide = () => {
+        el.classList.add("is-leaving");
+        setTimeout(() => el.remove(), 220);
+      };
+      const timer = setTimeout(hide, Math.max(1800, duration));
+      el.addEventListener("click", () => {
+        clearTimeout(timer);
+        hide();
+      }, { once: true });
+    }
+
+    function appBasePath() {
+      let path = location.pathname || "/";
+      if (/\.html?$/i.test(path)) path = path.replace(/\/[^/]+$/, "/");
+      else if (!path.endsWith("/")) path += "/";
+      return path;
+    }
+
+    function resolveAppAsset(relPath) {
+      const rel = String(relPath || "").replace(/^\.\//, "").replace(/^\//, "");
+      if (/^https?:\/\//i.test(relPath)) return String(relPath);
+      try {
+        return new URL(rel, `${location.origin}${appBasePath()}`).href;
+      } catch {
+        return `${appBasePath()}${rel}`;
+      }
+    }
+
     function normalizeCategoryEntry(item) {
       if (item && typeof item === "object" && !Array.isArray(item)) {
         const name = String(item.name || "").trim();
@@ -7572,36 +7624,62 @@
 
     function loadScriptOnce(src) {
       return new Promise((resolve, reject) => {
-        let absolute = src;
-        try {
-          absolute = new URL(src, window.location.href).href;
-        } catch {
-          absolute = src;
-        }
+        const isRemote = /^https?:\/\//i.test(src);
+        const absolute = isRemote ? src : resolveAppAsset(src);
         const existing = [...document.scripts].find(item =>
-          item.src === absolute || item.getAttribute("src") === src
+          item.src === absolute
+          || item.getAttribute("src") === src
+          || item.getAttribute("src") === absolute
         );
         if (existing) {
-          if (existing.dataset.loaded === "1" || (src.includes("xlsx") && window.XLSX?.read)) {
+          if (existing.dataset.loaded === "1" || (absolute.includes("xlsx") && window.XLSX?.read)) {
             existing.dataset.loaded = "1";
             resolve();
             return;
           }
-          existing.addEventListener("load", () => {
-            existing.dataset.loaded = "1";
-            resolve();
-          }, { once: true });
-          existing.addEventListener("error", () => reject(new Error(`脚本加载失败: ${src}`)), { once: true });
-          return;
+          if (existing.dataset.failed === "1") {
+            existing.remove();
+          } else {
+            let settled = false;
+            const onLoad = () => {
+              if (settled) return;
+              settled = true;
+              existing.dataset.loaded = "1";
+              resolve();
+            };
+            const onError = () => {
+              if (settled) return;
+              settled = true;
+              existing.dataset.failed = "1";
+              existing.remove();
+              reject(new Error(`脚本加载失败: ${absolute}`));
+            };
+            existing.addEventListener("load", onLoad, { once: true });
+            existing.addEventListener("error", onError, { once: true });
+            // Previously failed/errored tags may never fire again — timeout fallback
+            setTimeout(() => {
+              if (settled) return;
+              if (absolute.includes("xlsx") && window.XLSX?.read) {
+                onLoad();
+                return;
+              }
+              onError();
+            }, 4000);
+            return;
+          }
         }
         const script = document.createElement("script");
-        script.src = src;
+        script.src = absolute;
         script.async = true;
         script.onload = () => {
           script.dataset.loaded = "1";
           resolve();
         };
-        script.onerror = () => reject(new Error(`脚本加载失败: ${src}`));
+        script.onerror = () => {
+          script.dataset.failed = "1";
+          script.remove();
+          reject(new Error(`脚本加载失败: ${absolute}`));
+        };
         document.head.appendChild(script);
       });
     }
@@ -8058,6 +8136,11 @@
         if (/^岗位$/.test(raw)) best += 0.15;
         if (/^职位$/.test(raw)) best -= 0.05;
       }
+      // Prefer 考勤刷卡地 over 公司注册地 for work base
+      if (fieldKey === "baseLocation") {
+        if (/考勤刷卡地/.test(raw)) best += 0.35;
+        if (/公司注册地/.test(raw)) best -= 0.2;
+      }
       return best;
     }
 
@@ -8204,10 +8287,9 @@
     async function ensureXlsxLib() {
       if (window.XLSX?.read) return window.XLSX;
       const candidates = IS_OFFLINE_APP
-        ? ["vendor/xlsx.full.min.js", "assets/vendor/xlsx.full.min.js"]
+        ? [resolveAppAsset("vendor/xlsx.full.min.js"), resolveAppAsset("assets/vendor/xlsx.full.min.js")]
         : [
-          "assets/vendor/xlsx.full.min.js",
-          "./assets/vendor/xlsx.full.min.js",
+          resolveAppAsset("assets/vendor/xlsx.full.min.js"),
           "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js",
           "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
         ];
@@ -8216,11 +8298,12 @@
         try {
           await loadScriptOnce(src);
           if (window.XLSX?.read) return window.XLSX;
+          lastError = new Error(`已加载脚本但未找到 XLSX 全局对象: ${src}`);
         } catch (error) {
           lastError = error;
         }
       }
-      throw lastError || new Error("无法加载 Excel 解析库（SheetJS）。请检查网络或确认站点已包含 assets/vendor/xlsx.full.min.js");
+      throw lastError || new Error("无法加载 Excel 解析库（SheetJS）。请硬刷新后重试，或改用 CSV/JSON 导入。");
     }
 
     function detectDelimiter(text) {
@@ -8451,6 +8534,18 @@
       throw new Error("不支持的 JSON 结构，请使用人才对象数组");
     }
 
+    async function readImportText(file) {
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      if (bytes.length >= 2 && bytes[0] === 0xFF && bytes[1] === 0xFE) {
+        return new TextDecoder("utf-16le").decode(bytes);
+      }
+      if (bytes.length >= 2 && bytes[0] === 0xFE && bytes[1] === 0xFF) {
+        return new TextDecoder("utf-16be").decode(bytes);
+      }
+      return new TextDecoder("utf-8").decode(bytes).replace(/^\uFEFF/, "");
+    }
+
     async function parseImportFile(file) {
       const name = String(file?.name || "未命名");
       const lower = name.toLowerCase();
@@ -8458,11 +8553,11 @@
         throw new Error("暂不支持直接解析 Apple Numbers（.numbers）。请在 Numbers 中导出为 Excel（.xlsx）或 CSV 后再导入。");
       }
       if (lower.endsWith(".json") || (file.type || "").includes("json")) {
-        const text = await file.text();
+        const text = await readImportText(file);
         return { fileName: name, ...parseJsonImport(text) };
       }
       if (lower.endsWith(".csv") || lower.endsWith(".tsv") || (file.type || "").includes("csv") || (file.type || "").includes("tab-separated")) {
-        const text = await file.text();
+        const text = await readImportText(file);
         const delimiter = lower.endsWith(".tsv") ? "\t" : detectDelimiter(text);
         return { fileName: name, ...sheetMatrixToTable(parseDelimitedText(text, delimiter)) };
       }
@@ -8478,7 +8573,7 @@
       }
       // Fallback: try JSON then CSV then Excel
       try {
-        const text = await file.text();
+        const text = await readImportText(file);
         try {
           return { fileName: name, ...parseJsonImport(text) };
         } catch {
@@ -8696,6 +8791,7 @@
       let update = 0;
       let skip = 0;
       let denied = 0;
+      let remapped = 0;
       const seenNos = new Set();
       importState.rows.forEach((row, index) => {
         const draft = rowToTalentDraft(row, importState.mapping, {
@@ -8706,7 +8802,11 @@
           skip += 1;
           return;
         }
-        if (!isSuperAdmin() && draft.category && !canAccessCategory(draft.category)) {
+        const originalCategory = String(draft.category || "").trim();
+        const resolved = resolveImportCategoryForAcl(draft.category);
+        if (originalCategory && resolved && originalCategory !== resolved) remapped += 1;
+        draft.category = resolved;
+        if (!isSuperAdmin() && !canAccessCategory(draft.category)) {
           denied += 1;
           return;
         }
@@ -8719,7 +8819,7 @@
         if (existingNos.has(key)) update += 1;
         else add += 1;
       });
-      return { add, update, skip, denied, total: importState.rows.length };
+      return { add, update, skip, denied, remapped, total: importState.rows.length };
     }
 
     function setImportError(message) {
@@ -8786,6 +8886,7 @@
         ];
         if (plan.skip) bits.push(`<span class="warn">跳过无姓名 ${plan.skip}</span>`);
         if (plan.denied) bits.push(`<span class="warn">无权限部门 ${plan.denied}</span>`);
+        if (plan.remapped) bits.push(`<span class="warn">将归入权限部门 ${plan.remapped}</span>`);
         els.importStats.innerHTML = bits.join(" · ");
       }
       if (els.confirmImportBtn) {
@@ -8864,12 +8965,22 @@
       } catch (error) {
         console.error(error);
         resetImportUi();
-        setImportError(error?.message || "导入解析失败");
+        const msg = error?.message || "导入解析失败";
+        setImportError(msg);
+        showToast(msg, { type: "error", duration: 5600 });
         if (!els.importDialog?.open) els.importDialog?.showModal();
       } finally {
         if (els.confirmImportBtn) els.confirmImportBtn.textContent = "生成档案";
         if (els.importFile) els.importFile.value = "";
       }
+    }
+
+    function resolveImportCategoryForAcl(category, { allowRemap = true } = {}) {
+      const name = String(category || "").trim();
+      if (isSuperAdmin()) return name;
+      if (name && canAccessCategory(name)) return name;
+      if (!allowRemap) return "";
+      return authAllowedCategories[0] || "";
     }
 
     function mergeImportedTalents(drafts) {
@@ -8883,12 +8994,20 @@
       let updated = 0;
       let skipped = 0;
       let denied = 0;
+      let remapped = 0;
       drafts.forEach(draft => {
         if (!draft?.name) {
           skipped += 1;
           return;
         }
-        if (!isSuperAdmin() && draft.category && !canAccessCategory(draft.category)) {
+        const originalCategory = String(draft.category || "").trim();
+        draft.category = resolveImportCategoryForAcl(draft.category);
+        if (originalCategory && draft.category && originalCategory !== draft.category) {
+          remapped += 1;
+          const note = `原分类:${originalCategory}`;
+          draft.remark = draft.remark ? `${draft.remark}；${note}` : note;
+        }
+        if (!isSuperAdmin() && !canAccessCategory(draft.category)) {
           denied += 1;
           return;
         }
@@ -8919,14 +9038,6 @@
           updated += 1;
           return;
         }
-        if (!isSuperAdmin() && !draft.category) {
-          // Non-admin creating without category: assign first allowed category if any
-          draft.category = authAllowedCategories[0] || "";
-        }
-        if (!isSuperAdmin() && !canAccessCategory(draft.category)) {
-          denied += 1;
-          return;
-        }
         const created = {
           id: crypto.randomUUID(),
           photoUrl: "",
@@ -8936,12 +9047,13 @@
         indexByNo.set(key, next.length - 1);
         added += 1;
       });
-      return { next, added, updated, skipped, denied };
+      return { next, added, updated, skipped, denied, remapped };
     }
 
     async function confirmImportGenerate() {
       if (!Object.values(importState.mapping).includes("name")) {
         setImportError("请至少映射「姓名」列。");
+        showToast("请至少映射「姓名」列。", { type: "error" });
         return;
       }
       const drafts = importState.rows
@@ -8952,11 +9064,14 @@
         .filter(Boolean);
       if (!drafts.length) {
         setImportError("没有可生成的有效行（姓名必填）。");
+        showToast("没有可生成的有效行（姓名必填）。", { type: "error" });
         return;
       }
-      const { next, added, updated, skipped, denied } = mergeImportedTalents(drafts);
+      const { next, added, updated, skipped, denied, remapped } = mergeImportedTalents(drafts);
       if (!added && !updated) {
-        setImportError(denied ? "导入行均不在您的部门权限范围内。" : "没有可写入的档案。");
+        const msg = denied ? "导入行均不在您的部门权限范围内。" : "没有可写入的档案。";
+        setImportError(msg);
+        showToast(msg, { type: "error" });
         return;
       }
       if (els.confirmImportBtn) {
@@ -8972,13 +9087,17 @@
         if (focused?.category) activeCategory = focused.category;
         render();
         closeImportDialog();
-        const parts = [`新增 ${added} 人`, `更新 ${updated} 人`];
-        if (skipped) parts.push(`跳过 ${skipped} 行`);
-        if (denied) parts.push(`无权限 ${denied} 行`);
-        alert(`档案生成完成：${parts.join("，")}`);
+        const parts = [`新增 ${added}`, `更新 ${updated}`];
+        if (skipped) parts.push(`跳过 ${skipped}`);
+        if (denied) parts.push(`无权限 ${denied}`);
+        if (remapped) parts.push(`分类已归入权限部门 ${remapped}`);
+        showToast(`档案生成完成：${parts.join("，")}`, { type: "success", duration: 5200 });
+        setSyncStatus(`已同步 · 导入 +${added}/~${updated}`);
       } catch (error) {
         console.error(error);
-        setImportError(error?.message || "保存失败，请检查网络后重试。本地预览已保留，可再次点击生成档案。");
+        const msg = error?.message || "保存失败，请检查网络后重试。";
+        setImportError(`${msg}（本地预览已保留，可再次点击生成档案）`);
+        showToast(`导入保存失败：${msg}`, { type: "error", duration: 6000 });
       } finally {
         if (els.confirmImportBtn) {
           els.confirmImportBtn.textContent = "生成档案";
