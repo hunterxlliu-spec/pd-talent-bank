@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-dash-pie-polish -->
+  <!-- deploy-bust: 20260724-dash-excel-wider -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -29,7 +29,7 @@
       --fs-xs: 12px;
       --fs-title: 22px;
       --fs-brand: 18px;
-      --sidebar-w: 260px;
+      --sidebar-w: 240px;
     }
 
     html, body {
@@ -732,7 +732,7 @@
     .dashboard-pies {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      gap: 14px;
       min-width: 0;
       align-items: stretch;
     }
@@ -743,10 +743,12 @@
 
     .dash-pie-card {
       min-width: 0;
-      padding-bottom: 14px;
+      padding: 14px 16px 12px;
       display: grid;
       gap: 6px;
       align-content: start;
+      container-type: inline-size;
+      container-name: dash-pie;
     }
 
     .dash-pie-card.is-compare-left {
@@ -761,58 +763,92 @@
 
     .dash-pie-head {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       gap: 10px;
-      margin-bottom: 2px;
+      padding-bottom: 8px;
+      margin-bottom: 0;
+      border-bottom: 1px solid var(--line);
     }
 
     .dash-pie-head h3 {
       margin: 0;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       color: var(--ink);
     }
 
     .dash-pie-kicker {
       display: block;
-      margin-top: 2px;
+      margin-top: 1px;
       font-size: 11px;
       font-weight: 600;
       color: var(--muted);
     }
 
     .dash-pie-head .field {
-      flex: 0 1 150px;
-      gap: 2px;
+      flex: 0 1 148px;
+      gap: 1px;
     }
 
     .dash-pie-head label {
-      font-size: 11px;
+      font-size: 10.5px;
+      letter-spacing: 0.02em;
     }
 
     .dash-pie-head select {
-      min-height: 32px;
-      padding: 4px 8px;
+      min-height: 30px;
+      padding: 3px 8px;
       font-size: 12px;
     }
 
     .dash-pie-note {
-      margin: 0 0 4px;
-      font-size: 12px;
+      margin: 0;
+      font-size: 11px;
       color: var(--muted);
+      line-height: 1.4;
     }
 
     .edu-chart {
       display: grid;
-      gap: 16px;
-      margin-top: 12px;
-      justify-items: center;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 4px;
+      align-items: center;
+      justify-items: stretch;
+      min-width: 0;
     }
 
     .edu-pie-wrap {
       width: min(360px, 100%);
+      max-width: 100%;
       aspect-ratio: 360 / 250;
+      justify-self: center;
+    }
+
+    @container dash-pie (min-width: 520px) {
+      .edu-chart {
+        grid-template-columns: minmax(240px, 1.05fr) minmax(200px, 0.95fr);
+        gap: 10px 18px;
+        align-items: center;
+      }
+
+      .edu-pie-wrap {
+        width: 100%;
+        max-width: 380px;
+        justify-self: center;
+      }
+
+      .edu-legend-table {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        justify-self: stretch;
+      }
+
+      .edu-pie-empty {
+        justify-self: center;
+      }
     }
 
     .edu-pie-wrap svg {
@@ -900,36 +936,36 @@
     }
 
     .edu-legend-table {
-      width: min(320px, 100%);
-      max-width: 100%;
-      margin: 2px auto 0;
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
       border-collapse: separate;
       border-spacing: 0;
-      font-size: 12.5px;
+      font-size: 12px;
       color: var(--ink);
-      background: rgba(255, 255, 255, .72);
-      border: 1px solid rgba(226, 232, 240, .9);
-      border-radius: 12px;
+      background: #fff;
+      border: 1px solid rgba(226, 232, 240, .95);
+      border-radius: 8px;
       overflow: hidden;
       box-shadow: none;
     }
 
     .edu-legend-table th,
     .edu-legend-table td {
-      padding: 8px 12px;
+      padding: 6px 10px;
       white-space: nowrap;
       text-align: left;
-      border-bottom: 1px solid rgba(238, 242, 246, .9);
+      border-bottom: 1px solid rgba(238, 242, 246, .95);
       vertical-align: middle;
     }
 
     .edu-legend-table thead th {
-      background: rgba(247, 250, 252, .92);
+      background: #f4f7fa;
       color: #7a8796;
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 650;
       letter-spacing: 0.03em;
-      border-bottom-color: rgba(226, 232, 240, .95);
+      border-bottom-color: rgba(226, 232, 240, .98);
     }
 
     .edu-legend-table tbody tr:last-child td {
@@ -963,11 +999,11 @@
     .edu-legend-table .col-swatch {
       width: 1%;
       padding-right: 2px;
-      padding-left: 12px;
+      padding-left: 10px;
     }
 
     .edu-legend-table .col-label {
-      padding-left: 8px;
+      padding-left: 6px;
       font-weight: 600;
     }
 
@@ -979,12 +1015,14 @@
     }
 
     .edu-legend-table .col-count {
-      min-width: 44px;
+      min-width: 40px;
+      padding-right: 8px;
     }
 
     .edu-legend-table .col-percent {
-      min-width: 108px;
-      padding-left: 8px;
+      min-width: 96px;
+      padding-left: 6px;
+      padding-right: 10px;
     }
 
     .edu-legend-table .col-count strong,
@@ -1012,14 +1050,14 @@
       display: inline-flex;
       align-items: center;
       justify-content: flex-end;
-      gap: 8px;
-      min-width: 86px;
+      gap: 7px;
+      min-width: 78px;
     }
 
     .edu-legend-bar {
       display: inline-block;
-      width: 44px;
-      height: 4px;
+      width: 36px;
+      height: 3px;
       border-radius: 999px;
       background: #e8eef4;
       overflow: hidden;
@@ -1042,6 +1080,13 @@
       color: var(--muted);
       font-size: 13px;
       text-align: center;
+    }
+
+    @media (max-width: 1280px) {
+      /* Give each Excel-style module full width before stacking pie+table */
+      .dashboard-pies {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (max-width: 1100px) {
@@ -1084,7 +1129,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 14px;
-      padding: 18px 28px;
+      padding: 16px 22px;
       background: rgba(247, 249, 252, .86);
       backdrop-filter: blur(14px);
       border-bottom: 1px solid rgba(226, 232, 240, .9);
@@ -1160,7 +1205,7 @@
     }
 
     .content {
-      padding: 18px 22px 32px;
+      padding: 16px 18px 28px;
       display: block;
       min-width: 0;
       max-width: 100%;
@@ -4769,14 +4814,14 @@
     }
 
     function applySidebarWidth(px) {
-      const width = Math.min(SIDEBAR_MAX_W, Math.max(SIDEBAR_MIN_W, Math.round(Number(px) || 260)));
+      const width = Math.min(SIDEBAR_MAX_W, Math.max(SIDEBAR_MIN_W, Math.round(Number(px) || 240)));
       document.documentElement.style.setProperty("--sidebar-w", `${width}px`);
       return width;
     }
 
     function initSidebarResizer() {
       const saved = Number(localStorage.getItem(SIDEBAR_WIDTH_KEY) || 0);
-      applySidebarWidth(saved || 260);
+      applySidebarWidth(saved || 240);
       const handle = document.querySelector("#sidebarResizer");
       if (!handle) return;
       let dragging = false;
@@ -5857,20 +5902,17 @@
 
       const paths = sliceMeta.map(item => {
         const color = sliceColor(item.label, item.colorIndex);
-        const d = item.count === total && gap === 0
-          ? null
-          : describeDonutSlice(cx, cy, outerR, innerR, item.start, item.end);
-        if (!d) {
-          return `
-            <circle class="edu-pie-slice" cx="${cx}" cy="${cy}" r="${outerR}" fill="${color}">
+        if (item.count === total && gap === 0) {
+          return `<circle class="edu-pie-slice" cx="${cx}" cy="${cy}" r="${outerR}" fill="${color}">
               <title>${escapeHtml(item.label)}：${item.count}人（${item.percent}%）</title>
-            </circle>
-            <circle class="edu-pie-hole" cx="${cx}" cy="${cy}" r="${innerR}"></circle>`;
+            </circle>`;
         }
-        return `<path class="edu-pie-slice" d="${d}" fill="${color}">
+        return `<path class="edu-pie-slice" d="${describeDonutSlice(cx, cy, outerR, innerR, item.start, item.end)}" fill="${color}">
           <title>${escapeHtml(item.label)}：${item.count}人（${item.percent}%）</title>
         </path>`;
       }).join("");
+
+      const hole = `<circle class="edu-pie-hole" cx="${cx}" cy="${cy}" r="${innerR}"></circle>`;
 
       const labelCandidates = sliceMeta
         .filter(item => item.percent >= 8 || sliceMeta.length <= 3)
@@ -5924,6 +5966,7 @@
         <div class="edu-pie-wrap">
           <svg viewBox="0 0 360 250" role="img" aria-label="${escapeHtml(chartTitle)}">
             ${paths}
+            ${hole}
             ${leaders}
             ${center}
           </svg>
