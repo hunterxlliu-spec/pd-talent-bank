@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-profile-vivid -->
+  <!-- deploy-bust: 20260724-stat-no-bar -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -2347,22 +2347,12 @@
 
     .profile-stat {
       position: relative;
-      padding: 14px 12px 14px 14px;
+      padding: 14px 12px;
       border-radius: 14px;
       background: #fff;
       border: 1px solid #e8eef4;
       box-shadow: 0 8px 20px rgba(15, 23, 42, .03);
       overflow: hidden;
-    }
-
-    .profile-stat::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 4px;
-      background: var(--stat-accent, var(--brand));
     }
 
     .profile-stat span {
@@ -2381,10 +2371,10 @@
       font-weight: 800;
     }
 
-    .profile-stat--tenure { --stat-accent: #0d9488; background: linear-gradient(180deg, #f0fdfa, #fff 55%); border-color: #ccfbf1; }
-    .profile-stat--product-years { --stat-accent: #2563eb; background: linear-gradient(180deg, #eff6ff, #fff 55%); border-color: #dbeafe; }
-    .profile-stat--products { --stat-accent: #ea580c; background: linear-gradient(180deg, #fff7ed, #fff 55%); border-color: #ffedd5; }
-    .profile-stat--skills { --stat-accent: #db2777; background: linear-gradient(180deg, #fdf2f8, #fff 55%); border-color: #fce7f3; }
+    .profile-stat--tenure { --stat-accent: #0d9488; }
+    .profile-stat--product-years { --stat-accent: #2563eb; }
+    .profile-stat--products { --stat-accent: #ea580c; }
+    .profile-stat--skills { --stat-accent: #db2777; }
 
     .profile-card {
       background: #fff;
