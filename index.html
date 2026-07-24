@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-list-pills-no-tabs -->
+  <!-- deploy-bust: 20260724-profile-vivid -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -2091,9 +2091,9 @@
       justify-content: space-between;
       gap: 12px;
       padding: 12px 16px;
-      background: rgba(255, 255, 255, .86);
+      background: rgba(255, 255, 255, .9);
       backdrop-filter: saturate(180%) blur(20px);
-      border-bottom: 1px solid var(--line);
+      border-bottom: 1px solid rgba(45, 212, 191, .18);
       color: var(--ink);
     }
 
@@ -2104,7 +2104,7 @@
       font-weight: 700;
       letter-spacing: 0;
       opacity: 1;
-      color: #344054;
+      color: #1f2937;
     }
 
     .profile-dialog .modal-head-actions {
@@ -2114,14 +2114,15 @@
     }
 
     .profile-dialog .modal-head .btn.primary {
-      background: var(--brand);
+      background: linear-gradient(135deg, #14b8a6, #0d9488);
       color: #fff;
-      border-color: var(--brand);
+      border-color: transparent;
       font-weight: 600;
+      box-shadow: 0 6px 16px rgba(13, 148, 136, .28);
     }
 
     .profile-dialog .modal-head .btn.primary:hover {
-      background: var(--brand-strong);
+      background: linear-gradient(135deg, #0d9488, #0f766e);
     }
 
     .profile-dialog .modal-head .btn.icon {
@@ -2137,7 +2138,10 @@
     .profile-dialog .modal-body {
       padding: 0;
       max-height: min(90vh, 920px);
-      background: #f5f5f7;
+      background:
+        radial-gradient(ellipse 80% 40% at 0% 0%, rgba(45, 212, 191, .10), transparent 55%),
+        radial-gradient(ellipse 60% 35% at 100% 8%, rgba(56, 189, 248, .10), transparent 50%),
+        #f3f6fa;
       gap: 0;
       overflow: auto;
     }
@@ -2175,33 +2179,55 @@
     }
 
     .profile-hero {
+      position: relative;
       margin: 16px 16px 0;
       padding: 22px;
-      border-radius: 16px;
-      background: #fff;
+      border-radius: 18px;
+      background:
+        linear-gradient(135deg, rgba(20, 184, 166, .16) 0%, rgba(56, 189, 248, .12) 48%, rgba(251, 146, 60, .10) 100%),
+        #fff;
       color: var(--ink);
       display: grid;
-      grid-template-columns: 88px minmax(0, 1fr);
+      grid-template-columns: 96px minmax(0, 1fr);
       gap: 18px;
       align-items: center;
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(20, 184, 166, .18);
+      box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
+      overflow: hidden;
+    }
+
+    .profile-hero::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 5px;
+      background: linear-gradient(90deg, #14b8a6 0%, #38bdf8 52%, #fb923c 100%);
+    }
+
+    .profile-avatar-ring {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      padding: 3px;
+      background: linear-gradient(140deg, #2dd4bf 0%, #38bdf8 48%, #fb923c 100%);
+      box-shadow: 0 10px 24px rgba(45, 212, 191, .28);
+      flex: 0 0 auto;
     }
 
     .profile-avatar {
-      width: 88px;
-      height: 88px;
+      width: 100%;
+      height: 100%;
       border-radius: 50%;
       overflow: hidden;
-      background: #e8e8ed;
+      background: linear-gradient(160deg, #5eead4 0%, #0d9488 100%);
       border: 0;
       box-shadow: none;
       display: grid;
       place-items: center;
       font-size: 26px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 0.02em;
-      color: #3a3a3c;
+      color: #fff;
     }
 
     .profile-avatar img {
@@ -2217,14 +2243,15 @@
       font-size: clamp(22px, 3vw, 28px);
       line-height: 1.2;
       letter-spacing: -0.02em;
-      font-weight: 600;
-      color: var(--ink);
+      font-weight: 700;
+      color: #0f172a;
     }
 
     .profile-role {
       margin: 6px 0 0;
-      color: var(--muted);
+      color: #475569;
       font-size: 13px;
+      font-weight: 550;
     }
 
     .profile-meta-row {
@@ -2240,19 +2267,70 @@
       gap: 5px;
       padding: 5px 10px;
       border-radius: 999px;
-      background: #f5f5f7;
-      border: 1px solid var(--line);
+      background: var(--pill-soft-bg);
+      border: 1px solid transparent;
       font-size: 12px;
-      color: var(--ink);
+      font-weight: 650;
+      color: var(--pill-soft);
     }
 
-    .profile-chip strong { font-weight: 700; }
+    .profile-chip strong { font-weight: 750; }
 
-    .profile-status {
-      background: #f0fdf7;
-      color: #387f6b;
-      border-color: transparent;
-      font-weight: 700;
+    .profile-chip--status-active {
+      background: var(--pill-status-active-bg);
+      color: var(--pill-status-active);
+    }
+
+    .profile-chip--status-candidate {
+      background: var(--pill-status-candidate-bg);
+      color: var(--pill-status-candidate);
+    }
+
+    .profile-chip--status-reserve {
+      background: var(--pill-status-reserve-bg);
+      color: var(--pill-status-reserve);
+    }
+
+    .profile-chip--status-left {
+      background: var(--pill-status-left-bg);
+      color: var(--pill-status-left);
+    }
+
+    .profile-chip--id {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    .profile-chip--grade {
+      background: var(--pill-grade-bg);
+      color: var(--pill-grade);
+    }
+
+    .profile-chip--gender {
+      background: #fce7f3;
+      color: #be185d;
+    }
+
+    .profile-chip--hometown {
+      background: var(--pill-dept-bg);
+      color: var(--pill-dept);
+    }
+
+    .profile-chip--edu {
+      background: var(--pill-edu-bg);
+      color: var(--pill-edu);
+    }
+
+    .profile-chip--project {
+      background: var(--pill-role-bg);
+      color: var(--pill-role);
+    }
+
+    .profile-chip--pending,
+    .profile-chip.is-pending {
+      background: #f1f5f9;
+      color: #94a3b8;
+      font-weight: 550;
     }
 
     .profile-body {
@@ -2268,27 +2346,45 @@
     }
 
     .profile-stat {
-      padding: 14px 12px;
+      position: relative;
+      padding: 14px 12px 14px 14px;
       border-radius: 14px;
       background: #fff;
       border: 1px solid #e8eef4;
       box-shadow: 0 8px 20px rgba(15, 23, 42, .03);
+      overflow: hidden;
+    }
+
+    .profile-stat::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--stat-accent, var(--brand));
     }
 
     .profile-stat span {
       display: block;
-      color: #667085;
+      color: #64748b;
       font-size: 11px;
+      font-weight: 600;
     }
 
     .profile-stat strong {
       display: block;
       margin-top: 6px;
       font-size: 18px;
-      color: #3f918b;
+      color: var(--stat-accent, #0d9488);
       overflow-wrap: anywhere;
       font-weight: 800;
     }
+
+    .profile-stat--tenure { --stat-accent: #0d9488; background: linear-gradient(180deg, #f0fdfa, #fff 55%); border-color: #ccfbf1; }
+    .profile-stat--product-years { --stat-accent: #2563eb; background: linear-gradient(180deg, #eff6ff, #fff 55%); border-color: #dbeafe; }
+    .profile-stat--products { --stat-accent: #ea580c; background: linear-gradient(180deg, #fff7ed, #fff 55%); border-color: #ffedd5; }
+    .profile-stat--skills { --stat-accent: #db2777; background: linear-gradient(180deg, #fdf2f8, #fff 55%); border-color: #fce7f3; }
 
     .profile-card {
       background: #fff;
@@ -2304,7 +2400,7 @@
       margin: 0 0 14px;
       font-size: 13px;
       font-weight: 800;
-      color: #1d2733;
+      color: #0f172a;
     }
 
     .profile-card-title::before { content: none; }
@@ -2313,16 +2409,26 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      --kicker: var(--brand);
+      --kicker-glow: rgba(15, 118, 110, .14);
     }
 
     .profile-card-kicker::before {
       content: "";
-      width: 8px;
-      height: 8px;
+      width: 9px;
+      height: 9px;
       border-radius: 50%;
-      background: var(--brand);
-      box-shadow: 0 0 0 4px rgba(15, 118, 110, .12);
+      background: var(--kicker);
+      box-shadow: 0 0 0 4px var(--kicker-glow);
     }
+
+    .profile-card-kicker--identity { --kicker: #2563eb; --kicker-glow: rgba(37, 99, 235, .14); }
+    .profile-card-kicker--org { --kicker: #ea580c; --kicker-glow: rgba(234, 88, 12, .14); }
+    .profile-card-kicker--edu { --kicker: #0d9488; --kicker-glow: rgba(13, 148, 136, .14); }
+    .profile-card-kicker--skills { --kicker: #db2777; --kicker-glow: rgba(219, 39, 119, .14); }
+    .profile-card-kicker--products { --kicker: #2563eb; --kicker-glow: rgba(37, 99, 235, .14); }
+    .profile-card-kicker--custom { --kicker: #64748b; --kicker-glow: rgba(100, 116, 139, .14); }
+    .profile-card-kicker--remark { --kicker: #d97706; --kicker-glow: rgba(217, 119, 6, .14); }
 
     .profile-section-grid {
       display: grid;
@@ -2349,23 +2455,37 @@
     }
 
     .profile-dialog .info-item:hover {
-      background: #f3fdfa;
-      border-color: #dff8f2;
+      background: #f0fdfa;
+      border-color: #ccfbf1;
+    }
+
+    .profile-dialog .info-item.is-empty {
+      background: #f8fafc;
+    }
+
+    .profile-dialog .info-item.is-empty:hover {
+      background: #f1f5f9;
+      border-color: #e2e8f0;
     }
 
     .profile-dialog .info-label {
       font-size: 11px;
-      color: #8492a6;
+      color: #94a3b8;
       font-weight: 600;
     }
 
     .profile-dialog .info-value {
       margin-top: 5px;
       font-size: 13px;
-      font-weight: 650;
-      color: #1d2733;
+      font-weight: 700;
+      color: #0f172a;
       line-height: 1.45;
       overflow-wrap: anywhere;
+    }
+
+    .profile-dialog .info-item.is-empty .info-value {
+      color: #94a3b8;
+      font-weight: 550;
     }
 
     .skill-pills {
@@ -2378,10 +2498,25 @@
     .skill-pill {
       padding: 6px 11px;
       border-radius: 999px;
-      background: #ecf9f5;
-      color: #3f918b;
+      background: #fce7f3;
+      color: #be185d;
       font-size: 12px;
       font-weight: 700;
+    }
+
+    .skill-pill:nth-child(4n+2) {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .skill-pill:nth-child(4n+3) {
+      background: #ccfbf1;
+      color: #0f766e;
+    }
+
+    .skill-pill:nth-child(4n+4) {
+      background: #ffedd5;
+      color: #c2410c;
     }
 
     .experience-list { display: grid; gap: 10px; }
@@ -2452,8 +2587,8 @@
       margin: 0;
       padding: 14px 16px;
       border-radius: 12px;
-      background: #f8fafc;
-      border: 1px dashed #d0d5dd;
+      background: linear-gradient(180deg, #fffbeb, #fff);
+      border: 1px dashed #fcd34d;
       color: #344054;
       line-height: 1.65;
       white-space: pre-wrap;
@@ -2464,6 +2599,21 @@
       color: #98a2b3;
       font-size: 13px;
       padding: 8px 2px;
+    }
+
+    .product-pill {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+
+    .product-pill:nth-child(3n+2) {
+      background: #ffedd5;
+      color: #c2410c;
+    }
+
+    .product-pill:nth-child(3n+3) {
+      background: #ccfbf1;
+      color: #0f766e;
     }
 
 
@@ -2575,13 +2725,13 @@
       }
 
       .profile-dialog .modal-head {
-        color: #fff;
+        padding: 12px 14px;
       }
 
       .profile-dialog .modal-head .btn.icon {
-        background: rgba(255,255,255,.14);
-        color: #fff;
-        border: 1px solid rgba(255,255,255,.18);
+        background: #fff;
+        color: #344054;
+        border: 1px solid #d0d5dd;
       }
 
       .profile-hero {
@@ -2590,11 +2740,13 @@
         border-radius: 0;
       }
 
-      .profile-avatar {
+      .profile-avatar-ring {
         width: 96px;
         height: 96px;
-        border-radius: 22px;
-        font-size: 30px;
+      }
+
+      .profile-avatar {
+        font-size: 28px;
       }
 
       .profile-hero-main h2 {
@@ -6301,8 +6453,29 @@
         case "候选": return "person-pill--status-candidate";
         case "储备": return "person-pill--status-reserve";
         case "离职": return "person-pill--status-left";
-        default: return "person-pill--muted";
+        default: return "person-pill--soft";
       }
+    }
+
+    function profileStatusChipClass(status) {
+      switch (String(status || "").trim()) {
+        case "在职": return "profile-chip--status-active";
+        case "候选": return "profile-chip--status-candidate";
+        case "储备": return "profile-chip--status-reserve";
+        case "离职": return "profile-chip--status-left";
+        default: return "profile-chip--pending";
+      }
+    }
+
+    function profileMetaChip(text, variant, options = {}) {
+      const raw = String(text == null ? "" : text).trim();
+      const pending = Boolean(options.pending) || !raw || raw === "-" || /待完善$/.test(raw);
+      const label = raw || options.fallback || "-";
+      const classes = ["profile-chip", pending ? "profile-chip--pending" : (variant || "")].filter(Boolean).join(" ");
+      const strongPrefix = options.prefix
+        ? `${escapeHtml(options.prefix)} <strong>${escapeHtml(label)}</strong>`
+        : escapeHtml(label);
+      return `<span class="${classes}">${strongPrefix}</span>`;
     }
 
     function softPill(text) {
@@ -6397,10 +6570,12 @@
     }
 
     function infoItem(label, value) {
+      const text = value == null || value === "" ? "-" : String(value);
+      const empty = text === "-";
       return `
-        <div class="info-item">
+        <div class="info-item${empty ? " is-empty" : ""}">
           <span class="info-label">${escapeHtml(label)}</span>
-          <span class="info-value">${escapeHtml(value || "-")}</span>
+          <span class="info-value">${escapeHtml(text)}</span>
         </div>
       `;
     }
@@ -6483,36 +6658,42 @@
         ? `<img alt="${escapeHtml(person.name || "")}" src="${escapeHtml(photoSrc)}">`
         : escapeHtml(initials(person.name));
 
+      const genderChip = person.gender
+        ? `${person.gender}${ageText !== "-" ? ` · ${ageText}岁` : ""}`
+        : (ageText !== "-" ? `${ageText}岁` : "-");
+
       return `
         <div class="profile-sheet">
           <section class="profile-hero">
-            <div class="profile-avatar">${photoHtml}</div>
+            <div class="profile-avatar-ring">
+              <div class="profile-avatar">${photoHtml}</div>
+            </div>
             <div class="profile-hero-main">
               <h2 class="profile-name-line">${escapeHtml(person.name || "-")}${person.englishName ? `<span class="profile-name-en">${escapeHtml(person.englishName)}</span>` : ""}</h2>
               <p class="profile-role">${escapeHtml(roleLine)}</p>
               <div class="profile-meta-row">
-                <span class="profile-chip profile-status">${escapeHtml(person.status || "-")}</span>
-                <span class="profile-chip">工号 <strong>${escapeHtml(person.employeeNo || "-")}</strong></span>
-                <span class="profile-chip">职级 <strong>${escapeHtml(person.jobGrade || "-")}</strong></span>
-                <span class="profile-chip">${escapeHtml(person.gender || "-")}${ageText !== "-" ? ` · ${escapeHtml(ageText)}岁` : ""}</span>
-                <span class="profile-chip">${escapeHtml(person.hometown || "籍贯待完善")}</span>
-                <span class="profile-chip">${escapeHtml(person.education || "学历待完善")}</span>
-                <span class="profile-chip">${escapeHtml(person.currentProject || "当前项目待完善")}</span>
+                <span class="profile-chip ${profileStatusChipClass(person.status)}">${escapeHtml(person.status || "-")}</span>
+                ${profileMetaChip(person.employeeNo || "-", "profile-chip--id", { prefix: "工号" })}
+                ${profileMetaChip(person.jobGrade || "-", "profile-chip--grade", { prefix: "职级" })}
+                ${profileMetaChip(genderChip, "profile-chip--gender")}
+                ${profileMetaChip(person.hometown, "profile-chip--hometown", { fallback: "籍贯待完善", pending: !person.hometown })}
+                ${profileMetaChip(person.education, "profile-chip--edu", { fallback: "学历待完善", pending: !person.education })}
+                ${profileMetaChip(person.currentProject, "profile-chip--project", { fallback: "当前项目待完善", pending: !person.currentProject })}
               </div>
             </div>
           </section>
 
           <div class="profile-body">
             <div class="profile-stats">
-              <div class="profile-stat"><span>工作年限</span><strong>${escapeHtml(formatYears(person.firstWorkDate))}</strong></div>
-              <div class="profile-stat"><span>产品经验</span><strong>${escapeHtml(formatYears(person.appleStartDate))}</strong></div>
-              <div class="profile-stat"><span>产品经验</span><strong>${productLabels.length}</strong></div>
-              <div class="profile-stat"><span>技能标签</span><strong>${skills.length}</strong></div>
+              <div class="profile-stat profile-stat--tenure"><span>工作年限</span><strong>${escapeHtml(formatYears(person.firstWorkDate))}</strong></div>
+              <div class="profile-stat profile-stat--product-years"><span>产品经验年限</span><strong>${escapeHtml(formatYears(person.appleStartDate))}</strong></div>
+              <div class="profile-stat profile-stat--products"><span>产品经验</span><strong>${productLabels.length}</strong></div>
+              <div class="profile-stat profile-stat--skills"><span>技能标签</span><strong>${skills.length}</strong></div>
             </div>
 
             <div class="profile-section-grid">
               <section class="profile-card">
-                <h4 class="profile-card-title"><span class="profile-card-kicker">身份背景</span></h4>
+                <h4 class="profile-card-title"><span class="profile-card-kicker profile-card-kicker--identity">身份背景</span></h4>
                 <div class="full-info-grid cols-2">
                   ${infoItem("英文名", person.englishName)}
                   ${infoItem("性别", person.gender)}
@@ -6527,7 +6708,7 @@
               </section>
 
               <section class="profile-card">
-                <h4 class="profile-card-title"><span class="profile-card-kicker">组织信息</span></h4>
+                <h4 class="profile-card-title"><span class="profile-card-kicker profile-card-kicker--org">组织信息</span></h4>
                 <div class="full-info-grid cols-2">
                   ${infoItem("所属分类", person.category || "未分类")}
                   ${infoItem("子部门", person.department)}
@@ -6544,7 +6725,7 @@
             </div>
 
             <section class="profile-card">
-              <h4 class="profile-card-title"><span class="profile-card-kicker">教育与经验</span></h4>
+              <h4 class="profile-card-title"><span class="profile-card-kicker profile-card-kicker--edu">教育与经验</span></h4>
               <div class="full-info-grid">
                 ${infoItem("毕业学校", person.school)}
                 ${infoItem("毕业时间", formatDate(person.graduationDate))}
@@ -6556,22 +6737,22 @@
             </section>
 
             <section class="profile-card">
-              <h4 class="profile-card-title"><span class="profile-card-kicker">技能标签</span></h4>
+              <h4 class="profile-card-title"><span class="profile-card-kicker profile-card-kicker--skills">技能标签</span></h4>
               ${skillHtml}
             </section>
 
             <section class="profile-card">
-              <h4 class="profile-card-title"><span class="profile-card-kicker">产品经验</span></h4>
+              <h4 class="profile-card-title"><span class="profile-card-kicker profile-card-kicker--products">产品经验</span></h4>
               <div class="experience-list">${productItems || "<div class='profile-empty'>暂无产品经验</div>"}</div>
             </section>
 
             <section class="profile-card">
-              <h4 class="profile-card-title"><span class="profile-card-kicker">自定义项目</span></h4>
+              <h4 class="profile-card-title"><span class="profile-card-kicker profile-card-kicker--custom">自定义项目</span></h4>
               <div class="full-info-grid">${customItems || "<div class='profile-empty'>暂无自定义项目</div>"}</div>
             </section>
 
             <section class="profile-card">
-              <h4 class="profile-card-title"><span class="profile-card-kicker">备注</span></h4>
+              <h4 class="profile-card-title"><span class="profile-card-kicker profile-card-kicker--remark">备注</span></h4>
               <p class="profile-remark">${escapeHtml(person.remark || "暂无备注")}</p>
             </section>
           </div>
