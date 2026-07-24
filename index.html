@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-pie-hover-explode -->
+  <!-- deploy-bust: 20260724-pie-hit-layer -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -912,10 +912,7 @@
     }
 
     .edu-bar-item {
-      display: grid;
-      grid-template-columns: minmax(64px, 0.9fr) minmax(0, 1.6fr) auto;
-      gap: 8px;
-      align-items: center;
+      display: block;
       width: 100%;
       margin: 0;
       padding: 4px 2px;
@@ -924,10 +921,21 @@
       cursor: pointer;
       text-align: left;
       border-radius: 8px;
-      transition: opacity .16s ease, background .16s ease, transform .2s cubic-bezier(.22, 1, .36, 1);
+      transition: opacity .16s ease, background .16s ease;
       font: inherit;
       color: inherit;
+    }
+
+    /* Visual-only shift: keep the button box fixed so grow/translate never leaves the cursor. */
+    .edu-bar-visual {
+      display: grid;
+      grid-template-columns: minmax(64px, 0.9fr) minmax(0, 1.6fr) auto;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
       transform-origin: left center;
+      transition: transform .2s cubic-bezier(.22, 1, .36, 1);
+      pointer-events: none;
     }
 
     .edu-bar-item:hover,
@@ -954,6 +962,9 @@
       opacity: 1;
       filter: none;
       background: rgba(61, 169, 160, .1);
+    }
+
+    .edu-bar-wrap.has-selection .edu-bar-item.is-selected .edu-bar-visual {
       transform: translateX(5px) scale(1.015);
     }
 
@@ -1050,6 +1061,19 @@
       overflow: visible;
     }
 
+    /* Hit path stays untranslated; visual fill alone explodes (avoids leave/enter jitter). */
+    .edu-pie-slice-hit {
+      fill: transparent;
+      cursor: pointer;
+      outline: none;
+      pointer-events: all;
+    }
+
+    .edu-pie-slice-hit:focus-visible {
+      outline: 2px solid rgba(61, 169, 160, .55);
+      outline-offset: 2px;
+    }
+
     .edu-pie-slice {
       --ex: 0px;
       --ey: 0px;
@@ -1057,8 +1081,7 @@
       transform: translate(var(--ex), var(--ey));
       transform-box: fill-box;
       transform-origin: center;
-      cursor: pointer;
-      outline: none;
+      pointer-events: none;
     }
 
     .edu-pie-callout {
@@ -1066,16 +1089,7 @@
       --ey: 0px;
       transition: opacity .16s ease, transform .22s cubic-bezier(.22, 1, .36, 1);
       transform: translate(var(--ex), var(--ey));
-    }
-
-    .edu-pie-wrap:hover:not(.has-selection) .edu-pie-slice {
-      opacity: .52;
-    }
-
-    .edu-pie-wrap:hover:not(.has-selection) .edu-pie-slice:hover,
-    .edu-pie-wrap:hover:not(.has-selection) .edu-pie-slice:focus-visible {
-      opacity: 1;
-      filter: brightness(1.06) saturate(1.05);
+      pointer-events: none;
     }
 
     .edu-pie-wrap.has-selection .edu-pie-slice {
@@ -1083,7 +1097,7 @@
       filter: saturate(.68) brightness(1.02);
     }
 
-    .edu-pie-wrap.has-selection .edu-pie-slice.is-selected {
+    .edu-pie-wrap.has-selection .edu-pie-slice-group.is-selected .edu-pie-slice {
       opacity: 1;
       filter: brightness(1.14) saturate(1.42);
     }
@@ -6539,11 +6553,15 @@
       let percent = 0;
       let found = false;
 
-      wrap.querySelectorAll(".edu-pie-slice, .edu-bar-item").forEach(el => {
+      wrap.querySelectorAll(".edu-pie-slice-group, .edu-bar-item").forEach(el => {
         const isSel = Boolean(next) && el.dataset.pieLabel === next;
         el.classList.toggle("is-selected", isSel);
-        el.setAttribute("aria-pressed", isSel ? "true" : "false");
-        if (el.classList.contains("edu-pie-slice")) setPieExplodeOffset(el, isSel);
+        const pressEl = el.classList.contains("edu-pie-slice-group")
+          ? el.querySelector(".edu-pie-slice-hit")
+          : el;
+        pressEl?.setAttribute("aria-pressed", isSel ? "true" : "false");
+        const visual = el.querySelector(".edu-pie-slice");
+        if (visual) setPieExplodeOffset(visual, isSel);
         if (isSel) {
           count = Number(el.dataset.pieCount || 0);
           percent = Number(el.dataset.piePercent || 0);
@@ -6635,13 +6653,25 @@
       chartEl.dataset.pieBound = "1";
 
       const activate = (label) => setPieSelection(chartEl, label || "");
-      const hoverTarget = (event) =>
-        event.target.closest(".edu-pie-slice, .edu-bar-item, .edu-legend-table tbody tr[data-pie-label]");
+      // Prefer table row when the event is inside the legend (avoids fighting slice hover).
+      const hoverTarget = (event) => {
+        const row = event.target.closest(".edu-legend-table tbody tr[data-pie-label]");
+        if (row) return row;
+        return event.target.closest(".edu-pie-slice-group, .edu-pie-slice-hit, .edu-bar-item");
+      };
+      const sliceOrBar = (event) =>
+        event.target.closest(".edu-pie-slice-group, .edu-pie-slice-hit, .edu-bar-item");
 
       chartEl.addEventListener("click", event => {
-        const slice = event.target.closest(".edu-pie-slice, .edu-bar-item");
+        const slice = sliceOrBar(event);
         if (slice?.dataset.pieLabel) {
           activate(slice.dataset.pieLabel);
+          return;
+        }
+        // Hit path may lack dataset if event lands on child — climb to group.
+        const group = event.target.closest(".edu-pie-slice-group");
+        if (group?.dataset.pieLabel) {
+          activate(group.dataset.pieLabel);
           return;
         }
         const row = event.target.closest(".edu-legend-table tbody tr[data-pie-label]");
@@ -6656,20 +6686,25 @@
 
       chartEl.addEventListener("keydown", event => {
         if (event.key !== "Enter" && event.key !== " ") return;
-        const slice = event.target.closest(".edu-pie-slice, .edu-bar-item");
+        const slice = sliceOrBar(event);
+        const group = event.target.closest(".edu-pie-slice-group");
         const row = event.target.closest(".edu-legend-table tbody tr[data-pie-label]");
-        const label = slice?.dataset.pieLabel || row?.dataset.pieLabel;
+        const label = slice?.dataset.pieLabel || group?.dataset.pieLabel || row?.dataset.pieLabel;
         if (!label) return;
         event.preventDefault();
         activate(label);
       });
 
       // Desktop: hover drives explode / vivid / bold; touch keeps click/tap only.
+      // Hit geometry never moves, so explode cannot trigger leave→enter jitter.
       chartEl.addEventListener("pointerover", event => {
         if (!PIE_HOVER_MQ.matches || event.pointerType === "touch") return;
         const el = hoverTarget(event);
-        if (el?.dataset.pieLabel) {
-          setPieHover(chartEl, el.dataset.pieLabel);
+        const label = el?.dataset.pieLabel
+          || el?.closest?.(".edu-pie-slice-group")?.dataset.pieLabel
+          || "";
+        if (label) {
+          setPieHover(chartEl, label);
           return;
         }
         if (event.target.closest(".edu-pie-wrap, .edu-bar-wrap, .edu-legend-table")) {
@@ -6724,15 +6759,23 @@
         const color = sliceColor(item.label, item.colorIndex);
         const tip = `${escapeHtml(item.label)}：${item.count}人（${item.percent}%）`;
         const midAttr = `data-pie-mid="${item.mid.toFixed(5)}"`;
-        const common = `class="edu-pie-slice" data-pie-label="${escapeHtml(item.label)}" data-pie-count="${item.count}" data-pie-percent="${item.percent}" ${midAttr} tabindex="0" role="button" aria-pressed="false" aria-label="${tip}"`;
+        const dataAttrs = `data-pie-label="${escapeHtml(item.label)}" data-pie-count="${item.count}" data-pie-percent="${item.percent}" ${midAttr}`;
+        const hitAttrs = `class="edu-pie-slice-hit" ${dataAttrs} tabindex="0" role="button" aria-pressed="false" aria-label="${tip}"`;
         if (item.count === total && gap === 0) {
-          return `<circle ${common} cx="${cx}" cy="${cy}" r="${outerR}" fill="${color}">
-              <title>${tip}</title>
-            </circle>`;
+          return `<g class="edu-pie-slice-group" ${dataAttrs}>
+              <circle ${hitAttrs} cx="${cx}" cy="${cy}" r="${outerR}"></circle>
+              <circle class="edu-pie-slice" cx="${cx}" cy="${cy}" r="${outerR}" fill="${color}" ${midAttr} pointer-events="none">
+                <title>${tip}</title>
+              </circle>
+            </g>`;
         }
-        return `<path ${common} d="${describeDonutSlice(cx, cy, outerR, innerR, item.start, item.end)}" fill="${color}">
-          <title>${tip}</title>
-        </path>`;
+        const d = describeDonutSlice(cx, cy, outerR, innerR, item.start, item.end);
+        return `<g class="edu-pie-slice-group" ${dataAttrs}>
+            <path ${hitAttrs} d="${d}"></path>
+            <path class="edu-pie-slice" d="${d}" fill="${color}" ${midAttr} pointer-events="none">
+              <title>${tip}</title>
+            </path>
+          </g>`;
       }).join("");
 
       const hole = `<circle class="edu-pie-hole" cx="${cx}" cy="${cy}" r="${innerR}"></circle>`;
@@ -6821,9 +6864,11 @@
         const zeroClass = item.count === 0 ? " is-zero" : "";
         return `
           <button type="button" class="edu-bar-item${zeroClass}" data-pie-label="${escapeHtml(item.label)}" data-pie-count="${item.count}" data-pie-percent="${item.percent}" aria-pressed="false" aria-label="${tip}">
-            <span class="edu-bar-name">${escapeHtml(pieLegendLabel(item.label))}</span>
-            <span class="edu-bar-track" aria-hidden="true"><span class="edu-bar-fill" style="width:${width}%;background:${color}"></span></span>
-            <span class="edu-bar-meta">${item.count} · ${item.percent}%</span>
+            <span class="edu-bar-visual">
+              <span class="edu-bar-name">${escapeHtml(pieLegendLabel(item.label))}</span>
+              <span class="edu-bar-track" aria-hidden="true"><span class="edu-bar-fill" style="width:${width}%;background:${color}"></span></span>
+              <span class="edu-bar-meta">${item.count} · ${item.percent}%</span>
+            </span>
           </button>
         `;
       }).join("");
