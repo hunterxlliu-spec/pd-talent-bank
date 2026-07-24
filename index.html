@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-dash-colors-vivid -->
+  <!-- deploy-bust: 20260724-pie-click-label -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -861,21 +861,57 @@
     .edu-pie-slice {
       transition: opacity .16s ease, filter .16s ease;
       transform-origin: center;
-      cursor: default;
+      cursor: pointer;
+      outline: none;
     }
 
-    .edu-pie-wrap:hover .edu-pie-slice {
+    .edu-pie-wrap:hover:not(.has-selection) .edu-pie-slice {
       opacity: .52;
     }
 
-    .edu-pie-wrap:hover .edu-pie-slice:hover {
+    .edu-pie-wrap:hover:not(.has-selection) .edu-pie-slice:hover,
+    .edu-pie-wrap:hover:not(.has-selection) .edu-pie-slice:focus-visible {
       opacity: 1;
       filter: brightness(1.06) saturate(1.05);
+    }
+
+    .edu-pie-wrap.has-selection .edu-pie-slice {
+      opacity: .38;
+    }
+
+    .edu-pie-wrap.has-selection .edu-pie-slice.is-selected {
+      opacity: 1;
+      filter: brightness(1.08) saturate(1.08);
+    }
+
+    .edu-pie-wrap.has-selection .edu-pie-callout {
+      opacity: .28;
+    }
+
+    .edu-pie-wrap.has-selection .edu-pie-callout.is-selected {
+      opacity: 1;
     }
 
     .edu-pie-hole {
       fill: #fff;
       pointer-events: none;
+    }
+
+    .edu-pie-center-name {
+      font-size: 11px;
+      font-weight: 700;
+      fill: var(--ink);
+      font-family: inherit;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .edu-pie-wrap.has-selection .edu-pie-center-name {
+      opacity: 1;
+    }
+
+    .edu-pie-wrap.has-selection .edu-pie-center-value {
+      font-size: 18px;
     }
 
     .edu-pie-center-value {
@@ -885,6 +921,7 @@
       font-family: inherit;
       letter-spacing: -0.03em;
       font-variant-numeric: tabular-nums;
+      pointer-events: none;
     }
 
     .edu-pie-center-unit {
@@ -892,6 +929,7 @@
       font-weight: 600;
       fill: var(--muted);
       font-family: inherit;
+      pointer-events: none;
     }
 
     .edu-pie-label {
@@ -994,6 +1032,22 @@
 
     .edu-legend-table tbody tr.is-top:hover td {
       background: rgba(61, 169, 160, .08);
+    }
+
+    .edu-legend-table tbody tr[data-pie-label] {
+      cursor: pointer;
+    }
+
+    .edu-legend-table tbody tr.is-selected td {
+      background: rgba(37, 99, 235, .08);
+    }
+
+    .edu-legend-table tbody tr.is-selected:hover td {
+      background: rgba(37, 99, 235, .11);
+    }
+
+    .edu-legend-table tbody tr.is-selected .col-label {
+      color: #1d4ed8;
     }
 
     .edu-legend-table .col-swatch {
@@ -5846,7 +5900,7 @@
               const isTop = !isZero && item.count === topCount && topCount > 0;
               const rowClass = [isZero ? "is-zero" : "", isTop ? "is-top" : ""].filter(Boolean).join(" ");
               return `
-              <tr${rowClass ? ` class="${rowClass}"` : ""}>
+              <tr${rowClass ? ` class="${rowClass}"` : ""} data-pie-label="${escapeHtml(item.label)}" data-pie-count="${item.count}" data-pie-percent="${item.percent}" tabindex="0" role="button" aria-label="${escapeHtml(pieLegendLabel(item.label))}：${item.count}人，${item.percent}%">
                 <td class="col-swatch"><span class="edu-legend-swatch" style="background:${color}"></span></td>
                 <td class="col-label">${escapeHtml(pieLegendLabel(item.label))}</td>
                 <td class="col-count"><strong>${item.count}</strong></td>
@@ -5861,6 +5915,109 @@
           </tbody>
         </table>
       `;
+    }
+
+    function fitPieCenterName(label) {
+      const short = pieLegendLabel(label);
+      if (short.length <= 6) return short;
+      return `${short.slice(0, 5)}…`;
+    }
+
+    function setPieSelection(chartEl, label) {
+      if (!chartEl) return;
+      const wrap = chartEl.querySelector(".edu-pie-wrap");
+      const table = chartEl.querySelector(".edu-legend-table");
+      if (!wrap) return;
+
+      const prev = wrap.dataset.selectedLabel || "";
+      const next = label && label === prev ? "" : (label || "");
+      wrap.dataset.selectedLabel = next;
+      wrap.classList.toggle("has-selection", Boolean(next));
+
+      let count = 0;
+      let percent = 0;
+      let found = false;
+
+      wrap.querySelectorAll(".edu-pie-slice").forEach(el => {
+        const isSel = Boolean(next) && el.dataset.pieLabel === next;
+        el.classList.toggle("is-selected", isSel);
+        el.setAttribute("aria-pressed", isSel ? "true" : "false");
+        if (isSel) {
+          count = Number(el.dataset.pieCount || 0);
+          percent = Number(el.dataset.piePercent || 0);
+          found = true;
+        }
+      });
+      wrap.querySelectorAll(".edu-pie-callout").forEach(el => {
+        el.classList.toggle("is-selected", Boolean(next) && el.dataset.pieLabel === next);
+      });
+      table?.querySelectorAll("tbody tr[data-pie-label]").forEach(tr => {
+        const isSel = Boolean(next) && tr.dataset.pieLabel === next;
+        tr.classList.toggle("is-selected", isSel);
+        if (isSel && !found) {
+          count = Number(tr.dataset.pieCount || 0);
+          percent = Number(tr.dataset.piePercent || 0);
+          found = true;
+        }
+      });
+
+      const centerName = wrap.querySelector(".edu-pie-center-name");
+      const centerValue = wrap.querySelector(".edu-pie-center-value");
+      const centerUnit = wrap.querySelector(".edu-pie-center-unit");
+      const total = Number(wrap.dataset.pieTotal || 0);
+      const cy = Number(wrap.dataset.pieCy || 125);
+      if (!centerValue || !centerUnit) return;
+
+      if (!next) {
+        if (centerName) centerName.textContent = "";
+        centerValue.textContent = String(total);
+        centerValue.setAttribute("y", String(cy - 2));
+        centerUnit.textContent = "人";
+        centerUnit.setAttribute("y", String(cy + 14));
+        return;
+      }
+
+      if (centerName) {
+        centerName.textContent = fitPieCenterName(next);
+        centerName.setAttribute("y", String(cy - 16));
+      }
+      centerValue.textContent = String(count);
+      centerValue.setAttribute("y", String(cy + 2));
+      centerUnit.textContent = `${percent}% · 人`;
+      centerUnit.setAttribute("y", String(cy + 16));
+    }
+
+    function bindPieChartInteractions(chartEl) {
+      if (!chartEl || chartEl.dataset.pieBound === "1") return;
+      chartEl.dataset.pieBound = "1";
+
+      const activate = (label) => setPieSelection(chartEl, label || "");
+
+      chartEl.addEventListener("click", event => {
+        const slice = event.target.closest(".edu-pie-slice");
+        if (slice?.dataset.pieLabel) {
+          activate(slice.dataset.pieLabel);
+          return;
+        }
+        const row = event.target.closest(".edu-legend-table tbody tr[data-pie-label]");
+        if (row?.dataset.pieLabel) {
+          activate(row.dataset.pieLabel);
+          return;
+        }
+        if (event.target.closest(".edu-pie-wrap")) {
+          activate("");
+        }
+      });
+
+      chartEl.addEventListener("keydown", event => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        const slice = event.target.closest(".edu-pie-slice");
+        const row = event.target.closest(".edu-legend-table tbody tr[data-pie-label]");
+        const label = slice?.dataset.pieLabel || row?.dataset.pieLabel;
+        if (!label) return;
+        event.preventDefault();
+        activate(label);
+      });
     }
 
     function buildPieChartHtml(distribution, chartTitle = "分布饼图") {
@@ -5902,13 +6059,15 @@
 
       const paths = sliceMeta.map(item => {
         const color = sliceColor(item.label, item.colorIndex);
+        const tip = `${escapeHtml(item.label)}：${item.count}人（${item.percent}%）`;
+        const common = `class="edu-pie-slice" data-pie-label="${escapeHtml(item.label)}" data-pie-count="${item.count}" data-pie-percent="${item.percent}" tabindex="0" role="button" aria-pressed="false" aria-label="${tip}"`;
         if (item.count === total && gap === 0) {
-          return `<circle class="edu-pie-slice" cx="${cx}" cy="${cy}" r="${outerR}" fill="${color}">
-              <title>${escapeHtml(item.label)}：${item.count}人（${item.percent}%）</title>
+          return `<circle ${common} cx="${cx}" cy="${cy}" r="${outerR}" fill="${color}">
+              <title>${tip}</title>
             </circle>`;
         }
-        return `<path class="edu-pie-slice" d="${describeDonutSlice(cx, cy, outerR, innerR, item.start, item.end)}" fill="${color}">
-          <title>${escapeHtml(item.label)}：${item.count}人（${item.percent}%）</title>
+        return `<path ${common} d="${describeDonutSlice(cx, cy, outerR, innerR, item.start, item.end)}" fill="${color}">
+          <title>${tip}</title>
         </path>`;
       }).join("");
 
@@ -5950,21 +6109,24 @@
         const color = sliceColor(item.label, item.colorIndex);
         const shortLabel = pieLegendLabel(item.label);
         return `
-          <path class="edu-pie-leader" d="M ${startPt.x.toFixed(1)} ${startPt.y.toFixed(1)} L ${elbowX.toFixed(1)} ${elbow.y.toFixed(1)} L ${lineEndX.toFixed(1)} ${labelY.toFixed(1)}" stroke="${color}"></path>
-          <circle class="edu-pie-leader-dot" cx="${startPt.x.toFixed(1)}" cy="${startPt.y.toFixed(1)}" r="2.4" fill="${color}"></circle>
-          <text class="edu-pie-label-strong" x="${labelX.toFixed(1)}" y="${(labelY - 1).toFixed(1)}" text-anchor="${anchor}">${escapeHtml(shortLabel)}</text>
-          <text class="edu-pie-label" x="${labelX.toFixed(1)}" y="${(labelY + 11).toFixed(1)}" text-anchor="${anchor}">${item.percent}% · ${item.count}人</text>
+          <g class="edu-pie-callout" data-pie-label="${escapeHtml(item.label)}" pointer-events="none">
+            <path class="edu-pie-leader" d="M ${startPt.x.toFixed(1)} ${startPt.y.toFixed(1)} L ${elbowX.toFixed(1)} ${elbow.y.toFixed(1)} L ${lineEndX.toFixed(1)} ${labelY.toFixed(1)}" stroke="${color}"></path>
+            <circle class="edu-pie-leader-dot" cx="${startPt.x.toFixed(1)}" cy="${startPt.y.toFixed(1)}" r="2.4" fill="${color}"></circle>
+            <text class="edu-pie-label-strong" x="${labelX.toFixed(1)}" y="${(labelY - 1).toFixed(1)}" text-anchor="${anchor}">${escapeHtml(shortLabel)}</text>
+            <text class="edu-pie-label" x="${labelX.toFixed(1)}" y="${(labelY + 11).toFixed(1)}" text-anchor="${anchor}">${item.percent}% · ${item.count}人</text>
+          </g>
         `;
       }).join("");
 
       const center = `
+        <text class="edu-pie-center-name" x="${cx}" y="${cy - 16}" text-anchor="middle"></text>
         <text class="edu-pie-center-value" x="${cx}" y="${cy - 2}" text-anchor="middle">${total}</text>
         <text class="edu-pie-center-unit" x="${cx}" y="${cy + 14}" text-anchor="middle">人</text>
       `;
 
       return `
-        <div class="edu-pie-wrap">
-          <svg viewBox="0 0 360 250" role="img" aria-label="${escapeHtml(chartTitle)}">
+        <div class="edu-pie-wrap" data-pie-total="${total}" data-pie-cy="${cy}" data-selected-label="">
+          <svg viewBox="0 0 360 250" role="img" aria-label="${escapeHtml(chartTitle)}。点击扇区可查看分类名称">
             ${paths}
             ${hole}
             ${leaders}
@@ -7201,6 +7363,9 @@
       renderDashPie("right");
       syncDashModeChrome();
     });
+
+    bindPieChartInteractions(els.dashPieLeft);
+    bindPieChartInteractions(els.dashPieRight);
 
     els.mobileCategoryBar?.addEventListener("click", event => {
       const chip = event.target.closest(".mobile-category-chip");
