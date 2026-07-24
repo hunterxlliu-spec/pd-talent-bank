@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-list-columns -->
+  <!-- deploy-bust: 20260724-smart-import -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -8316,7 +8316,7 @@
         });
     }
 
-    function rowToTalentDraft(row, mapping) {
+    function rowToTalentDraft(row, mapping, options = {}) {
       const draft = {};
       Object.entries(mapping).forEach(([header, field]) => {
         if (!field) return;
@@ -8328,7 +8328,8 @@
       if (!name) return null;
       let employeeNo = String(draft.employeeNo || "").trim();
       if (!employeeNo) {
-        employeeNo = `IMP-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+        const seq = Number(options.seq) || 0;
+        employeeNo = `IMP-${Date.now().toString(36).toUpperCase()}-${String(seq).padStart(3, "0")}`;
       }
       const birthDate = coerceImportDate(draft.birthDate);
       const products = draft.products ? normalizeImportProducts(draft.products) : [];
@@ -8366,7 +8367,9 @@
     }
 
     function buildImportPreviewRows(limit = 5) {
-      return importState.rows.slice(0, limit).map(row => rowToTalentDraft(row, importState.mapping)).filter(Boolean);
+      return importState.rows.slice(0, limit)
+        .map((row, index) => rowToTalentDraft(row, importState.mapping, { seq: index + 1 }))
+        .filter(Boolean);
     }
 
     function summarizeImportPlan() {
@@ -8376,8 +8379,8 @@
       let skip = 0;
       let denied = 0;
       const seenNos = new Set();
-      importState.rows.forEach(row => {
-        const draft = rowToTalentDraft(row, importState.mapping);
+      importState.rows.forEach((row, index) => {
+        const draft = rowToTalentDraft(row, importState.mapping, { seq: index + 1 });
         if (!draft) {
           skip += 1;
           return;
@@ -8385,9 +8388,6 @@
         if (!isSuperAdmin() && draft.category && !canAccessCategory(draft.category)) {
           denied += 1;
           return;
-        }
-        if (!isSuperAdmin() && !draft.category) {
-          // allow; will keep existing category on update or leave empty for admin later
         }
         const key = draft.employeeNo;
         if (seenNos.has(key)) {
@@ -8610,7 +8610,7 @@
         return;
       }
       const drafts = importState.rows
-        .map(row => rowToTalentDraft(row, importState.mapping))
+        .map((row, index) => rowToTalentDraft(row, importState.mapping, { seq: index + 1 }))
         .filter(Boolean);
       if (!drafts.length) {
         setImportError("没有可生成的有效行（姓名必填）。");
