@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-pie-hit-layer -->
+  <!-- deploy-bust: 20260724-list-columns -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -1561,20 +1561,15 @@
       font-weight: 700;
     }
 
-    .person-cell-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 5px;
-      max-width: 280px;
-    }
-
     .person-pill {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       max-width: 100%;
-      padding: 3px 9px;
-      border-radius: 999px;
+      min-width: 28px;
+      min-height: 22px;
+      padding: 2px 8px;
+      border-radius: 6px;
       font-size: 11px;
       font-weight: 650;
       line-height: 1.35;
@@ -1583,24 +1578,10 @@
       text-overflow: ellipsis;
     }
 
-    .person-pill--role {
-      background: var(--pill-role-bg);
-      color: var(--pill-role);
-    }
-
     .person-pill--grade {
       background: var(--pill-grade-bg);
       color: var(--pill-grade);
-    }
-
-    .person-pill--dept {
-      background: var(--pill-dept-bg);
-      color: var(--pill-dept);
-    }
-
-    .person-pill--edu {
-      background: var(--pill-edu-bg);
-      color: var(--pill-edu);
+      font-variant-numeric: tabular-nums;
     }
 
     .person-pill--soft {
@@ -1629,9 +1610,30 @@
       color: var(--pill-status-left);
     }
 
-    .person-pill--muted {
-      background: #f1f5f9;
-      color: #64748b;
+    .cell-stack {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .cell-primary {
+      color: var(--ink);
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cell-meta {
+      color: var(--muted);
+      font-size: var(--fs-xs);
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cell-empty {
+      color: #94a3b8;
+      font-weight: 500;
     }
 
     .filters {
@@ -1685,8 +1687,7 @@
     }
 
     .table-wrap {
-      overflow-x: auto;
-      overflow-y: visible;
+      overflow: auto;
       background: #fff;
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -1694,6 +1695,7 @@
       position: relative;
       max-width: 100%;
       min-width: 0;
+      max-height: min(68vh, calc(100dvh - 260px));
       -webkit-overflow-scrolling: touch;
       scrollbar-gutter: stable;
     }
@@ -1718,31 +1720,89 @@
       font-size: var(--fs-xs);
     }
 
-    table {
-      width: max-content;
-      min-width: 100%;
-      table-layout: auto;
-      border-collapse: collapse;
+    .talent-table {
+      width: 100%;
+      min-width: 1080px;
+      table-layout: fixed;
+      border-collapse: separate;
+      border-spacing: 0;
     }
 
-    th, td {
-      padding: 12px 12px;
+    .talent-table th,
+    .talent-table td {
+      padding: 11px 12px;
       border-bottom: 1px solid #eef1f5;
       text-align: left;
       vertical-align: middle;
       font-size: var(--fs-sm);
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-sizing: border-box;
     }
 
-    th {
+    .talent-table th {
       position: sticky;
       top: 0;
-      background: #fbfbfd;
-      color: var(--muted);
-      font-size: var(--fs-xs);
-      font-weight: 600;
-      letter-spacing: 0;
-      z-index: 1;
+      background: #f4f7fa;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      z-index: 3;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 1px 0 #e2e8f0;
+    }
+
+    .talent-table .col-person {
+      width: 200px;
+      min-width: 180px;
+    }
+
+    .talent-table .col-role {
+      width: 168px;
+      min-width: 140px;
+    }
+
+    .talent-table .col-grade {
+      width: 72px;
+      min-width: 64px;
+      text-align: center;
+    }
+
+    .talent-table .col-education {
+      width: 72px;
+      min-width: 64px;
+      text-align: center;
+    }
+
+    .talent-table .col-tenure {
+      width: 120px;
+      min-width: 104px;
+    }
+
+    .talent-table .col-status {
+      width: 84px;
+      min-width: 72px;
+      text-align: center;
+    }
+
+    .talent-table .col-project {
+      width: auto;
+      min-width: 220px;
+      white-space: normal;
+    }
+
+    .talent-table .col-project .cell-stack {
+      white-space: normal;
+    }
+
+    .talent-table .col-project .cell-primary,
+    .talent-table .col-project .cell-meta {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     th.col-person,
@@ -1751,14 +1811,14 @@
       left: 0;
       z-index: 2;
       background: #fff;
-      min-width: 220px;
       white-space: normal;
-      box-shadow: 8px 0 12px rgba(15, 23, 42, .04);
+      overflow: visible;
+      box-shadow: 6px 0 10px rgba(15, 23, 42, .03);
     }
 
     th.col-person {
-      background: #f9fafc;
-      z-index: 4;
+      background: #f4f7fa;
+      z-index: 5;
     }
 
     th.col-actions,
@@ -1767,20 +1827,20 @@
       right: 0;
       z-index: 2;
       background: #fff;
-      box-shadow: -8px 0 12px rgba(15, 23, 42, .04);
+      box-shadow: -6px 0 10px rgba(15, 23, 42, .03);
       white-space: nowrap;
-      width: 88px;
-      min-width: 76px;
-      max-width: 96px;
-      padding-left: 8px;
+      width: 64px;
+      min-width: 56px;
+      max-width: 72px;
+      padding-left: 6px;
       padding-right: 8px;
       text-align: center;
       overflow: visible;
     }
 
     th.col-actions {
-      background: #f9fafc;
-      z-index: 3;
+      background: #f4f7fa;
+      z-index: 4;
     }
 
     td.col-actions .row-ops {
@@ -1788,7 +1848,7 @@
       flex-wrap: nowrap;
       gap: 6px;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: center;
     }
 
     td.col-actions .action-more {
@@ -1799,6 +1859,15 @@
       font-weight: 700;
       line-height: 1;
       color: var(--muted);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 8px;
+    }
+
+    td.col-actions .action-more:hover {
+      background: #f1f5f9;
+      border-color: #e2e8f0;
+      color: var(--ink);
     }
 
     td.col-actions .action-hint {
@@ -1825,20 +1894,36 @@
       white-space: nowrap;
     }
 
-    tbody tr {
+    .talent-table tbody tr.talent-row {
       transition: background .15s ease;
       cursor: pointer;
     }
 
-    tbody tr:hover, tbody tr.active {
-      background: #f1fdfa;
+    .talent-table tbody tr.talent-row:hover td,
+    .talent-table tbody tr.talent-row.active td {
+      background: #f3fbf9;
+    }
+
+    .talent-table tbody tr.talent-row:hover td.col-person,
+    .talent-table tbody tr.talent-row:hover td.col-actions,
+    .talent-table tbody tr.talent-row.active td.col-person,
+    .talent-table tbody tr.talent-row.active td.col-actions {
+      background: #f3fbf9;
+    }
+
+    .talent-table tbody tr.talent-row:last-child td {
+      border-bottom: 0;
     }
 
     .person-cell {
       display: flex;
       align-items: center;
       gap: 10px;
-      min-width: 190px;
+      min-width: 0;
+    }
+
+    .person-cell > div {
+      min-width: 0;
     }
 
     .avatar {
@@ -3220,6 +3305,120 @@
       color: var(--ink);
     }
 
+    .import-dialog {
+      width: min(920px, calc(100vw - 28px));
+      max-height: min(88vh, 900px);
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .import-dialog .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-height: min(72vh, 760px);
+      overflow: auto;
+    }
+
+    .import-hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: var(--fs-sm);
+      line-height: 1.5;
+    }
+
+    .import-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      font-size: var(--fs-sm);
+      color: #344054;
+    }
+
+    .import-meta strong {
+      color: var(--ink);
+    }
+
+    .import-map-table,
+    .import-preview-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--fs-sm);
+    }
+
+    .import-map-table th,
+    .import-map-table td,
+    .import-preview-table th,
+    .import-preview-table td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    .import-map-table th,
+    .import-preview-table th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .import-map-table select {
+      width: 100%;
+      min-width: 140px;
+    }
+
+    .import-preview-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      max-height: 220px;
+    }
+
+    .import-preview-table td {
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .import-stats {
+      margin: 0;
+      font-size: var(--fs-sm);
+      color: #344054;
+    }
+
+    .import-stats .warn {
+      color: var(--accent);
+    }
+
+    .import-dropzone {
+      border: 1.5px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 18px 16px;
+      text-align: center;
+      background: linear-gradient(180deg, #fbfdff, #f8fafc);
+      color: var(--muted);
+      font-size: var(--fs-sm);
+      cursor: pointer;
+      transition: border-color .15s ease, background .15s ease;
+    }
+
+    .import-dropzone:hover,
+    .import-dropzone.is-dragover {
+      border-color: var(--brand);
+      background: #f0fdfa;
+      color: var(--ink);
+    }
+
     .admin-dialog .modal-body,
     .password-dialog .modal-body {
       display: flex;
@@ -3483,11 +3682,11 @@
         <div class="actions">
           <span class="current-user-chip" id="currentUserChip" hidden>未登录</span>
           <button class="btn" id="usersAdminBtn" title="用户管理" hidden>用户管理</button>
-          <button class="btn" id="importBtn" title="导入 JSON">导入</button>
+          <button class="btn" id="importBtn" title="导入 Excel / CSV / JSON">导入</button>
           <button class="btn" id="exportExcelBtn" title="导出当前筛选结果为 Excel">导出Excel</button>
           <button class="btn primary" id="addBtn">新增人才</button>
           <button class="btn" id="logoutBtn" title="退出登录">退出</button>
-          <input class="hidden-file" id="importFile" type="file" accept="application/json">
+          <input class="hidden-file" id="importFile" type="file" accept=".xlsx,.xls,.csv,.tsv,.json,.numbers,application/json,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
         </div>
       </header>
 
@@ -3666,28 +3865,19 @@
               </div>
             </section>
 
-            <p class="table-scroll-hint">表格较宽时可左右滑动查看更多字段；人才列与操作列会固定在两侧</p>
+            <p class="table-scroll-hint">窄屏时可左右滑动；人员与操作列固定在两侧</p>
             <section class="table-wrap" aria-label="人才列表">
-              <table>
+              <table class="talent-table">
                 <thead>
                   <tr>
-                    <th class="col-person">人才</th>
-                    <th class="col-gender">性别</th>
-                    <th class="col-age">年龄</th>
-                    <th class="col-grade">职级</th>
-                    <th class="col-secondary">籍贯</th>
-                    <th class="col-education">学历</th>
-                    <th class="col-secondary">英语水平</th>
-                    <th class="col-project">当前项目</th>
-                    <th class="col-secondary">毕业学校 / 专业</th>
-                    <th class="col-secondary">入职时间</th>
-                    <th class="col-secondary">司龄</th>
-                    <th class="col-secondary">常驻基地</th>
-                    <th class="col-secondary">工作年限</th>
-                    <th class="col-secondary">产品经验年限</th>
-                    <th class="col-secondary">产品经验</th>
-                    <th class="col-status">状态</th>
-                    <th class="col-actions">操作</th>
+                    <th class="col-person" scope="col">人员</th>
+                    <th class="col-role" scope="col">部门 / 岗位</th>
+                    <th class="col-grade" scope="col">职级</th>
+                    <th class="col-education" scope="col">学历</th>
+                    <th class="col-tenure" scope="col">司龄 / 年龄</th>
+                    <th class="col-status" scope="col">状态</th>
+                    <th class="col-project" scope="col">项目 / 学校</th>
+                    <th class="col-actions" scope="col">操作</th>
                   </tr>
                 </thead>
                 <tbody id="talentRows"></tbody>
@@ -3957,6 +4147,53 @@
         <button class="btn primary" type="submit" id="confirmMoveBtn">确认移动</button>
       </div>
     </form>
+  </dialog>
+
+  <dialog id="importDialog" class="import-dialog">
+    <div class="modal-head">
+      <h3>智能导入 · 生成档案</h3>
+      <button class="btn icon" type="button" id="closeImportDialog" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="import-hint">
+        支持 <strong>Excel（.xlsx / .xls）</strong>、<strong>CSV / TSV</strong>、<strong>JSON</strong>。
+        系统会自动识别表头并映射到人才字段；确认后按工号合并生成个人档案。
+        Apple Numbers（.numbers）请先导出为 Excel 或 CSV 再导入。
+      </p>
+      <div class="import-dropzone" id="importDropzone" tabindex="0" role="button" aria-label="选择或拖入导入文件">
+        点击选择文件，或拖入 Excel / CSV / JSON
+      </div>
+      <div class="import-meta" id="importMeta" hidden></div>
+      <div id="importMappingSection" hidden>
+        <div class="section-title"><h4>列映射（可改）</h4></div>
+        <div class="import-preview-wrap">
+          <table class="import-map-table">
+            <thead>
+              <tr>
+                <th>文件列</th>
+                <th>样本</th>
+                <th>映射到字段</th>
+              </tr>
+            </thead>
+            <tbody id="importMappingRows"></tbody>
+          </table>
+        </div>
+        <div class="section-title"><h4>预览（前 5 行）</h4></div>
+        <div class="import-preview-wrap">
+          <table class="import-preview-table">
+            <thead id="importPreviewHead"></thead>
+            <tbody id="importPreviewBody"></tbody>
+          </table>
+        </div>
+        <p class="import-stats" id="importStats"></p>
+      </div>
+      <p class="login-error" id="importError" role="alert" hidden></p>
+      <div class="row-actions">
+        <button class="btn" type="button" id="cancelImportBtn">取消</button>
+        <button class="btn" type="button" id="repickImportBtn">重选文件</button>
+        <button class="btn primary" type="button" id="confirmImportBtn" disabled>生成档案</button>
+      </div>
+    </div>
   </dialog>
 
   <script>
@@ -4643,6 +4880,16 @@
       photoPreview: document.querySelector("#photoPreview"),
       categoryNav: document.querySelector("#categoryNav"),
       importFile: document.querySelector("#importFile"),
+      importDialog: document.querySelector("#importDialog"),
+      importDropzone: document.querySelector("#importDropzone"),
+      importMeta: document.querySelector("#importMeta"),
+      importMappingSection: document.querySelector("#importMappingSection"),
+      importMappingRows: document.querySelector("#importMappingRows"),
+      importPreviewHead: document.querySelector("#importPreviewHead"),
+      importPreviewBody: document.querySelector("#importPreviewBody"),
+      importStats: document.querySelector("#importStats"),
+      importError: document.querySelector("#importError"),
+      confirmImportBtn: document.querySelector("#confirmImportBtn"),
       dashboardNavBtn: document.querySelector("#dashboardNavBtn"),
       dashboardPanel: document.querySelector("#dashboardPanel"),
       listPanel: document.querySelector("#listPanel"),
@@ -7035,9 +7282,10 @@
       return `<span class="${classes}">${strongPrefix}</span>`;
     }
 
-    function softPill(text) {
-      if (!text || text === "-") return "-";
-      return `<span class="person-pill person-pill--soft">${escapeHtml(text)}</span>`;
+    function cellText(text, empty = "-") {
+      const raw = String(text == null ? "" : text).trim();
+      if (!raw || raw === "-") return `<span class="cell-empty">${escapeHtml(empty)}</span>`;
+      return escapeHtml(raw);
     }
 
     function renderTable() {
@@ -7047,73 +7295,58 @@
       if (els.peopleCount) els.peopleCount.textContent = `${list.length}人`;
 
       els.rows.innerHTML = list.map(person => {
-        const productTags = (person.products || []).map(item => {
-          const label = productDisplayName(item);
-          if (!label) return null;
-          return `<span class="tag ${isPresetAppleProduct(item) ? "apple" : ""}">${escapeHtml(label)}</span>`;
-        }).filter(Boolean);
-        const visibleProductTags = productTags.slice(0, 3);
-        const extraProductCount = productTags.length - visibleProductTags.length;
-        const products = [
-          ...visibleProductTags,
-          extraProductCount > 0 ? `<span class="tag more-tag" title="共 ${productTags.length} 项，详见档案">+${extraProductCount}</span>` : ""
-        ].filter(Boolean).join("");
-
         const age = person.age || calcAgeFromBirth(person.birthDate) || "";
         const deptLabel = person.department || person.category || "";
-        const namePills = [];
-        if (person.position) {
-          namePills.push(`<span class="person-pill person-pill--role">${escapeHtml(person.position)}</span>`);
-        }
-        if (deptLabel) {
-          namePills.push(`<span class="person-pill person-pill--dept">${escapeHtml(deptLabel)}</span>`);
-        }
+        const position = String(person.position || "").trim();
+        const tenureText = formatTenureYears(person.joinDate);
+        const tenureParts = [];
+        if (tenureText && tenureText !== "-") tenureParts.push(tenureText);
+        if (age) tenureParts.push(`${age}岁`);
+        const genderBit = String(person.gender || "").trim();
 
         const gradeHtml = person.jobGrade
           ? `<span class="person-pill person-pill--grade">${escapeHtml(person.jobGrade)}</span>`
-          : "-";
-        const eduHtml = person.education
-          ? `<span class="person-pill person-pill--edu">${escapeHtml(person.education)}</span>`
-          : "-";
+          : `<span class="cell-empty">-</span>`;
         const statusHtml = person.status
           ? `<span class="person-pill ${statusPillClass(person.status)}">${escapeHtml(person.status)}</span>`
-          : "-";
-        const tenureText = formatTenureYears(person.joinDate);
-        const tenureHtml = tenureText && tenureText !== "-"
-          ? softPill(tenureText)
-          : "-";
+          : `<span class="cell-empty">-</span>`;
+
+        const project = String(person.currentProject || "").trim();
+        const school = String(person.school || "").trim();
+        const major = String(person.major || "").trim();
+        const schoolLine = [school || "-", major].filter(Boolean).join(" · ");
 
         return `
           <tr class="talent-row ${person.id === selectedId ? "active" : ""}" data-id="${person.id}">
             <td class="col-person">
               <div class="person-cell">
                 ${avatarHtml(person)}
-                <div>
+                <div class="cell-stack">
                   <div class="person-name">${escapeHtml(person.name || "-")}${person.englishName ? `<span class="person-name-en">${escapeHtml(person.englishName)}</span>` : ""}</div>
-                  <div class="person-cell-pills">${namePills.join("") || `<span class="person-pill person-pill--muted">未填岗位</span>`}</div>
                 </div>
               </div>
             </td>
-            <td class="col-gender">${softPill(person.gender)}</td>
-            <td class="col-age">${age ? softPill(`${age}岁`) : "-"}</td>
+            <td class="col-role">
+              <div class="cell-stack">
+                <div class="cell-primary">${position ? escapeHtml(position) : `<span class="cell-empty">未填岗位</span>`}</div>
+                <div class="cell-meta">${deptLabel ? escapeHtml(deptLabel) : `<span class="cell-empty">-</span>`}</div>
+              </div>
+            </td>
             <td class="col-grade">${gradeHtml}</td>
-            <td class="col-secondary">${escapeHtml(person.hometown || "-")}</td>
-            <td class="col-education">${eduHtml}</td>
-            <td class="col-secondary">
-              <div>${softPill(englishLevelNumber(person.englishLevel) || "")}</div>
+            <td class="col-education">${cellText(person.education)}</td>
+            <td class="col-tenure">
+              <div class="cell-stack">
+                <div class="cell-primary">${tenureParts.length ? escapeHtml(tenureParts.join(" · ")) : `<span class="cell-empty">-</span>`}</div>
+                ${genderBit ? `<div class="cell-meta">${escapeHtml(genderBit)}</div>` : ""}
+              </div>
             </td>
-            <td class="col-project">${escapeHtml(person.currentProject || "-")}</td>
-            <td class="col-secondary">
-              <strong>${escapeHtml(person.school || "-")}</strong>
-              <div class="cell-sub">${escapeHtml(person.major || "-")} · ${formatDate(person.graduationDate)}</div>
-            </td>
-            <td class="col-secondary">${formatDate(person.joinDate)}</td>
-            <td class="col-secondary">${tenureHtml}</td>
-            <td class="col-secondary">${escapeHtml(person.baseLocation || "-")}</td>
-            <td class="col-secondary">${softPill(formatYears(person.firstWorkDate))}</td>
-            <td class="col-secondary"><span class="tag apple">${formatYears(person.appleStartDate)}</span></td>
-            <td class="col-secondary"><div class="tag-list">${products || "<span class='subtext'>-</span>"}</div></td>
             <td class="col-status">${statusHtml}</td>
+            <td class="col-project">
+              <div class="cell-stack">
+                <div class="cell-primary" title="${escapeHtml(project || "-")}">${project ? escapeHtml(project) : `<span class="cell-empty">-</span>`}</div>
+                <div class="cell-meta" title="${escapeHtml(schoolLine)}">${escapeHtml(schoolLine)}</div>
+              </div>
+            </td>
             <td class="col-actions">
               <div class="row-ops">
                 <button class="btn action-more" type="button" data-action="talent-more" data-id="${person.id}" title="更多操作（也可右键）" aria-haspopup="menu">⋯</button>
@@ -7640,6 +7873,775 @@
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
+    }
+
+    const IMPORT_FIELD_DEFS = [
+      { key: "name", label: "姓名 *" },
+      { key: "employeeNo", label: "工号" },
+      { key: "englishName", label: "英文名" },
+      { key: "gender", label: "性别" },
+      { key: "status", label: "状态" },
+      { key: "birthDate", label: "出生日期" },
+      { key: "age", label: "年龄" },
+      { key: "hometown", label: "籍贯" },
+      { key: "education", label: "学历" },
+      { key: "englishLevel", label: "英语水平" },
+      { key: "jobGrade", label: "职级" },
+      { key: "joinDate", label: "入职时间" },
+      { key: "baseLocation", label: "常驻基地" },
+      { key: "school", label: "毕业学校" },
+      { key: "graduationDate", label: "毕业时间" },
+      { key: "major", label: "专业" },
+      { key: "firstWorkDate", label: "工作时间" },
+      { key: "appleStartDate", label: "产品经验开始" },
+      { key: "category", label: "所属分类" },
+      { key: "department", label: "子部门" },
+      { key: "position", label: "岗位" },
+      { key: "currentProject", label: "当前项目" },
+      { key: "skills", label: "技能标签" },
+      { key: "certificates", label: "证书/资质" },
+      { key: "phone", label: "电话" },
+      { key: "email", label: "邮箱" },
+      { key: "products", label: "产品经验" },
+      { key: "remark", label: "备注" }
+    ];
+
+    const IMPORT_HEADER_ALIASES = {
+      name: ["姓名", "名字", "员工姓名", "人员姓名", "name", "fullname", "员工", "人员"],
+      employeeNo: ["工号", "员工编号", "员工号", "编号", "employeeno", "employee_no", "empno", "emp_no", "staffid", "staff_id", "工号id"],
+      englishName: ["英文名", "英语名", "englishname", "english name", "english", "enname"],
+      gender: ["性别", "gender", "sex"],
+      status: ["状态", "在职状态", "人员状态", "status", "employment status"],
+      birthDate: ["出生日期", "生日", "出生年月", "出生", "birthdate", "birthday", "dob", "date of birth"],
+      age: ["年龄", "age"],
+      hometown: ["籍贯", "籍貫", "hometown", "native place", "户口"],
+      education: ["学历", "學位", "学位", "education", "degree", "学历层次"],
+      englishLevel: ["英语水平", "英语", "englishlevel", "english level", "english"],
+      jobGrade: ["职级", "级别", "等级", "jobgrade", "job grade", "grade", "level", "职等"],
+      joinDate: ["入职时间", "入职日期", "入职", "到岗日期", "joindate", "join date", "hiredate", "hire date", "入司时间", "入司日期"],
+      baseLocation: ["常驻基地", "基地", "工作地点", "驻地", "baselocation", "base location", "location", "办公地点"],
+      school: ["毕业学校", "毕业院校", "学校", "院校", "school", "university", "college"],
+      graduationDate: ["毕业时间", "毕业日期", "graduationdate", "graduation date", "毕业"],
+      major: ["专业", "major", "所学专业"],
+      firstWorkDate: ["工作时间", "首次工作", "参加工作时间", "参加工作日期", "firstworkdate", "first work date", "工作开始"],
+      appleStartDate: ["产品经验开始", "产品经验开始时间", "产品经验开始日期", "applestartdate", "apple start date", "产品经验"],
+      category: ["所属分类", "分类", "研发分类", "部门分类", "category", "大类", "一级部门"],
+      department: ["子部门", "部门", "科室", "department", "dept", "二级部门"],
+      position: ["岗位", "职位", "职务", "position", "title", "job title", "角色"],
+      currentProject: ["当前项目", "项目", "currentproject", "current project", "project"],
+      skills: ["技能标签", "技能", "skills", "skill", "能力标签"],
+      certificates: ["证书/资质", "证书", "资质", "certificates", "certificate", "资格证书"],
+      phone: ["电话", "手机", "手机号", "联系电话", "phone", "mobile", "tel", "cellphone"],
+      email: ["邮箱", "电子邮箱", "邮件", "email", "mail", "e-mail"],
+      products: ["产品经验", "产品", "products", "product", "产品线"],
+      remark: ["备注", "说明", "备注信息", "remark", "note", "notes", "comment", "comments"]
+    };
+
+    let importState = {
+      fileName: "",
+      headers: [],
+      rows: [],
+      mapping: {}
+    };
+
+    function normalizeImportHeader(value) {
+      return String(value ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s_\-:/\\|()（）【】\[\]]+/g, "")
+        .replace(/的/g, "");
+    }
+
+    function guessImportField(header) {
+      const raw = String(header ?? "").trim();
+      if (!raw) return "";
+      const norm = normalizeImportHeader(raw);
+      if (!norm) return "";
+      for (const def of IMPORT_FIELD_DEFS) {
+        if (normalizeImportHeader(def.key) === norm || normalizeImportHeader(def.label) === norm) {
+          return def.key;
+        }
+      }
+      let best = { key: "", score: 0 };
+      for (const [key, aliases] of Object.entries(IMPORT_HEADER_ALIASES)) {
+        for (const alias of aliases) {
+          const a = normalizeImportHeader(alias);
+          if (!a) continue;
+          if (norm === a) return key;
+          if (norm.includes(a) || a.includes(norm)) {
+            const score = Math.min(norm.length, a.length) / Math.max(norm.length, a.length);
+            if (score > best.score) best = { key, score };
+          }
+        }
+      }
+      return best.score >= 0.55 ? best.key : "";
+    }
+
+    function autoMapImportHeaders(headers) {
+      const mapping = {};
+      const used = new Set();
+      headers.forEach(header => {
+        const guessed = guessImportField(header);
+        if (guessed && !used.has(guessed)) {
+          mapping[header] = guessed;
+          used.add(guessed);
+        } else {
+          mapping[header] = "";
+        }
+      });
+      return mapping;
+    }
+
+    async function ensureXlsxLib() {
+      if (window.XLSX?.read) return window.XLSX;
+      const candidates = IS_OFFLINE_APP
+        ? ["vendor/xlsx.full.min.js", "assets/vendor/xlsx.full.min.js"]
+        : [
+          "assets/vendor/xlsx.full.min.js",
+          "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js",
+          "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
+        ];
+      let lastError = null;
+      for (const src of candidates) {
+        try {
+          await loadScriptOnce(src);
+          if (window.XLSX?.read) return window.XLSX;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError || new Error("无法加载 Excel 解析库");
+    }
+
+    function detectDelimiter(text) {
+      const sample = String(text || "").split(/\r?\n/).slice(0, 8).join("\n");
+      const counts = {
+        "\t": (sample.match(/\t/g) || []).length,
+        ",": (sample.match(/,/g) || []).length,
+        ";": (sample.match(/;/g) || []).length
+      };
+      return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0] || ",";
+    }
+
+    function parseDelimitedText(text, delimiter) {
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let inQuotes = false;
+      const input = String(text || "").replace(/^\uFEFF/, "");
+      for (let i = 0; i < input.length; i += 1) {
+        const ch = input[i];
+        const next = input[i + 1];
+        if (inQuotes) {
+          if (ch === '"' && next === '"') {
+            cell += '"';
+            i += 1;
+          } else if (ch === '"') {
+            inQuotes = false;
+          } else {
+            cell += ch;
+          }
+          continue;
+        }
+        if (ch === '"') {
+          inQuotes = true;
+          continue;
+        }
+        if (ch === delimiter) {
+          row.push(cell);
+          cell = "";
+          continue;
+        }
+        if (ch === "\n") {
+          row.push(cell);
+          rows.push(row);
+          row = [];
+          cell = "";
+          continue;
+        }
+        if (ch === "\r") continue;
+        cell += ch;
+      }
+      if (cell.length || row.length) {
+        row.push(cell);
+        rows.push(row);
+      }
+      return rows.filter(item => item.some(value => String(value ?? "").trim() !== ""));
+    }
+
+    function sheetMatrixToTable(matrix) {
+      if (!Array.isArray(matrix) || !matrix.length) {
+        throw new Error("文件没有可用数据行");
+      }
+      const width = matrix.reduce((max, row) => Math.max(max, Array.isArray(row) ? row.length : 0), 0);
+      if (!width) throw new Error("文件没有可用列");
+      const normalized = matrix.map(row => {
+        const cells = Array.isArray(row) ? row.slice(0, width) : [];
+        while (cells.length < width) cells.push("");
+        return cells.map(cell => {
+          if (cell == null) return "";
+          if (cell instanceof Date) return cell.toISOString().slice(0, 10);
+          return String(cell).trim();
+        });
+      });
+      let headerRowIndex = normalized.findIndex(row => row.some(cell => String(cell).trim()));
+      if (headerRowIndex < 0) throw new Error("未找到表头");
+      const headers = normalized[headerRowIndex].map((cell, index) => {
+        const text = String(cell || "").trim();
+        return text || `列${index + 1}`;
+      });
+      const uniqueHeaders = [];
+      const seen = {};
+      headers.forEach(header => {
+        const base = header;
+        if (!seen[base]) {
+          seen[base] = 1;
+          uniqueHeaders.push(base);
+          return;
+        }
+        seen[base] += 1;
+        uniqueHeaders.push(`${base}_${seen[base]}`);
+      });
+      const rows = normalized.slice(headerRowIndex + 1)
+        .filter(row => row.some(cell => String(cell || "").trim()))
+        .map(row => {
+          const obj = {};
+          uniqueHeaders.forEach((header, index) => {
+            obj[header] = row[index] ?? "";
+          });
+          return obj;
+        });
+      return { headers: uniqueHeaders, rows };
+    }
+
+    function parseJsonImport(text) {
+      const data = JSON.parse(text);
+      if (Array.isArray(data)) {
+        if (!data.length) throw new Error("JSON 数组为空");
+        if (data.every(item => item && typeof item === "object" && !Array.isArray(item))) {
+          const keySet = new Set();
+          data.forEach(item => Object.keys(item).forEach(key => keySet.add(key)));
+          const preferred = IMPORT_FIELD_DEFS.map(item => item.key).filter(key => keySet.has(key));
+          const headers = [
+            ...preferred,
+            ...[...keySet].filter(key => !preferred.includes(key) && key !== "id" && key !== "photoUrl")
+          ];
+          ["skills", "products", "customFields"].forEach(key => {
+            if (keySet.has(key) && !headers.includes(key)) headers.push(key);
+          });
+          const rows = data.map(item => {
+            const row = {};
+            headers.forEach(header => {
+              const value = item[header];
+              if (Array.isArray(value)) {
+                if (header === "skills") row[header] = value.join(", ");
+                else if (header === "products") {
+                  row[header] = value.map(entry => {
+                    if (!entry) return "";
+                    if (typeof entry === "string") return entry;
+                    return entry.customName || entry.value || "";
+                  }).filter(Boolean).join("、");
+                } else if (header === "customFields") {
+                  row[header] = value.map(entry => `${entry?.name || ""}:${entry?.value || ""}`).join("; ");
+                } else {
+                  row[header] = value.join(", ");
+                }
+              } else if (value == null) {
+                row[header] = "";
+              } else {
+                row[header] = String(value);
+              }
+            });
+            return row;
+          });
+          return { headers, rows };
+        }
+        if (data.every(item => Array.isArray(item))) {
+          return sheetMatrixToTable(data);
+        }
+      }
+      if (data && typeof data === "object") {
+        if (Array.isArray(data.talents)) return parseJsonImport(JSON.stringify(data.talents));
+        if (Array.isArray(data.rows) && Array.isArray(data.headers)) {
+          const headers = data.headers.map((h, i) => String(h || `列${i + 1}`));
+          const rows = data.rows.map(row => {
+            if (Array.isArray(row)) {
+              const obj = {};
+              headers.forEach((header, index) => { obj[header] = row[index] ?? ""; });
+              return obj;
+            }
+            return row;
+          });
+          return { headers, rows };
+        }
+      }
+      throw new Error("不支持的 JSON 结构，请使用人才对象数组");
+    }
+
+    async function parseImportFile(file) {
+      const name = String(file?.name || "未命名");
+      const lower = name.toLowerCase();
+      if (lower.endsWith(".numbers")) {
+        throw new Error("暂不支持直接解析 Apple Numbers（.numbers）。请在 Numbers 中导出为 Excel（.xlsx）或 CSV 后再导入。");
+      }
+      if (lower.endsWith(".json") || (file.type || "").includes("json")) {
+        const text = await file.text();
+        return { fileName: name, ...parseJsonImport(text) };
+      }
+      if (lower.endsWith(".csv") || lower.endsWith(".tsv") || (file.type || "").includes("csv") || (file.type || "").includes("tab-separated")) {
+        const text = await file.text();
+        const delimiter = lower.endsWith(".tsv") ? "\t" : detectDelimiter(text);
+        return { fileName: name, ...sheetMatrixToTable(parseDelimitedText(text, delimiter)) };
+      }
+      if (lower.endsWith(".xlsx") || lower.endsWith(".xls") || (file.type || "").includes("sheet") || (file.type || "").includes("excel")) {
+        const XLSX = await ensureXlsxLib();
+        const buffer = await file.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
+        const sheetName = workbook.SheetNames[0];
+        if (!sheetName) throw new Error("Excel 中没有工作表");
+        const sheet = workbook.Sheets[sheetName];
+        const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", raw: false });
+        return { fileName: name, ...sheetMatrixToTable(matrix) };
+      }
+      // Fallback: try JSON then CSV then Excel
+      try {
+        const text = await file.text();
+        try {
+          return { fileName: name, ...parseJsonImport(text) };
+        } catch {
+          return { fileName: name, ...sheetMatrixToTable(parseDelimitedText(text, detectDelimiter(text))) };
+        }
+      } catch {
+        const XLSX = await ensureXlsxLib();
+        const buffer = await file.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", raw: false });
+        return { fileName: name, ...sheetMatrixToTable(matrix) };
+      }
+    }
+
+    function coerceImportDate(value) {
+      if (value == null || value === "") return "";
+      if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        return value.toISOString().slice(0, 10);
+      }
+      const raw = String(value).trim();
+      if (!raw) return "";
+      if (/^\d{4}年\d{1,2}月\d{1,2}日/.test(raw)) {
+        const m = raw.match(/(\d{4})年(\d{1,2})月(\d{1,2})/);
+        if (m) return `${m[1]}-${String(m[2]).padStart(2, "0")}-${String(m[3]).padStart(2, "0")}`;
+      }
+      if (/^\d{5}(\.\d+)?$/.test(raw)) {
+        const serial = Number(raw);
+        if (serial > 20000 && serial < 80000) {
+          const utc = Date.UTC(1899, 11, 30) + Math.round(serial) * 86400000;
+          const d = new Date(utc);
+          return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+        }
+      }
+      return normalizeDate(raw);
+    }
+
+    function normalizeImportEducation(value) {
+      const text = String(value || "").trim();
+      if (!text) return "";
+      if (EDUCATION_OPTIONS.includes(text)) return text;
+      const lower = text.toLowerCase();
+      if (/博士|phd|doctor/.test(lower)) return "博士";
+      if (/硕士|研究生|master|mba|meng/.test(lower)) return "硕士";
+      if (/本科|学士|bachelor|大学本科/.test(lower)) return "本科";
+      if (/专科|大专|高职|associate/.test(lower)) return "专科";
+      return "其他";
+    }
+
+    function normalizeImportStatus(value) {
+      const text = String(value || "").trim();
+      if (!text) return "在职";
+      if (["在职", "候选", "储备", "离职"].includes(text)) return text;
+      const lower = text.toLowerCase();
+      if (/离职|resign|left|inactive|terminated/.test(lower)) return "离职";
+      if (/候选|candidate|面试/.test(lower)) return "候选";
+      if (/储备|backup|pipeline|talent pool/.test(lower)) return "储备";
+      if (/在职|active|employed|正式|试用/.test(lower)) return "在职";
+      return "在职";
+    }
+
+    function normalizeImportGender(value) {
+      const text = String(value || "").trim();
+      if (!text) return "男";
+      if (text === "女" || /^f(emale)?$/i.test(text) || text === "女士") return "女";
+      return "男";
+    }
+
+    function normalizeImportHometown(value) {
+      const text = String(value || "").trim();
+      if (!text) return "";
+      const exact = CHINA_REGIONS.find(item => item === text);
+      if (exact) return exact;
+      const hit = CHINA_REGIONS.find(item => text.includes(item) || item.includes(text));
+      return hit || text;
+    }
+
+    function normalizeImportEnglishLevel(value) {
+      const text = String(value || "").trim();
+      if (!text) return "";
+      const byValue = ENGLISH_LEVEL_OPTIONS.find(item => item.value === text);
+      if (byValue) return byValue.value;
+      if (/^[123]$/.test(text)) return ENGLISH_LEVEL_OPTIONS[Number(text) - 1]?.value || "";
+      if (/仅能读写|读写/.test(text) && !/沟通/.test(text)) return ENGLISH_LEVEL_OPTIONS[0].value;
+      if (/基本沟通/.test(text)) return ENGLISH_LEVEL_OPTIONS[1].value;
+      if (/无障碍|听说读写/.test(text)) return ENGLISH_LEVEL_OPTIONS[2].value;
+      const byLabel = ENGLISH_LEVEL_OPTIONS.find(item => item.label.includes(text) || text.includes(item.label));
+      return byLabel ? byLabel.value : text;
+    }
+
+    function normalizeImportSkills(value) {
+      return String(value || "")
+        .split(/[,，、;/|]+/)
+        .map(item => item.trim())
+        .filter(Boolean);
+    }
+
+    function normalizeImportProducts(value) {
+      return String(value || "")
+        .split(/[,，、;/|]+/)
+        .map(item => item.trim())
+        .filter(Boolean)
+        .map(name => {
+          const matched = matchProductOption(name);
+          if (matched && matched !== PRODUCT_OTHER) return { value: matched };
+          return { value: PRODUCT_OTHER, customName: name };
+        });
+    }
+
+    function rowToTalentDraft(row, mapping) {
+      const draft = {};
+      Object.entries(mapping).forEach(([header, field]) => {
+        if (!field) return;
+        const value = row[header];
+        if (value == null || String(value).trim() === "") return;
+        draft[field] = value;
+      });
+      const name = String(draft.name || "").trim();
+      if (!name) return null;
+      let employeeNo = String(draft.employeeNo || "").trim();
+      if (!employeeNo) {
+        employeeNo = `IMP-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+      }
+      const birthDate = coerceImportDate(draft.birthDate);
+      const products = draft.products ? normalizeImportProducts(draft.products) : [];
+      return {
+        employeeNo,
+        name,
+        englishName: String(draft.englishName || "").trim(),
+        currentProject: String(draft.currentProject || "").trim(),
+        gender: normalizeImportGender(draft.gender),
+        status: normalizeImportStatus(draft.status),
+        birthDate,
+        age: birthDate ? calcAgeFromBirth(birthDate) : (String(draft.age || "").trim() || ""),
+        hometown: normalizeImportHometown(draft.hometown),
+        education: normalizeImportEducation(draft.education),
+        englishLevel: normalizeImportEnglishLevel(draft.englishLevel),
+        jobGrade: normalizeJobGrade(draft.jobGrade),
+        joinDate: coerceImportDate(draft.joinDate),
+        baseLocation: String(draft.baseLocation || "").trim(),
+        school: String(draft.school || "").trim(),
+        graduationDate: coerceImportDate(draft.graduationDate),
+        major: String(draft.major || "").trim(),
+        firstWorkDate: coerceImportDate(draft.firstWorkDate),
+        appleStartDate: coerceImportDate(draft.appleStartDate),
+        category: String(draft.category || "").trim(),
+        department: String(draft.department || "").trim(),
+        position: String(draft.position || "").trim(),
+        skills: draft.skills ? normalizeImportSkills(draft.skills) : [],
+        certificates: String(draft.certificates || "").trim(),
+        phone: String(draft.phone || "").trim(),
+        email: String(draft.email || "").trim(),
+        remark: String(draft.remark || "").trim(),
+        products,
+        customFields: []
+      };
+    }
+
+    function buildImportPreviewRows(limit = 5) {
+      return importState.rows.slice(0, limit).map(row => rowToTalentDraft(row, importState.mapping)).filter(Boolean);
+    }
+
+    function summarizeImportPlan() {
+      const existingNos = new Map(talents.map(person => [String(person.employeeNo || "").trim(), person]));
+      let add = 0;
+      let update = 0;
+      let skip = 0;
+      let denied = 0;
+      const seenNos = new Set();
+      importState.rows.forEach(row => {
+        const draft = rowToTalentDraft(row, importState.mapping);
+        if (!draft) {
+          skip += 1;
+          return;
+        }
+        if (!isSuperAdmin() && draft.category && !canAccessCategory(draft.category)) {
+          denied += 1;
+          return;
+        }
+        if (!isSuperAdmin() && !draft.category) {
+          // allow; will keep existing category on update or leave empty for admin later
+        }
+        const key = draft.employeeNo;
+        if (seenNos.has(key)) {
+          update += 1;
+          return;
+        }
+        seenNos.add(key);
+        if (existingNos.has(key)) update += 1;
+        else add += 1;
+      });
+      return { add, update, skip, denied, total: importState.rows.length };
+    }
+
+    function setImportError(message) {
+      if (!els.importError) return;
+      if (!message) {
+        els.importError.hidden = true;
+        els.importError.textContent = "";
+        return;
+      }
+      els.importError.hidden = false;
+      els.importError.textContent = message;
+    }
+
+    function renderImportPreviewUi() {
+      if (!els.importMappingRows) return;
+      const hasMappedName = Object.values(importState.mapping).includes("name");
+      els.importMappingRows.innerHTML = importState.headers.map(header => {
+        const sample = importState.rows.slice(0, 3).map(row => row[header]).filter(v => String(v || "").trim()).slice(0, 2).join(" / ");
+        const options = [
+          `<option value="">忽略</option>`,
+          ...IMPORT_FIELD_DEFS.map(def => {
+            const selected = importState.mapping[header] === def.key ? " selected" : "";
+            return `<option value="${escapeHtml(def.key)}"${selected}>${escapeHtml(def.label)}</option>`;
+          })
+        ].join("");
+        return `<tr>
+          <td>${escapeHtml(header)}</td>
+          <td title="${escapeHtml(sample)}">${escapeHtml(sample || "-")}</td>
+          <td><select data-import-header="${escapeHtml(header)}">${options}</select></td>
+        </tr>`;
+      }).join("");
+
+      const previewFields = IMPORT_FIELD_DEFS
+        .map(def => def.key)
+        .filter(key => Object.values(importState.mapping).includes(key))
+        .slice(0, 8);
+      if (!previewFields.includes("name") && hasMappedName) previewFields.unshift("name");
+      const fields = previewFields.length ? previewFields : ["name", "employeeNo", "department", "position"];
+      const previews = buildImportPreviewRows(5);
+      if (els.importPreviewHead) {
+        els.importPreviewHead.innerHTML = `<tr>${fields.map(key => {
+          const label = IMPORT_FIELD_DEFS.find(item => item.key === key)?.label || key;
+          return `<th>${escapeHtml(label)}</th>`;
+        }).join("")}</tr>`;
+      }
+      if (els.importPreviewBody) {
+        els.importPreviewBody.innerHTML = previews.length
+          ? previews.map(person => `<tr>${fields.map(key => {
+            let value = person[key];
+            if (Array.isArray(value)) value = key === "products"
+              ? value.map(item => item.customName || item.value || "").filter(Boolean).join("、")
+              : value.join(", ");
+            return `<td>${escapeHtml(value || "")}</td>`;
+          }).join("")}</tr>`).join("")
+          : `<tr><td colspan="${fields.length}">暂无有效预览行（需映射「姓名」）</td></tr>`;
+      }
+
+      const plan = summarizeImportPlan();
+      if (els.importStats) {
+        const bits = [
+          `共 ${plan.total} 行`,
+          `将新增 <strong>${plan.add}</strong>`,
+          `更新 <strong>${plan.update}</strong>`
+        ];
+        if (plan.skip) bits.push(`<span class="warn">跳过无姓名 ${plan.skip}</span>`);
+        if (plan.denied) bits.push(`<span class="warn">无权限部门 ${plan.denied}</span>`);
+        els.importStats.innerHTML = bits.join(" · ");
+      }
+      if (els.confirmImportBtn) {
+        els.confirmImportBtn.disabled = !hasMappedName || plan.add + plan.update === 0;
+      }
+      if (els.importMeta) {
+        els.importMeta.hidden = false;
+        els.importMeta.innerHTML = `
+          <span>文件：<strong>${escapeHtml(importState.fileName || "-")}</strong></span>
+          <span>列数：<strong>${importState.headers.length}</strong></span>
+          <span>数据行：<strong>${importState.rows.length}</strong></span>
+          <span>已识别姓名列：<strong>${hasMappedName ? "是" : "否"}</strong></span>
+        `;
+      }
+      if (els.importMappingSection) els.importMappingSection.hidden = false;
+      setImportError(hasMappedName ? "" : "请至少将一列映射到「姓名」后才能生成档案。");
+    }
+
+    function resetImportUi() {
+      importState = { fileName: "", headers: [], rows: [], mapping: {} };
+      if (els.importMeta) els.importMeta.hidden = true;
+      if (els.importMappingSection) els.importMappingSection.hidden = true;
+      if (els.importMappingRows) els.importMappingRows.innerHTML = "";
+      if (els.importPreviewHead) els.importPreviewHead.innerHTML = "";
+      if (els.importPreviewBody) els.importPreviewBody.innerHTML = "";
+      if (els.importStats) els.importStats.textContent = "";
+      if (els.confirmImportBtn) els.confirmImportBtn.disabled = true;
+      setImportError("");
+    }
+
+    function openImportDialog() {
+      if (!hasAnyCategoryAccess()) {
+        alert("暂无部门权限，请联系超级管理员分配");
+        return;
+      }
+      resetImportUi();
+      els.importDialog?.showModal();
+    }
+
+    function closeImportDialog() {
+      els.importDialog?.close();
+      resetImportUi();
+      if (els.importFile) els.importFile.value = "";
+    }
+
+    async function handleImportFile(file) {
+      if (!file) return;
+      setImportError("");
+      if (els.confirmImportBtn) {
+        els.confirmImportBtn.disabled = true;
+        els.confirmImportBtn.textContent = "解析中…";
+      }
+      try {
+        const parsed = await parseImportFile(file);
+        importState = {
+          fileName: parsed.fileName,
+          headers: parsed.headers,
+          rows: parsed.rows,
+          mapping: autoMapImportHeaders(parsed.headers)
+        };
+        renderImportPreviewUi();
+        if (!els.importDialog?.open) els.importDialog?.showModal();
+      } catch (error) {
+        resetImportUi();
+        setImportError(error?.message || "导入解析失败");
+        if (!els.importDialog?.open) els.importDialog?.showModal();
+      } finally {
+        if (els.confirmImportBtn) els.confirmImportBtn.textContent = "生成档案";
+        if (els.importFile) els.importFile.value = "";
+      }
+    }
+
+    function mergeImportedTalents(drafts) {
+      const next = talents.map(person => ({ ...person }));
+      const indexByNo = new Map();
+      next.forEach((person, index) => {
+        const no = String(person.employeeNo || "").trim();
+        if (no) indexByNo.set(no, index);
+      });
+      let added = 0;
+      let updated = 0;
+      let skipped = 0;
+      let denied = 0;
+      drafts.forEach(draft => {
+        if (!draft?.name) {
+          skipped += 1;
+          return;
+        }
+        if (!isSuperAdmin() && draft.category && !canAccessCategory(draft.category)) {
+          denied += 1;
+          return;
+        }
+        const key = String(draft.employeeNo || "").trim();
+        const existingIndex = key ? indexByNo.get(key) : undefined;
+        if (existingIndex != null) {
+          const prev = next[existingIndex];
+          if (!isSuperAdmin() && !canAccessCategory(prev.category)) {
+            denied += 1;
+            return;
+          }
+          const merged = {
+            ...prev,
+            ...draft,
+            id: prev.id,
+            photoUrl: prev.photoUrl || "",
+            customFields: Array.isArray(prev.customFields) ? prev.customFields : [],
+            category: draft.category || prev.category || "",
+            department: draft.department || prev.department || "",
+            skills: draft.skills?.length ? draft.skills : (prev.skills || []),
+            products: draft.products?.length ? draft.products : (prev.products || [])
+          };
+          if (!isSuperAdmin() && !canAccessCategory(merged.category)) {
+            denied += 1;
+            return;
+          }
+          next[existingIndex] = merged;
+          updated += 1;
+          return;
+        }
+        if (!isSuperAdmin() && !draft.category) {
+          // Non-admin creating without category: assign first allowed category if any
+          draft.category = authAllowedCategories[0] || "";
+        }
+        if (!isSuperAdmin() && !canAccessCategory(draft.category)) {
+          denied += 1;
+          return;
+        }
+        const created = {
+          id: crypto.randomUUID(),
+          photoUrl: "",
+          ...draft
+        };
+        next.push(created);
+        indexByNo.set(key, next.length - 1);
+        added += 1;
+      });
+      return { next, added, updated, skipped, denied };
+    }
+
+    async function confirmImportGenerate() {
+      if (!Object.values(importState.mapping).includes("name")) {
+        setImportError("请至少映射「姓名」列。");
+        return;
+      }
+      const drafts = importState.rows
+        .map(row => rowToTalentDraft(row, importState.mapping))
+        .filter(Boolean);
+      if (!drafts.length) {
+        setImportError("没有可生成的有效行（姓名必填）。");
+        return;
+      }
+      const { next, added, updated, skipped, denied } = mergeImportedTalents(drafts);
+      if (!added && !updated) {
+        setImportError(denied ? "导入行均不在您的部门权限范围内。" : "没有可写入的档案。");
+        return;
+      }
+      if (els.confirmImportBtn) {
+        els.confirmImportBtn.disabled = true;
+        els.confirmImportBtn.textContent = "生成中…";
+      }
+      try {
+        await saveTalents(normalizeTalentList(next));
+        selectedId = talents[0]?.id || selectedId;
+        render();
+        closeImportDialog();
+        const parts = [`新增 ${added} 人`, `更新 ${updated} 人`];
+        if (skipped) parts.push(`跳过 ${skipped} 行`);
+        if (denied) parts.push(`无权限 ${denied} 行`);
+        alert(`档案生成完成：${parts.join("，")}`);
+      } catch (error) {
+        setImportError(error?.message || "保存失败");
+      } finally {
+        if (els.confirmImportBtn) {
+          els.confirmImportBtn.textContent = "生成档案";
+          els.confirmImportBtn.disabled = false;
+        }
+      }
     }
 
     function exportFilteredToExcel() {
@@ -8500,39 +9502,65 @@
     });
 
     document.querySelector("#importBtn").addEventListener("click", () => {
+      openImportDialog();
+    });
+    els.importFile.addEventListener("change", event => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      handleImportFile(file);
+    });
+    els.importDropzone?.addEventListener("click", () => {
       if (!hasAnyCategoryAccess()) {
         alert("暂无部门权限，请联系超级管理员分配");
         return;
       }
       els.importFile.click();
     });
-    els.importFile.addEventListener("change", event => {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async () => {
-        try {
-          const imported = JSON.parse(reader.result);
-          if (!Array.isArray(imported)) throw new Error("not array");
-          let list = normalizeTalentList(imported);
-          if (!isSuperAdmin()) {
-            list = list.filter(person => canAccessCategory(person.category));
-            if (!list.length) {
-              alert("导入文件中没有您有权限的部门人才。");
-              return;
-            }
+    els.importDropzone?.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        els.importDropzone.click();
+      }
+    });
+    ["dragenter", "dragover"].forEach(type => {
+      els.importDropzone?.addEventListener(type, event => {
+        event.preventDefault();
+        els.importDropzone.classList.add("is-dragover");
+      });
+    });
+    ["dragleave", "drop"].forEach(type => {
+      els.importDropzone?.addEventListener(type, event => {
+        event.preventDefault();
+        els.importDropzone.classList.remove("is-dragover");
+      });
+    });
+    els.importDropzone?.addEventListener("drop", event => {
+      const file = event.dataTransfer?.files?.[0];
+      if (file) handleImportFile(file);
+    });
+    els.importMappingRows?.addEventListener("change", event => {
+      const select = event.target.closest("select[data-import-header]");
+      if (!select) return;
+      const header = select.getAttribute("data-import-header");
+      const nextField = select.value || "";
+      if (nextField) {
+        Object.keys(importState.mapping).forEach(key => {
+          if (key !== header && importState.mapping[key] === nextField) {
+            importState.mapping[key] = "";
           }
-          talents = list;
-          selectedId = talents[0]?.id || null;
-          await saveTalents();
-          render();
-        } catch {
-          alert("导入失败，请选择有效的人才库 JSON 文件。");
-        } finally {
-          event.target.value = "";
-        }
-      };
-      reader.readAsText(file);
+        });
+      }
+      importState.mapping[header] = nextField;
+      renderImportPreviewUi();
+    });
+    document.querySelector("#closeImportDialog")?.addEventListener("click", () => closeImportDialog());
+    document.querySelector("#cancelImportBtn")?.addEventListener("click", () => closeImportDialog());
+    document.querySelector("#repickImportBtn")?.addEventListener("click", () => {
+      setImportError("");
+      els.importFile.click();
+    });
+    document.querySelector("#confirmImportBtn")?.addEventListener("click", () => {
+      confirmImportGenerate();
     });
 
     document.querySelector("#logoutBtn").addEventListener("click", async () => {
