@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-dash-p0-overview -->
+  <!-- deploy-bust: 20260724-dash-pie-polish -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -805,8 +805,8 @@
 
     .edu-chart {
       display: grid;
-      gap: 18px;
-      margin-top: 16px;
+      gap: 16px;
+      margin-top: 12px;
       justify-items: center;
     }
 
@@ -822,32 +822,77 @@
       overflow: visible;
     }
 
+    .edu-pie-slice {
+      transition: opacity .16s ease, filter .16s ease;
+      transform-origin: center;
+      cursor: default;
+    }
+
+    .edu-pie-wrap:hover .edu-pie-slice {
+      opacity: .52;
+    }
+
+    .edu-pie-wrap:hover .edu-pie-slice:hover {
+      opacity: 1;
+      filter: brightness(1.06) saturate(1.05);
+    }
+
+    .edu-pie-hole {
+      fill: #fff;
+      pointer-events: none;
+    }
+
+    .edu-pie-center-value {
+      font-size: 22px;
+      font-weight: 700;
+      fill: var(--ink);
+      font-family: inherit;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .edu-pie-center-unit {
+      font-size: 11px;
+      font-weight: 600;
+      fill: var(--muted);
+      font-family: inherit;
+    }
+
     .edu-pie-label {
       font-size: 10.5px;
-      fill: #44515f;
+      fill: #667585;
       font-family: inherit;
+      font-variant-numeric: tabular-nums;
     }
 
     .edu-pie-label-strong {
       font-size: 11px;
       font-weight: 700;
-      fill: #2f3a46;
+      fill: #3a4654;
       font-family: inherit;
     }
 
     .edu-pie-leader {
       fill: none;
       stroke: #94a3b8;
-      stroke-width: 1.15;
+      stroke-width: 1;
       stroke-linecap: round;
       stroke-linejoin: round;
+      opacity: .72;
+    }
+
+    .edu-pie-leader-dot {
+      stroke: #fff;
+      stroke-width: 1.25;
     }
 
     .edu-pie-empty {
-      width: min(240px, 100%);
+      width: min(200px, 100%);
       aspect-ratio: 1;
       border-radius: 50%;
-      background: #eef2f6;
+      background:
+        radial-gradient(circle at 50% 50%, #fff 0 38%, transparent 39%),
+        #eef2f6;
       display: grid;
       place-items: center;
       color: var(--muted);
@@ -855,35 +900,36 @@
     }
 
     .edu-legend-table {
-      width: max-content;
+      width: min(320px, 100%);
       max-width: 100%;
-      margin: 4px auto 0;
+      margin: 2px auto 0;
       border-collapse: separate;
       border-spacing: 0;
-      font-size: 13px;
+      font-size: 12.5px;
       color: var(--ink);
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 10px;
+      background: rgba(255, 255, 255, .72);
+      border: 1px solid rgba(226, 232, 240, .9);
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: var(--shadow-soft);
+      box-shadow: none;
     }
 
     .edu-legend-table th,
     .edu-legend-table td {
-      padding: 7px 12px;
+      padding: 8px 12px;
       white-space: nowrap;
       text-align: left;
-      border-bottom: 1px solid #eef2f6;
+      border-bottom: 1px solid rgba(238, 242, 246, .9);
       vertical-align: middle;
     }
 
     .edu-legend-table thead th {
-      background: #f7fafc;
-      color: #667085;
+      background: rgba(247, 250, 252, .92);
+      color: #7a8796;
       font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
+      font-weight: 650;
+      letter-spacing: 0.03em;
+      border-bottom-color: rgba(226, 232, 240, .95);
     }
 
     .edu-legend-table tbody tr:last-child td {
@@ -891,12 +937,38 @@
     }
 
     .edu-legend-table tbody tr:hover td {
-      background: #fafcfd;
+      background: rgba(248, 251, 253, .95);
+    }
+
+    .edu-legend-table tbody tr.is-zero td {
+      color: #9aa6b4;
+    }
+
+    .edu-legend-table tbody tr.is-zero .edu-legend-swatch {
+      opacity: .45;
+    }
+
+    .edu-legend-table tbody tr.is-zero:hover td {
+      background: transparent;
+    }
+
+    .edu-legend-table tbody tr.is-top td {
+      background: rgba(61, 169, 160, .05);
+    }
+
+    .edu-legend-table tbody tr.is-top:hover td {
+      background: rgba(61, 169, 160, .08);
     }
 
     .edu-legend-table .col-swatch {
       width: 1%;
-      padding-right: 4px;
+      padding-right: 2px;
+      padding-left: 12px;
+    }
+
+    .edu-legend-table .col-label {
+      padding-left: 8px;
+      font-weight: 600;
     }
 
     .edu-legend-table .col-count,
@@ -906,18 +978,63 @@
       color: var(--muted);
     }
 
+    .edu-legend-table .col-count {
+      min-width: 44px;
+    }
+
+    .edu-legend-table .col-percent {
+      min-width: 108px;
+      padding-left: 8px;
+    }
+
     .edu-legend-table .col-count strong,
     .edu-legend-table .col-percent strong {
       color: var(--ink);
       font-weight: 700;
     }
 
+    .edu-legend-table tbody tr.is-zero .col-count strong,
+    .edu-legend-table tbody tr.is-zero .col-percent strong {
+      color: #9aa6b4;
+      font-weight: 550;
+    }
+
     .edu-legend-swatch {
       display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 3px;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
       vertical-align: middle;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55), 0 0 0 2.5px rgba(148, 163, 184, .16);
+    }
+
+    .edu-legend-pct {
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      min-width: 86px;
+    }
+
+    .edu-legend-bar {
+      display: inline-block;
+      width: 44px;
+      height: 4px;
+      border-radius: 999px;
+      background: #e8eef4;
+      overflow: hidden;
+      flex: 0 0 auto;
+    }
+
+    .edu-legend-bar > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      min-width: 0;
+    }
+
+    .edu-legend-table tbody tr.is-zero .edu-legend-bar > span {
+      opacity: .35;
     }
 
     .edu-empty {
@@ -5141,41 +5258,41 @@
     }
 
     const DASH_PIE_PALETTE = [
-      "#3da9a0", "#5b8def", "#e8a23a", "#ce673d", "#6b7c8f",
-      "#4f8f6a", "#c47a5a", "#7a8fd4", "#b7c0cc", "#2f8f88"
+      "#3da9a0", "#6b96eb", "#e0a04a", "#d47856", "#7a8a9a",
+      "#559872", "#c9896e", "#8498d6", "#b7c0cc", "#3f9f98"
     ];
 
     const DASH_SLICE_COLORS = {
-      "专科": "#5b8def",
+      "专科": "#6b96eb",
       "本科": "#3da9a0",
-      "硕士": "#e8a23a",
-      "博士": "#ce673d",
-      "其他": "#6b7c8f",
+      "硕士": "#e0a04a",
+      "博士": "#d47856",
+      "其他": "#7a8a9a",
       "未填写": "#b7c0cc",
-      "25岁以下": "#5b8def",
+      "25岁以下": "#6b96eb",
       "25~35岁": "#3da9a0",
-      "35岁以上": "#ce673d",
-      "男": "#5b8def",
-      "女": "#e8a23a",
+      "35岁以上": "#d47856",
+      "男": "#6b96eb",
+      "女": "#e0a04a",
       "在职": "#3da9a0",
-      "候选": "#e8a23a",
-      "储备": "#5b8def",
-      "离职": "#6b7c8f",
+      "候选": "#e0a04a",
+      "储备": "#6b96eb",
+      "离职": "#7a8a9a",
       "有产品经验": "#3da9a0",
       "无产品经验": "#b7c0cc",
-      "3年以下": "#5b8def",
+      "3年以下": "#6b96eb",
       "3~8年": "#3da9a0",
-      "8年以上": "#ce673d",
-      "1年以下": "#5b8def",
+      "8年以上": "#d47856",
+      "1年以下": "#6b96eb",
       "1~3年": "#3da9a0",
-      "3~5年": "#e8a23a",
-      "5年以上": "#ce673d",
-      "职级 1-5": "#5b8def",
+      "3~5年": "#e0a04a",
+      "5年以上": "#d47856",
+      "职级 1-5": "#6b96eb",
       "职级 6-8": "#3da9a0",
-      "职级 9-11": "#e8a23a",
-      "职级 12+": "#ce673d",
+      "职级 9-11": "#e0a04a",
+      "职级 12+": "#d47856",
       "仅能读写": "#b7c0cc",
-      "基本沟通读写": "#e8a23a",
+      "基本沟通读写": "#e0a04a",
       "无障碍沟通听说读写": "#3da9a0"
     };
 
@@ -5644,6 +5761,21 @@
       ].join(" ");
     }
 
+    function describeDonutSlice(cx, cy, outerR, innerR, startAngle, endAngle) {
+      const startOuter = polarToCartesian(cx, cy, outerR, endAngle);
+      const endOuter = polarToCartesian(cx, cy, outerR, startAngle);
+      const startInner = polarToCartesian(cx, cy, innerR, endAngle);
+      const endInner = polarToCartesian(cx, cy, innerR, startAngle);
+      const largeArc = endAngle - startAngle > Math.PI ? 1 : 0;
+      return [
+        `M ${startOuter.x} ${startOuter.y}`,
+        `A ${outerR} ${outerR} 0 ${largeArc} 0 ${endOuter.x} ${endOuter.y}`,
+        `L ${endInner.x} ${endInner.y}`,
+        `A ${innerR} ${innerR} 0 ${largeArc} 1 ${startInner.x} ${startInner.y}`,
+        "Z"
+      ].join(" ");
+    }
+
     function pieLegendLabel(label) {
       if (label === "无障碍沟通听说读写") return "无障碍沟通";
       if (label === "基本沟通读写") return "基本沟通";
@@ -5651,25 +5783,36 @@
     }
 
     function buildPieLegendTableHtml(legendItems, chartTitle) {
+      const topCount = Math.max(0, ...legendItems.map(item => item.count));
       return `
         <table class="edu-legend-table" aria-label="${escapeHtml(chartTitle)}明细">
           <thead>
             <tr>
               <th class="col-swatch" aria-hidden="true"></th>
-              <th>分类</th>
+              <th class="col-label">分类</th>
               <th class="col-count">人数</th>
               <th class="col-percent">占比</th>
             </tr>
           </thead>
           <tbody>
-            ${legendItems.map((item, index) => `
-              <tr>
-                <td class="col-swatch"><span class="edu-legend-swatch" style="background:${sliceColor(item.label, index)}"></span></td>
-                <td>${escapeHtml(pieLegendLabel(item.label))}</td>
+            ${legendItems.map((item, index) => {
+              const color = sliceColor(item.label, index);
+              const isZero = item.count === 0;
+              const isTop = !isZero && item.count === topCount && topCount > 0;
+              const rowClass = [isZero ? "is-zero" : "", isTop ? "is-top" : ""].filter(Boolean).join(" ");
+              return `
+              <tr${rowClass ? ` class="${rowClass}"` : ""}>
+                <td class="col-swatch"><span class="edu-legend-swatch" style="background:${color}"></span></td>
+                <td class="col-label">${escapeHtml(pieLegendLabel(item.label))}</td>
                 <td class="col-count"><strong>${item.count}</strong></td>
-                <td class="col-percent"><strong>${item.percent}%</strong></td>
-              </tr>
-            `).join("")}
+                <td class="col-percent">
+                  <span class="edu-legend-pct">
+                    <span class="edu-legend-bar" aria-hidden="true"><span style="width:${Math.max(0, Math.min(100, item.percent))}%;background:${color}"></span></span>
+                    <strong>${item.percent}%</strong>
+                  </span>
+                </td>
+              </tr>`;
+            }).join("")}
           </tbody>
         </table>
       `;
@@ -5688,44 +5831,68 @@
       const total = slices.reduce((sum, item) => sum + item.count, 0) || 1;
       const cx = 180;
       const cy = 125;
-      const r = 72;
-      const elbowR = r + 8;
-      const labelR = r + 26;
+      const outerR = 78;
+      const innerR = 46;
+      const elbowR = outerR + 10;
+      const labelR = outerR + 30;
+      const gap = slices.length > 1 ? 0.045 : 0;
       let angle = -Math.PI / 2;
-      const sliceMeta = slices.map((item, index) => {
+      const colorIndexByLabel = new Map(legendItems.map((item, index) => [item.label, index]));
+      const sliceMeta = slices.map(item => {
         const sweep = (item.count / total) * Math.PI * 2;
-        const start = angle;
-        const end = angle + sweep;
-        const mid = start + sweep / 2;
-        angle = end;
-        return { ...item, start, end, mid, sweep, colorIndex: index };
+        const usable = Math.max(0.0001, sweep - gap);
+        const start = angle + gap / 2;
+        const end = start + usable;
+        const mid = start + usable / 2;
+        angle += sweep;
+        return {
+          ...item,
+          start,
+          end,
+          mid,
+          sweep: usable,
+          colorIndex: colorIndexByLabel.has(item.label) ? colorIndexByLabel.get(item.label) : 0
+        };
       });
 
       const paths = sliceMeta.map(item => {
         const color = sliceColor(item.label, item.colorIndex);
-        if (item.count === total) {
-          return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}">
-            <title>${escapeHtml(item.label)}：${item.count}人（${item.percent}%）</title>
-          </circle>`;
+        const d = item.count === total && gap === 0
+          ? null
+          : describeDonutSlice(cx, cy, outerR, innerR, item.start, item.end);
+        if (!d) {
+          return `
+            <circle class="edu-pie-slice" cx="${cx}" cy="${cy}" r="${outerR}" fill="${color}">
+              <title>${escapeHtml(item.label)}：${item.count}人（${item.percent}%）</title>
+            </circle>
+            <circle class="edu-pie-hole" cx="${cx}" cy="${cy}" r="${innerR}"></circle>`;
         }
-        return `<path d="${describePieSlice(cx, cy, r, item.start, item.end)}" fill="${color}">
+        return `<path class="edu-pie-slice" d="${d}" fill="${color}">
           <title>${escapeHtml(item.label)}：${item.count}人（${item.percent}%）</title>
         </path>`;
       }).join("");
 
-      const planned = sliceMeta.map(item => {
-        const onRight = Math.cos(item.mid) >= 0;
-        const startPt = polarToCartesian(cx, cy, r * 0.9, item.mid);
-        const elbow = polarToCartesian(cx, cy, elbowR, item.mid);
-        const desiredY = polarToCartesian(cx, cy, labelR, item.mid).y;
-        return { item, onRight, startPt, elbow, desiredY, labelY: desiredY };
-      });
+      const labelCandidates = sliceMeta
+        .filter(item => item.percent >= 8 || sliceMeta.length <= 3)
+        .sort((a, b) => b.percent - a.percent)
+        .slice(0, 5);
+      const labeledIds = new Set(labelCandidates.map(item => item.label));
+
+      const planned = sliceMeta
+        .filter(item => labeledIds.has(item.label))
+        .map(item => {
+          const onRight = Math.cos(item.mid) >= 0;
+          const startPt = polarToCartesian(cx, cy, outerR - 2, item.mid);
+          const elbow = polarToCartesian(cx, cy, elbowR, item.mid);
+          const desiredY = polarToCartesian(cx, cy, labelR, item.mid).y;
+          return { item, onRight, startPt, elbow, desiredY, labelY: desiredY };
+        });
       ["left", "right"].forEach(side => {
         const onRight = side === "right";
         const group = planned.filter(entry => entry.onRight === onRight).sort((a, b) => a.desiredY - b.desiredY);
         for (let i = 1; i < group.length; i += 1) {
-          if (group[i].labelY - group[i - 1].labelY < 18) {
-            group[i].labelY = group[i - 1].labelY + 18;
+          if (group[i].labelY - group[i - 1].labelY < 20) {
+            group[i].labelY = group[i - 1].labelY + 20;
           }
         }
       });
@@ -5733,7 +5900,7 @@
       const leaders = planned.map(({ item, onRight, startPt, elbow, labelY }) => {
         const labelX = onRight ? cx + labelR : cx - labelR;
         const anchor = onRight ? "start" : "end";
-        const stub = 6;
+        const stub = 7;
         const lineEndX = onRight ? labelX - 3 : labelX + 3;
         const elbowX = onRight
           ? Math.min(elbow.x, labelX - stub)
@@ -5742,17 +5909,23 @@
         const shortLabel = pieLegendLabel(item.label);
         return `
           <path class="edu-pie-leader" d="M ${startPt.x.toFixed(1)} ${startPt.y.toFixed(1)} L ${elbowX.toFixed(1)} ${elbow.y.toFixed(1)} L ${lineEndX.toFixed(1)} ${labelY.toFixed(1)}" stroke="${color}"></path>
-          <circle cx="${startPt.x.toFixed(1)}" cy="${startPt.y.toFixed(1)}" r="2" fill="${color}"></circle>
+          <circle class="edu-pie-leader-dot" cx="${startPt.x.toFixed(1)}" cy="${startPt.y.toFixed(1)}" r="2.4" fill="${color}"></circle>
           <text class="edu-pie-label-strong" x="${labelX.toFixed(1)}" y="${(labelY - 1).toFixed(1)}" text-anchor="${anchor}">${escapeHtml(shortLabel)}</text>
-          <text class="edu-pie-label" x="${labelX.toFixed(1)}" y="${(labelY + 10).toFixed(1)}" text-anchor="${anchor}">${item.percent}% · ${item.count}人</text>
+          <text class="edu-pie-label" x="${labelX.toFixed(1)}" y="${(labelY + 11).toFixed(1)}" text-anchor="${anchor}">${item.percent}% · ${item.count}人</text>
         `;
       }).join("");
+
+      const center = `
+        <text class="edu-pie-center-value" x="${cx}" y="${cy - 2}" text-anchor="middle">${total}</text>
+        <text class="edu-pie-center-unit" x="${cx}" y="${cy + 14}" text-anchor="middle">人</text>
+      `;
 
       return `
         <div class="edu-pie-wrap">
           <svg viewBox="0 0 360 250" role="img" aria-label="${escapeHtml(chartTitle)}">
             ${paths}
             ${leaders}
+            ${center}
           </svg>
         </div>
         ${buildPieLegendTableHtml(legendItems, chartTitle)}
