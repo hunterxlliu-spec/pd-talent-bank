@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-pie-click-label -->
+  <!-- deploy-bust: 20260724-people-cards -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -21,6 +21,13 @@
       --brand-light: #d6fcf4;
       --accent: #ce673d;
       --danger: #c34f46;
+      --pill-role: #2563eb;
+      --pill-role-bg: #dbeafe;
+      --pill-grade: #15803d;
+      --pill-grade-bg: #dcfce7;
+      --pill-dept: #c2410c;
+      --pill-dept-bg: #ffedd5;
+      --tab-active: #2563eb;
       --shadow: 0 12px 32px rgba(15, 23, 42, .07);
       --shadow-soft: 0 4px 14px rgba(15, 23, 42, .04);
       --radius: 12px;
@@ -1280,17 +1287,250 @@
       max-width: 100%;
     }
 
+    .people-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .people-head-title {
+      margin: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #1f2937;
+    }
+
+    .people-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 40px;
+      height: 24px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: var(--tab-active);
+      font-size: var(--fs-xs);
+      font-weight: 700;
+    }
+
+    .people-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .person-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px 16px 12px;
+      background: #fff;
+      border: 1px solid rgba(226, 232, 240, .9);
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
+      cursor: pointer;
+      transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+      min-width: 0;
+    }
+
+    .person-card:hover {
+      border-color: #bfdbfe;
+      box-shadow: 0 12px 28px rgba(37, 99, 235, .1);
+      transform: translateY(-1px);
+    }
+
+    .person-card.active {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, .12), 0 12px 28px rgba(37, 99, 235, .1);
+    }
+
+    .person-card:focus-visible {
+      outline: 3px solid rgba(37, 99, 235, .28);
+      outline-offset: 2px;
+    }
+
+    .person-card-more {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1;
+      min-width: 30px;
+      min-height: 30px;
+      padding: 0;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--muted);
+      background: transparent;
+      border-radius: 8px;
+    }
+
+    .person-card-more:hover {
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .person-card-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      min-width: 0;
+      padding-right: 28px;
+    }
+
+    .person-card .avatar-btn,
+    .person-card .avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+    }
+
+    .person-card .avatar {
+      background: linear-gradient(145deg, #dbeafe, #e0f2fe);
+      color: #1d4ed8;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .person-card .avatar img {
+      border-radius: 50%;
+    }
+
+    .person-card-body {
+      min-width: 0;
+      flex: 1;
+      display: grid;
+      gap: 8px;
+    }
+
+    .person-card-name {
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1.3;
+      color: #111827;
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 0 8px;
+    }
+
+    .person-card-name .person-name-en {
+      font-size: 13px;
+      font-weight: 500;
+      color: #64748b;
+    }
+
+    .person-card-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .person-pill {
+      display: inline-flex;
+      align-items: center;
+      max-width: 100%;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 650;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .person-pill--role {
+      background: var(--pill-role-bg);
+      color: var(--pill-role);
+    }
+
+    .person-pill--grade {
+      background: var(--pill-grade-bg);
+      color: var(--pill-grade);
+    }
+
+    .person-pill--dept {
+      background: var(--pill-dept-bg);
+      color: var(--pill-dept);
+    }
+
+    .person-pill--muted {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    .person-card-loc {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      color: #64748b;
+      font-size: var(--fs-xs);
+      line-height: 1.4;
+    }
+
+    .person-card-loc-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .person-card-loc-icon {
+      flex: 0 0 auto;
+      display: inline-flex;
+      width: 14px;
+      height: 14px;
+      opacity: .95;
+    }
+
+    .person-card-loc-icon svg {
+      display: block;
+    }
+
+    .person-card-meta {
+      margin-top: auto;
+      padding-top: 10px;
+      border-top: 1px solid #eef2f7;
+      color: #64748b;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 720px) {
+      .people-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .filters {
       background: #fff;
       border: 1px solid var(--line);
       border-radius: var(--radius);
       padding: 14px;
       display: grid;
-      grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, .7fr));
+      grid-template-columns: minmax(0, 1.8fr) repeat(3, minmax(0, .65fr));
       gap: 10px;
       box-shadow: var(--shadow-soft);
       max-width: 100%;
       min-width: 0;
+    }
+
+    .filters .field:first-child input {
+      background: #f8fafc;
+      border-color: #e2e8f0;
     }
 
     .field {
@@ -2351,12 +2591,12 @@
     }
 
     .mobile-category-bar {
-      display: none;
+      display: flex;
       gap: 8px;
       overflow-x: auto;
       padding-bottom: 2px;
-      margin-bottom: 14px;
       -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
     }
 
     .mobile-category-chip {
@@ -2364,22 +2604,27 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      min-height: 30px;
-      padding: 0 10px;
+      min-height: 32px;
+      padding: 0 12px;
       border-radius: 999px;
-      border: 1px solid #d0d5dd;
-      background: #fff;
-      color: #344054;
+      border: 1px solid transparent;
+      background: #f1f5f9;
+      color: #475569;
       font-size: var(--fs-xs);
       font-weight: 650;
       cursor: pointer;
       white-space: nowrap;
+      transition: background .15s ease, color .15s ease;
+    }
+
+    .mobile-category-chip:hover {
+      background: #e2e8f0;
     }
 
     .mobile-category-chip.active {
-      background: rgba(13, 148, 136, 0.1);
-      border-color: rgba(15, 118, 110, 0.35);
-      color: #3f918b;
+      background: var(--tab-active);
+      border-color: var(--tab-active);
+      color: #fff;
     }
 
     .mobile-category-chip span {
@@ -2390,13 +2635,14 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: #f2f4f7;
+      background: rgba(15, 23, 42, .08);
       font-size: 11px;
       font-weight: 700;
     }
 
     .mobile-category-chip.active span {
-      background: rgba(13, 148, 136, 0.16);
+      background: rgba(255, 255, 255, .22);
+      color: #fff;
     }
 
     @media (max-width: 1180px) {
@@ -2420,10 +2666,6 @@
 
       .sidebar-resizer {
         display: none;
-      }
-
-      .mobile-category-bar {
-        display: flex;
       }
 
       .content {
@@ -3149,11 +3391,14 @@
           </section>
 
           <div class="list-panel" id="listPanel">
-            <div class="mobile-category-bar" id="mobileCategoryBar" aria-label="研发分类"></div>
+            <div class="people-head">
+              <h3 class="people-head-title">团队成员 <span class="people-count" id="peopleCount">0人</span></h3>
+            </div>
+            <div class="mobile-category-bar" id="mobileCategoryBar" aria-label="部门筛选"></div>
             <section class="filters" aria-label="筛选">
               <div class="field">
                 <label for="searchInput">搜索</label>
-                <input id="searchInput" placeholder="姓名 / 工号 / 学校 / 专业 / 产品">
+                <input id="searchInput" placeholder="搜索姓名 / 英文名 / 岗位 / 部门...">
               </div>
               <div class="field">
                 <label for="genderFilter">性别</label>
@@ -3183,33 +3428,7 @@
               </div>
             </section>
 
-            <p class="table-scroll-hint">表格较宽时可左右滑动查看更多字段；人才列与操作列会固定在两侧</p>
-            <section class="table-wrap" aria-label="人才列表">
-              <table>
-                <thead>
-                  <tr>
-                    <th class="col-person">人才</th>
-                    <th class="col-gender">性别</th>
-                    <th class="col-age">年龄</th>
-                    <th class="col-grade">职级</th>
-                    <th class="col-secondary">籍贯</th>
-                    <th class="col-education">学历</th>
-                    <th class="col-secondary">英语水平</th>
-                    <th class="col-project">当前项目</th>
-                    <th class="col-secondary">毕业学校 / 专业</th>
-                    <th class="col-secondary">入职时间</th>
-                    <th class="col-secondary">司龄</th>
-                    <th class="col-secondary">常驻基地</th>
-                    <th class="col-secondary">工作年限</th>
-                    <th class="col-secondary">产品经验年限</th>
-                    <th class="col-secondary">产品经验</th>
-                    <th class="col-status">状态</th>
-                    <th class="col-actions">操作</th>
-                  </tr>
-                </thead>
-                <tbody id="talentRows"></tbody>
-              </table>
-            </section>
+            <section class="people-grid" id="talentRows" aria-label="人才卡片列表"></section>
             <div class="empty" id="emptyState" hidden>暂无匹配人才</div>
           </div>
         </div>
@@ -4132,6 +4351,7 @@
       syncStatus: document.querySelector("#syncStatus"),
       rows: document.querySelector("#talentRows"),
       empty: document.querySelector("#emptyState"),
+      peopleCount: document.querySelector("#peopleCount"),
       detail: null,
       search: document.querySelector("#searchInput"),
       genderFilter: document.querySelector("#genderFilter"),
@@ -5279,12 +5499,12 @@
       return (name || "人").trim().slice(-2);
     }
 
-    function avatarHtml(person) {
-      if (person.photoUrl) {
-        const src = withAuthPhotoUrl(person.photoUrl);
-        return `<button class="avatar-btn profile-btn" type="button" title="查看完整档案" data-id="${person.id}"><span class="avatar"><img alt="${escapeHtml(person.name)}" src="${escapeHtml(src)}"></span></button>`;
-      }
-      return `<button class="avatar-btn profile-btn" type="button" title="查看完整档案" data-id="${person.id}"><span class="avatar">${escapeHtml(initials(person.name))}</span></button>`;
+    function avatarHtml(person, { interactive = true } = {}) {
+      const inner = person.photoUrl
+        ? `<span class="avatar"><img alt="${escapeHtml(person.name)}" src="${escapeHtml(withAuthPhotoUrl(person.photoUrl))}"></span>`
+        : `<span class="avatar">${escapeHtml(initials(person.name))}</span>`;
+      if (!interactive) return inner;
+      return `<button class="avatar-btn profile-btn" type="button" title="查看完整档案" data-id="${person.id}">${inner}</button>`;
     }
 
     function escapeHtml(value) {
@@ -6239,59 +6459,68 @@
       renderDashPie("right");
     }
 
+    function formatTenureCompact(dateValue) {
+      const iso = normalizeDate(dateValue);
+      if (!iso) return "";
+      return `司龄${yearsSince(iso).toFixed(1)}年`;
+    }
+
     function renderTable() {
       const list = filteredTalents();
       if (!list.some(person => person.id === selectedId)) selectedId = list[0]?.id || talents[0]?.id || null;
 
+      if (els.peopleCount) els.peopleCount.textContent = `${list.length}人`;
+
       els.rows.innerHTML = list.map(person => {
-        const productTags = (person.products || []).map(item => {
-          const label = productDisplayName(item);
-          if (!label) return null;
-          return `<span class="tag ${isPresetAppleProduct(item) ? "apple" : ""}">${escapeHtml(label)}</span>`;
-        }).filter(Boolean);
-        const visibleProductTags = productTags.slice(0, 3);
-        const extraProductCount = productTags.length - visibleProductTags.length;
-        const products = [
-          ...visibleProductTags,
-          extraProductCount > 0 ? `<span class="tag more-tag" title="共 ${productTags.length} 项，详见档案">+${extraProductCount}</span>` : ""
-        ].filter(Boolean).join("");
+        const age = person.age || calcAgeFromBirth(person.birthDate) || "";
+        const pills = [];
+        if (person.position) {
+          pills.push(`<span class="person-pill person-pill--role">${escapeHtml(person.position)}</span>`);
+        }
+        if (person.jobGrade) {
+          pills.push(`<span class="person-pill person-pill--grade">${escapeHtml(person.jobGrade)}</span>`);
+        }
+        const deptLabel = person.department || person.category;
+        if (deptLabel) {
+          pills.push(`<span class="person-pill person-pill--dept">${escapeHtml(deptLabel)}</span>`);
+        }
+
+        const metaBits = [];
+        if (person.gender) metaBits.push(escapeHtml(person.gender));
+        if (age) metaBits.push(`${escapeHtml(age)}岁`);
+        const tenure = formatTenureCompact(person.joinDate);
+        if (tenure) metaBits.push(tenure);
+        if (person.education) metaBits.push(escapeHtml(person.education));
+        if (person.status) metaBits.push(escapeHtml(person.status));
+        if (metaBits.length < 3) {
+          const english = englishLevelNumber(person.englishLevel);
+          if (english) metaBits.push(`英语${escapeHtml(english)}`);
+        }
+        if (metaBits.length < 3 && person.employeeNo) {
+          metaBits.push(`工号${escapeHtml(person.employeeNo)}`);
+        }
+
+        const locParts = [];
+        if (person.baseLocation) locParts.push(person.baseLocation);
+        else {
+          if (person.category) locParts.push(person.category);
+          if (person.department && person.department !== person.category) locParts.push(person.department);
+        }
+        const loc = locParts.filter(Boolean).join(" · ");
+
         return `
-          <tr class="talent-row ${person.id === selectedId ? "active" : ""}" data-id="${person.id}">
-            <td class="col-person">
-              <div class="person-cell">
-                ${avatarHtml(person)}
-                <div>
-                  <div class="person-name">${escapeHtml(person.name)}${person.englishName ? `<span class="person-name-en">${escapeHtml(person.englishName)}</span>` : ""}</div>
-                  <div class="subtext">${escapeHtml(person.department || person.category || "未分类")}${person.position ? ` · ${escapeHtml(person.position)}` : ""}</div>
-                </div>
+          <article class="person-card ${person.id === selectedId ? "active" : ""}" data-id="${person.id}" tabindex="0" role="button" aria-label="${escapeHtml(person.name || "人才")}">
+            <button class="btn person-card-more action-more" type="button" data-action="talent-more" data-id="${person.id}" title="更多操作（也可右键）" aria-haspopup="menu">⋯</button>
+            <div class="person-card-main">
+              ${avatarHtml(person, { interactive: false })}
+              <div class="person-card-body">
+                <div class="person-card-name">${escapeHtml(person.name || "-")}${person.englishName ? `<span class="person-name-en">${escapeHtml(person.englishName)}</span>` : ""}</div>
+                <div class="person-card-pills">${pills.join("") || `<span class="person-pill person-pill--muted">未填岗位</span>`}</div>
+                ${loc ? `<div class="person-card-loc"><span class="person-card-loc-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="person-card-loc-text">${escapeHtml(loc)}</span></div>` : ""}
               </div>
-            </td>
-            <td class="col-gender">${escapeHtml(person.gender || "-")}</td>
-            <td class="col-age">${escapeHtml(person.age || calcAgeFromBirth(person.birthDate) || "-")}</td>
-            <td class="col-grade">${escapeHtml(person.jobGrade || "-")}</td>
-            <td class="col-secondary">${escapeHtml(person.hometown || "-")}</td>
-            <td class="col-education">${escapeHtml(person.education || "-")}</td>
-            <td class="col-secondary">
-              <div>${escapeHtml(englishLevelNumber(person.englishLevel) || "-")}</div>
-            </td>
-            <td class="col-project">${escapeHtml(person.currentProject || "-")}</td>
-            <td class="col-secondary">
-              <strong>${escapeHtml(person.school || "-")}</strong>
-              <div class="cell-sub">${escapeHtml(person.major || "-")} · ${formatDate(person.graduationDate)}</div>
-            </td>
-            <td class="col-secondary">${formatDate(person.joinDate)}</td>
-            <td class="col-secondary">${formatTenureYears(person.joinDate)}</td>
-            <td class="col-secondary">${escapeHtml(person.baseLocation || "-")}</td>
-            <td class="col-secondary">${formatYears(person.firstWorkDate)}</td>
-            <td class="col-secondary"><span class="tag apple">${formatYears(person.appleStartDate)}</span></td>
-            <td class="col-secondary"><div class="tag-list">${products || "<span class='subtext'>-</span>"}</div></td>
-            <td class="col-status"><span class="tag warn">${escapeHtml(person.status || "-")}</span></td>
-            <td class="col-actions">
-              <div class="row-ops">
-                <button class="btn action-more" type="button" data-action="talent-more" data-id="${person.id}" title="更多操作（也可右键）" aria-haspopup="menu">⋯</button>
-              </div>
-            </td>
-          </tr>
+            </div>
+            <div class="person-card-meta">${metaBits.join(" · ") || "暂无更多信息"}</div>
+          </article>
         `;
       }).join("");
       els.empty.hidden = list.length > 0;
@@ -6900,6 +7129,7 @@
         if (els.statAvgAge) els.statAvgAge.textContent = "-";
         if (els.statEducationMini) els.statEducationMini.textContent = "暂无";
         els.rows.innerHTML = "";
+        if (els.peopleCount) els.peopleCount.textContent = "0人";
         els.empty.hidden = false;
         els.empty.textContent = "暂无部门权限，请联系超级管理员分配";
         setActiveView("list");
@@ -7603,20 +7833,27 @@
       }
 
       hideContextMenu();
-      if (event.target.closest("td.col-actions")) return;
-      const row = event.target.closest("tr.talent-row");
-      if (row?.dataset.id) {
-        const person = talents.find(item => item.id === row.dataset.id);
+      const card = event.target.closest("article.person-card");
+      if (card?.dataset.id) {
+        const person = talents.find(item => item.id === card.dataset.id);
         selectedId = person?.id || selectedId;
         renderTable();
         openProfileDialog(person);
       }
     });
 
+    els.rows.addEventListener("keydown", event => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const card = event.target.closest("article.person-card");
+      if (!card?.dataset.id || event.target.closest("[data-action='talent-more']")) return;
+      event.preventDefault();
+      card.click();
+    });
+
     els.rows.addEventListener("contextmenu", event => {
-      const row = event.target.closest("tr.talent-row");
-      if (!row?.dataset.id) return;
-      if (showTalentContextMenu(event, row.dataset.id)) {
+      const card = event.target.closest("article.person-card");
+      if (!card?.dataset.id) return;
+      if (showTalentContextMenu(event, card.dataset.id)) {
         event.preventDefault();
         event.stopPropagation();
       }
