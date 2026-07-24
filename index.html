@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260723-fixed-sidebar -->
+  <!-- deploy-bust: 20260724-dash-p0-overview -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -688,7 +688,7 @@
 
     .dashboard-hero {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
     }
 
@@ -709,7 +709,7 @@
 
     .dashboard-metric {
       margin: 0;
-      font-size: 36px;
+      font-size: 32px;
       line-height: 1.1;
       font-weight: 700;
       letter-spacing: -0.03em;
@@ -928,6 +928,9 @@
     }
 
     @media (max-width: 1100px) {
+      .dashboard-hero {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
       .filters {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -2876,14 +2879,24 @@
 
             <div class="dashboard-hero">
               <article class="dashboard-card">
-                <h3 id="dashTotalLabel">人才总人数</h3>
-                <p class="dashboard-metric" id="dashTotal">0</p>
-                <p class="dashboard-card-note" id="dashTotalNote">当前权限范围内可见人才</p>
+                <h3 id="dashKpiActiveLabel">在岗人数</h3>
+                <p class="dashboard-metric" id="dashKpiActive">0</p>
+                <p class="dashboard-card-note" id="dashKpiActiveNote">状态为「在职」的可用人力</p>
               </article>
               <article class="dashboard-card">
-                <h3 id="dashAvgAgeLabel">平均年龄</h3>
-                <p class="dashboard-metric" id="dashAvgAge">0<span class="dashboard-metric-unit">岁</span></p>
-                <p class="dashboard-card-note" id="dashAvgAgeNote">基于有出生日期 / 年龄的档案</p>
+                <h3 id="dashKpiMasterLabel">硕博占比</h3>
+                <p class="dashboard-metric" id="dashKpiMaster">-<span class="dashboard-metric-unit">%</span></p>
+                <p class="dashboard-card-note" id="dashKpiMasterNote">在岗中硕士 + 博士占比</p>
+              </article>
+              <article class="dashboard-card">
+                <h3 id="dashKpiTenureLabel">平均司龄</h3>
+                <p class="dashboard-metric" id="dashKpiTenure">-<span class="dashboard-metric-unit">年</span></p>
+                <p class="dashboard-card-note" id="dashKpiTenureNote">基于有入职时间的档案</p>
+              </article>
+              <article class="dashboard-card">
+                <h3 id="dashKpiCompleteLabel">数据完整率</h3>
+                <p class="dashboard-metric" id="dashKpiComplete">-<span class="dashboard-metric-unit">%</span></p>
+                <p class="dashboard-card-note" id="dashKpiCompleteNote">关键字段已填比例</p>
               </article>
             </div>
 
@@ -3887,8 +3900,8 @@
     let syncTimer = null;
     let draftPhotoUrl = "";
     let photoProcessing = false;
-    let dashPieLeftDim = "education";
-    let dashPieRightDim = "age";
+    let dashPieLeftDim = "category";
+    let dashPieRightDim = "education";
     let dashMode = "overall"; // overall | single | compare
     let dashSingleDept = "";
     let dashCompareLeft = "";
@@ -3925,12 +3938,18 @@
       listPanel: document.querySelector("#listPanel"),
       mainTitle: document.querySelector("#mainTitle"),
       mainSubtitle: document.querySelector("#mainSubtitle"),
-      dashTotal: document.querySelector("#dashTotal"),
-      dashTotalLabel: document.querySelector("#dashTotalLabel"),
-      dashTotalNote: document.querySelector("#dashTotalNote"),
-      dashAvgAge: document.querySelector("#dashAvgAge"),
-      dashAvgAgeLabel: document.querySelector("#dashAvgAgeLabel"),
-      dashAvgAgeNote: document.querySelector("#dashAvgAgeNote"),
+      dashKpiActive: document.querySelector("#dashKpiActive"),
+      dashKpiActiveLabel: document.querySelector("#dashKpiActiveLabel"),
+      dashKpiActiveNote: document.querySelector("#dashKpiActiveNote"),
+      dashKpiMaster: document.querySelector("#dashKpiMaster"),
+      dashKpiMasterLabel: document.querySelector("#dashKpiMasterLabel"),
+      dashKpiMasterNote: document.querySelector("#dashKpiMasterNote"),
+      dashKpiTenure: document.querySelector("#dashKpiTenure"),
+      dashKpiTenureLabel: document.querySelector("#dashKpiTenureLabel"),
+      dashKpiTenureNote: document.querySelector("#dashKpiTenureNote"),
+      dashKpiComplete: document.querySelector("#dashKpiComplete"),
+      dashKpiCompleteLabel: document.querySelector("#dashKpiCompleteLabel"),
+      dashKpiCompleteNote: document.querySelector("#dashKpiCompleteNote"),
       dashScopeHint: document.querySelector("#dashScopeHint"),
       dashSingleDeptField: document.querySelector("#dashSingleDeptField"),
       dashSingleDept: document.querySelector("#dashSingleDept"),
@@ -5147,6 +5166,14 @@
       "3年以下": "#5b8def",
       "3~8年": "#3da9a0",
       "8年以上": "#ce673d",
+      "1年以下": "#5b8def",
+      "1~3年": "#3da9a0",
+      "3~5年": "#e8a23a",
+      "5年以上": "#ce673d",
+      "职级 1-5": "#5b8def",
+      "职级 6-8": "#3da9a0",
+      "职级 9-11": "#e8a23a",
+      "职级 12+": "#ce673d",
       "仅能读写": "#b7c0cc",
       "基本沟通读写": "#e8a23a",
       "无障碍沟通听说读写": "#3da9a0"
@@ -5154,11 +5181,49 @@
 
     const DASH_DIMENSIONS = [
       {
+        id: "category",
+        label: "研发分类",
+        note: "按一级研发部门统计人数",
+        order: null,
+        bucket: person => String(person.category || "").trim() || "未分类"
+      },
+      {
         id: "education",
         label: "学历",
         note: "专科 / 本科 / 硕士 / 博士 / 其他",
         order: [...EDUCATION_OPTIONS, "未填写"],
         bucket: person => normalizeEducationLabel(person.education)
+      },
+      {
+        id: "tenure",
+        label: "司龄分层",
+        note: "1年以下 / 1~3年 / 3~5年 / 5年以上",
+        order: ["1年以下", "1~3年", "3~5年", "5年以上", "未填写"],
+        bucket: person => {
+          if (!normalizeDate(person.joinDate)) return "未填写";
+          const years = yearsSince(person.joinDate);
+          if (!Number.isFinite(years) || years < 0) return "未填写";
+          if (years < 1) return "1年以下";
+          if (years < 3) return "1~3年";
+          if (years < 5) return "3~5年";
+          return "5年以上";
+        }
+      },
+      {
+        id: "jobGrade",
+        label: "职级分布",
+        note: "1-5 / 6-8 / 9-11 / 12+",
+        order: ["职级 1-5", "职级 6-8", "职级 9-11", "职级 12+", "未填写"],
+        bucket: person => {
+          const value = normalizeJobGrade(person.jobGrade);
+          if (!value) return "未填写";
+          const num = Number(value);
+          if (!Number.isFinite(num) || num <= 0) return "未填写";
+          if (num <= 5) return "职级 1-5";
+          if (num <= 8) return "职级 6-8";
+          if (num <= 11) return "职级 9-11";
+          return "职级 12+";
+        }
       },
       {
         id: "age",
@@ -5192,23 +5257,6 @@
         bucket: person => {
           const value = String(person.status || "").trim();
           if (["在职", "候选", "储备", "离职"].includes(value)) return value;
-          return value || "未填写";
-        }
-      },
-      {
-        id: "category",
-        label: "研发分类",
-        note: "按当前可见部门分类统计",
-        order: null,
-        bucket: person => String(person.category || "").trim() || "未分类"
-      },
-      {
-        id: "jobGrade",
-        label: "职级",
-        note: "按填写的职级数字统计",
-        order: null,
-        bucket: person => {
-          const value = normalizeJobGrade(person.jobGrade);
           return value || "未填写";
         }
       },
@@ -5292,14 +5340,68 @@
       return { dim, items, total };
     }
 
+    function isActiveEmployee(person) {
+      return String(person?.status || "").trim() === "在职";
+    }
+
+    function isMasterOrDoctor(person) {
+      const edu = normalizeEducationLabel(person?.education);
+      return edu === "硕士" || edu === "博士";
+    }
+
+    function talentProfileCompleteness(person) {
+      const checks = [
+        String(person?.name || "").trim(),
+        String(person?.employeeNo || "").trim(),
+        String(person?.category || "").trim(),
+        String(person?.status || "").trim(),
+        normalizeEducationLabel(person?.education) !== "未填写",
+        Boolean(normalizeDate(person?.joinDate)),
+        Boolean(normalizeJobGrade(person?.jobGrade)),
+        personAgeNumber(person) != null,
+      ];
+      const filled = checks.filter(Boolean).length;
+      return filled / checks.length;
+    }
+
     function computeDashboardMetrics(list = talents) {
       const total = list.length;
+      const activeList = list.filter(isActiveEmployee);
+      const activeCount = activeList.length;
+      const masterDoctorCount = activeList.filter(isMasterOrDoctor).length;
+      const masterDoctorRate = activeCount
+        ? Math.round((masterDoctorCount / activeCount) * 1000) / 10
+        : null;
+
+      const tenureYears = list
+        .map(person => (normalizeDate(person.joinDate) ? yearsSince(person.joinDate) : null))
+        .filter(years => years != null && Number.isFinite(years) && years >= 0);
+      const avgTenure = tenureYears.length
+        ? Math.round((tenureYears.reduce((sum, years) => sum + years, 0) / tenureYears.length) * 10) / 10
+        : null;
+
+      const completenessScores = list.map(talentProfileCompleteness);
+      const completenessRate = completenessScores.length
+        ? Math.round((completenessScores.reduce((sum, rate) => sum + rate, 0) / completenessScores.length) * 1000) / 10
+        : null;
+
       const ages = list.map(personAgeNumber).filter(age => age != null);
       const avgAge = ages.length
         ? Math.round((ages.reduce((sum, age) => sum + age, 0) / ages.length) * 10) / 10
         : null;
       const education = computeDistribution(list, "education").items;
-      return { total, avgAge, ageSampleSize: ages.length, education };
+      return {
+        total,
+        activeCount,
+        masterDoctorRate,
+        masterDoctorCount,
+        avgTenure,
+        tenureSampleSize: tenureYears.length,
+        completenessRate,
+        avgAge,
+        ageSampleSize: ages.length,
+        education,
+      };
     }
 
     function getDashboardDepartments() {
@@ -5703,37 +5805,58 @@
           ]
         : getDashboardScopeList();
       const heroMetrics = computeDashboardMetrics(heroList);
+      const scopeTag = dashMode === "overall"
+        ? "当前可见范围"
+        : dashMode === "single"
+          ? (dashSingleDept || "当前部门")
+          : "对比范围";
 
-      if (els.dashTotalLabel) {
-        els.dashTotalLabel.textContent = (dashMode === "compare" || isSubCompare) ? "对比范围人数" : "人才总人数";
+      if (els.dashKpiActiveLabel) {
+        els.dashKpiActiveLabel.textContent = dashMode === "overall" ? "在岗人数" : `${scopeTag}·在岗`;
       }
-      if (els.dashTotal) els.dashTotal.textContent = String(heroMetrics.total);
-      if (els.dashTotalNote) {
-        if (dashMode === "overall") {
-          els.dashTotalNote.textContent = isSuperAdmin()
-            ? "全部人才（超级管理员可见）"
-            : "当前权限范围内可见人才";
-        } else if (dashMode === "single") {
-          els.dashTotalNote.textContent = isSubCompare
-            ? `${dashSingleDept || "-"}：${dashCompareLeft || "A"} + ${dashCompareRight || "B"}`
-            : `部门：${dashSingleDept || "-"}`;
-        } else {
-          els.dashTotalNote.textContent = `${dashCompareLeft || "A"} + ${dashCompareRight || "B"}`;
-        }
+      if (els.dashKpiActive) els.dashKpiActive.textContent = String(heroMetrics.activeCount);
+      if (els.dashKpiActiveNote) {
+        els.dashKpiActiveNote.textContent = dashMode === "overall"
+          ? `在职 ${heroMetrics.activeCount} / 全部 ${heroMetrics.total}`
+          : `在职 ${heroMetrics.activeCount} · 范围内共 ${heroMetrics.total} 人`;
       }
-      if (els.dashAvgAgeLabel) {
-        els.dashAvgAgeLabel.textContent = (dashMode === "compare" || isSubCompare) ? "对比范围平均年龄" : "平均年龄";
+
+      if (els.dashKpiMasterLabel) els.dashKpiMasterLabel.textContent = "硕博占比";
+      if (els.dashKpiMaster) {
+        els.dashKpiMaster.innerHTML = heroMetrics.masterDoctorRate == null
+          ? `-<span class="dashboard-metric-unit">%</span>`
+          : `${heroMetrics.masterDoctorRate}<span class="dashboard-metric-unit">%</span>`;
       }
-      if (els.dashAvgAge) {
-        els.dashAvgAge.innerHTML = heroMetrics.avgAge == null
-          ? `-<span class="dashboard-metric-unit">岁</span>`
-          : `${heroMetrics.avgAge}<span class="dashboard-metric-unit">岁</span>`;
+      if (els.dashKpiMasterNote) {
+        els.dashKpiMasterNote.textContent = heroMetrics.activeCount
+          ? `在岗硕博 ${heroMetrics.masterDoctorCount} 人`
+          : "暂无在岗人员";
       }
-      if (els.dashAvgAgeNote) {
-        els.dashAvgAgeNote.textContent = heroMetrics.ageSampleSize
-          ? `基于 ${heroMetrics.ageSampleSize} 份有年龄信息的档案`
-          : "暂无可用年龄数据";
+
+      if (els.dashKpiTenureLabel) els.dashKpiTenureLabel.textContent = "平均司龄";
+      if (els.dashKpiTenure) {
+        els.dashKpiTenure.innerHTML = heroMetrics.avgTenure == null
+          ? `-<span class="dashboard-metric-unit">年</span>`
+          : `${heroMetrics.avgTenure}<span class="dashboard-metric-unit">年</span>`;
       }
+      if (els.dashKpiTenureNote) {
+        els.dashKpiTenureNote.textContent = heroMetrics.tenureSampleSize
+          ? `基于 ${heroMetrics.tenureSampleSize} 份有入职时间的档案`
+          : "暂无入职时间数据";
+      }
+
+      if (els.dashKpiCompleteLabel) els.dashKpiCompleteLabel.textContent = "数据完整率";
+      if (els.dashKpiComplete) {
+        els.dashKpiComplete.innerHTML = heroMetrics.completenessRate == null
+          ? `-<span class="dashboard-metric-unit">%</span>`
+          : `${heroMetrics.completenessRate}<span class="dashboard-metric-unit">%</span>`;
+      }
+      if (els.dashKpiCompleteNote) {
+        els.dashKpiCompleteNote.textContent = heroMetrics.total
+          ? "姓名/工号/部门/状态/学历/入职/职级/年龄"
+          : "暂无档案";
+      }
+
       renderDashPie("left");
       renderDashPie("right");
     }
