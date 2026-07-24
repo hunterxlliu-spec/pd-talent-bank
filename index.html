@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-dash-pies-2x2 -->
+  <!-- deploy-bust: 20260724-pie-explode-vivid -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -897,7 +897,13 @@
     }
 
     .edu-bar-wrap.has-selection .edu-bar-focus {
-      color: var(--ink);
+      color: #0f766e;
+      font-weight: 800;
+    }
+
+    .edu-bar-wrap.has-selection .edu-bar-focus.is-selected {
+      color: #0f766e;
+      font-weight: 800;
     }
 
     .edu-bar-list {
@@ -918,9 +924,10 @@
       cursor: pointer;
       text-align: left;
       border-radius: 8px;
-      transition: opacity .16s ease, background .16s ease;
+      transition: opacity .16s ease, background .16s ease, transform .2s cubic-bezier(.22, 1, .36, 1);
       font: inherit;
       color: inherit;
+      transform-origin: left center;
     }
 
     .edu-bar-item:hover,
@@ -939,12 +946,29 @@
     }
 
     .edu-bar-wrap.has-selection .edu-bar-item {
-      opacity: .38;
+      opacity: .34;
+      filter: saturate(.75);
     }
 
     .edu-bar-wrap.has-selection .edu-bar-item.is-selected {
       opacity: 1;
-      background: rgba(61, 169, 160, .08);
+      filter: none;
+      background: rgba(61, 169, 160, .1);
+      transform: translateX(5px) scale(1.015);
+    }
+
+    .edu-bar-wrap.has-selection .edu-bar-item.is-selected .edu-bar-name {
+      font-weight: 800;
+      color: #0f766e;
+    }
+
+    .edu-bar-wrap.has-selection .edu-bar-item.is-selected .edu-bar-fill {
+      filter: brightness(1.1) saturate(1.35);
+    }
+
+    .edu-bar-wrap.has-selection .edu-bar-item.is-selected .edu-bar-meta {
+      color: #0f766e;
+      font-weight: 800;
     }
 
     .edu-bar-item.is-zero {
@@ -986,9 +1010,6 @@
       text-align: right;
     }
 
-    .edu-bar-item.is-selected .edu-bar-meta {
-      color: var(--ink);
-    }
 
     @container dash-pie (min-width: 520px) {
       .edu-chart {
@@ -1030,10 +1051,21 @@
     }
 
     .edu-pie-slice {
-      transition: opacity .16s ease, filter .16s ease;
+      --ex: 0px;
+      --ey: 0px;
+      transition: opacity .16s ease, filter .16s ease, transform .22s cubic-bezier(.22, 1, .36, 1);
+      transform: translate(var(--ex), var(--ey));
+      transform-box: fill-box;
       transform-origin: center;
       cursor: pointer;
       outline: none;
+    }
+
+    .edu-pie-callout {
+      --ex: 0px;
+      --ey: 0px;
+      transition: opacity .16s ease, transform .22s cubic-bezier(.22, 1, .36, 1);
+      transform: translate(var(--ex), var(--ey));
     }
 
     .edu-pie-wrap:hover:not(.has-selection) .edu-pie-slice {
@@ -1047,20 +1079,31 @@
     }
 
     .edu-pie-wrap.has-selection .edu-pie-slice {
-      opacity: .38;
+      opacity: .3;
+      filter: saturate(.68) brightness(1.02);
     }
 
     .edu-pie-wrap.has-selection .edu-pie-slice.is-selected {
       opacity: 1;
-      filter: brightness(1.08) saturate(1.08);
+      filter: brightness(1.14) saturate(1.42);
     }
 
     .edu-pie-wrap.has-selection .edu-pie-callout {
-      opacity: .28;
+      opacity: .22;
     }
 
     .edu-pie-wrap.has-selection .edu-pie-callout.is-selected {
       opacity: 1;
+    }
+
+    .edu-pie-wrap.has-selection .edu-pie-callout.is-selected .edu-pie-label-strong {
+      font-weight: 800;
+      fill: #1e293b;
+    }
+
+    .edu-pie-wrap.has-selection .edu-pie-callout.is-selected .edu-pie-label {
+      fill: #334155;
+      font-weight: 650;
     }
 
     .edu-pie-hole {
@@ -1079,10 +1122,18 @@
 
     .edu-pie-wrap.has-selection .edu-pie-center-name {
       opacity: 1;
+      font-weight: 800;
+      fill: #0f172a;
     }
 
     .edu-pie-wrap.has-selection .edu-pie-center-value {
       font-size: 18px;
+      font-weight: 800;
+    }
+
+    .edu-pie-wrap.has-selection .edu-pie-center-unit {
+      fill: #475569;
+      font-weight: 700;
     }
 
     .edu-pie-center-value {
@@ -1210,15 +1261,27 @@
     }
 
     .edu-legend-table tbody tr.is-selected td {
-      background: rgba(37, 99, 235, .08);
+      background: rgba(37, 99, 235, .1);
     }
 
     .edu-legend-table tbody tr.is-selected:hover td {
-      background: rgba(37, 99, 235, .11);
+      background: rgba(37, 99, 235, .14);
     }
 
     .edu-legend-table tbody tr.is-selected .col-label {
       color: #1d4ed8;
+      font-weight: 800;
+    }
+
+    .edu-legend-table tbody tr.is-selected .col-count strong,
+    .edu-legend-table tbody tr.is-selected .col-percent strong {
+      color: #1e40af;
+      font-weight: 800;
+    }
+
+    .edu-legend-table tbody tr.is-selected .edu-legend-swatch {
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .55), 0 0 0 2.5px rgba(37, 99, 235, .28);
+      filter: brightness(1.08) saturate(1.35);
     }
 
     .edu-legend-table .col-swatch {
@@ -6442,6 +6505,25 @@
       return `${short.slice(0, 5)}…`;
     }
 
+    const PIE_SLICE_EXPLODE = 8;
+
+    function setPieExplodeOffset(el, selected) {
+      if (!el) return;
+      if (!selected) {
+        el.style.setProperty("--ex", "0px");
+        el.style.setProperty("--ey", "0px");
+        return;
+      }
+      const mid = Number(el.dataset.pieMid);
+      if (!Number.isFinite(mid)) {
+        el.style.setProperty("--ex", "0px");
+        el.style.setProperty("--ey", "0px");
+        return;
+      }
+      el.style.setProperty("--ex", `${(Math.cos(mid) * PIE_SLICE_EXPLODE).toFixed(2)}px`);
+      el.style.setProperty("--ey", `${(Math.sin(mid) * PIE_SLICE_EXPLODE).toFixed(2)}px`);
+    }
+
     function setPieSelection(chartEl, label) {
       if (!chartEl) return;
       const wrap = chartEl.querySelector(".edu-pie-wrap, .edu-bar-wrap");
@@ -6461,6 +6543,7 @@
         const isSel = Boolean(next) && el.dataset.pieLabel === next;
         el.classList.toggle("is-selected", isSel);
         el.setAttribute("aria-pressed", isSel ? "true" : "false");
+        if (el.classList.contains("edu-pie-slice")) setPieExplodeOffset(el, isSel);
         if (isSel) {
           count = Number(el.dataset.pieCount || 0);
           percent = Number(el.dataset.piePercent || 0);
@@ -6468,7 +6551,9 @@
         }
       });
       wrap.querySelectorAll(".edu-pie-callout").forEach(el => {
-        el.classList.toggle("is-selected", Boolean(next) && el.dataset.pieLabel === next);
+        const isSel = Boolean(next) && el.dataset.pieLabel === next;
+        el.classList.toggle("is-selected", isSel);
+        setPieExplodeOffset(el, isSel);
       });
       table?.querySelectorAll("tbody tr[data-pie-label]").forEach(tr => {
         const isSel = Boolean(next) && tr.dataset.pieLabel === next;
@@ -6486,6 +6571,7 @@
         barFocus.textContent = next
           ? `${fitPieCenterName(next)} · ${count}人 · ${percent}%`
           : `共 ${total} 人`;
+        barFocus.classList.toggle("is-selected", Boolean(next));
       }
 
       const centerName = wrap.querySelector(".edu-pie-center-name");
@@ -6586,7 +6672,8 @@
       const paths = sliceMeta.map(item => {
         const color = sliceColor(item.label, item.colorIndex);
         const tip = `${escapeHtml(item.label)}：${item.count}人（${item.percent}%）`;
-        const common = `class="edu-pie-slice" data-pie-label="${escapeHtml(item.label)}" data-pie-count="${item.count}" data-pie-percent="${item.percent}" tabindex="0" role="button" aria-pressed="false" aria-label="${tip}"`;
+        const midAttr = `data-pie-mid="${item.mid.toFixed(5)}"`;
+        const common = `class="edu-pie-slice" data-pie-label="${escapeHtml(item.label)}" data-pie-count="${item.count}" data-pie-percent="${item.percent}" ${midAttr} tabindex="0" role="button" aria-pressed="false" aria-label="${tip}"`;
         if (item.count === total && gap === 0) {
           return `<circle ${common} cx="${cx}" cy="${cy}" r="${outerR}" fill="${color}">
               <title>${tip}</title>
@@ -6635,7 +6722,7 @@
         const color = sliceColor(item.label, item.colorIndex);
         const shortLabel = pieLegendLabel(item.label);
         return `
-          <g class="edu-pie-callout" data-pie-label="${escapeHtml(item.label)}" pointer-events="none">
+          <g class="edu-pie-callout" data-pie-label="${escapeHtml(item.label)}" data-pie-mid="${item.mid.toFixed(5)}" pointer-events="none">
             <path class="edu-pie-leader" d="M ${startPt.x.toFixed(1)} ${startPt.y.toFixed(1)} L ${elbowX.toFixed(1)} ${elbow.y.toFixed(1)} L ${lineEndX.toFixed(1)} ${labelY.toFixed(1)}" stroke="${color}"></path>
             <circle class="edu-pie-leader-dot" cx="${startPt.x.toFixed(1)}" cy="${startPt.y.toFixed(1)}" r="2.4" fill="${color}"></circle>
             <text class="edu-pie-label-strong" x="${labelX.toFixed(1)}" y="${(labelY - 1).toFixed(1)}" text-anchor="${anchor}">${escapeHtml(shortLabel)}</text>
