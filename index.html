@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-kpi-height -->
+  <!-- deploy-bust: 20260724-dash-pies-2x2 -->
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -3457,8 +3457,12 @@
                   <select id="dashCompareRight"></select>
                 </div>
                 <div class="field" id="dashCompareDimField" hidden>
-                  <label for="dashCompareDim">对比维度</label>
+                  <label for="dashCompareDim">第一行维度</label>
                   <select id="dashCompareDim"></select>
+                </div>
+                <div class="field" id="dashCompareDim2Field" hidden>
+                  <label for="dashCompareDim2">第二行维度</label>
+                  <select id="dashCompareDim2"></select>
                 </div>
                 <p class="dash-scope-hint" id="dashScopeHint">查看全部可见人才的整体结构分布</p>
               </div>
@@ -3516,6 +3520,34 @@
                 </div>
                 <p class="dash-pie-note" id="dashPieRightNote">按当前可见人才统计</p>
                 <div class="edu-chart" id="dashPieRight"></div>
+              </article>
+              <article class="dashboard-card dash-pie-card" id="dashPieCardLeft2">
+                <div class="dash-pie-head">
+                  <div>
+                    <h3 id="dashPieLeft2Title">学历</h3>
+                    <span class="dash-pie-kicker" id="dashPieLeft2Kicker">整体</span>
+                  </div>
+                  <div class="field" id="dashPieLeft2DimField">
+                    <label for="dashPieLeft2Dim">分类维度</label>
+                    <select id="dashPieLeft2Dim"></select>
+                  </div>
+                </div>
+                <p class="dash-pie-note" id="dashPieLeft2Note">按当前可见人才统计</p>
+                <div class="edu-chart" id="dashPieLeft2"></div>
+              </article>
+              <article class="dashboard-card dash-pie-card" id="dashPieCardRight2">
+                <div class="dash-pie-head">
+                  <div>
+                    <h3 id="dashPieRight2Title">职级分布</h3>
+                    <span class="dash-pie-kicker" id="dashPieRight2Kicker">整体</span>
+                  </div>
+                  <div class="field" id="dashPieRight2DimField">
+                    <label for="dashPieRight2Dim">分类维度</label>
+                    <select id="dashPieRight2Dim"></select>
+                  </div>
+                </div>
+                <p class="dash-pie-note" id="dashPieRight2Note">按当前可见人才统计</p>
+                <div class="edu-chart" id="dashPieRight2"></div>
               </article>
             </div>
           </section>
@@ -4492,12 +4524,23 @@
     let photoProcessing = false;
     let dashPieLeftDim = "category";
     let dashPieRightDim = "tenure";
+    let dashPieLeft2Dim = "education";
+    let dashPieRight2Dim = "jobGrade";
     let dashMode = "overall"; // overall | single | compare
     let dashSingleDept = "";
     let dashCompareLeft = "";
     let dashCompareRight = "";
     let dashCompareDim = "education";
+    let dashCompareDim2 = "jobGrade";
     let movingTalentId = null;
+
+    const DASH_PIE_SLOTS = ["left", "right", "left2", "right2"];
+    const DASH_PIE_SLOT_CAP = {
+      left: "Left",
+      right: "Right",
+      left2: "Left2",
+      right2: "Right2"
+    };
 
     const els = {
       statTotal: document.querySelector("#statTotal"),
@@ -4551,21 +4594,37 @@
       dashCompareVs: document.querySelector("#dashCompareVs"),
       dashCompareDimField: document.querySelector("#dashCompareDimField"),
       dashCompareDim: document.querySelector("#dashCompareDim"),
+      dashCompareDim2Field: document.querySelector("#dashCompareDim2Field"),
+      dashCompareDim2: document.querySelector("#dashCompareDim2"),
       dashboardPies: document.querySelector("#dashboardPies"),
       dashPieCardLeft: document.querySelector("#dashPieCardLeft"),
       dashPieCardRight: document.querySelector("#dashPieCardRight"),
+      dashPieCardLeft2: document.querySelector("#dashPieCardLeft2"),
+      dashPieCardRight2: document.querySelector("#dashPieCardRight2"),
       dashPieLeftTitle: document.querySelector("#dashPieLeftTitle"),
       dashPieRightTitle: document.querySelector("#dashPieRightTitle"),
+      dashPieLeft2Title: document.querySelector("#dashPieLeft2Title"),
+      dashPieRight2Title: document.querySelector("#dashPieRight2Title"),
       dashPieLeftKicker: document.querySelector("#dashPieLeftKicker"),
       dashPieRightKicker: document.querySelector("#dashPieRightKicker"),
+      dashPieLeft2Kicker: document.querySelector("#dashPieLeft2Kicker"),
+      dashPieRight2Kicker: document.querySelector("#dashPieRight2Kicker"),
       dashPieLeftDimField: document.querySelector("#dashPieLeftDimField"),
       dashPieRightDimField: document.querySelector("#dashPieRightDimField"),
+      dashPieLeft2DimField: document.querySelector("#dashPieLeft2DimField"),
+      dashPieRight2DimField: document.querySelector("#dashPieRight2DimField"),
       dashPieLeft: document.querySelector("#dashPieLeft"),
       dashPieRight: document.querySelector("#dashPieRight"),
+      dashPieLeft2: document.querySelector("#dashPieLeft2"),
+      dashPieRight2: document.querySelector("#dashPieRight2"),
       dashPieLeftDim: document.querySelector("#dashPieLeftDim"),
       dashPieRightDim: document.querySelector("#dashPieRightDim"),
+      dashPieLeft2Dim: document.querySelector("#dashPieLeft2Dim"),
+      dashPieRight2Dim: document.querySelector("#dashPieRight2Dim"),
       dashPieLeftNote: document.querySelector("#dashPieLeftNote"),
-      dashPieRightNote: document.querySelector("#dashPieRightNote")
+      dashPieRightNote: document.querySelector("#dashPieRightNote"),
+      dashPieLeft2Note: document.querySelector("#dashPieLeft2Note"),
+      dashPieRight2Note: document.querySelector("#dashPieRight2Note")
     };
 
     function setSyncStatus(text) {
@@ -6088,29 +6147,92 @@
       if (selected) select.value = selected;
     }
 
+    function getDashPieDimState(slot) {
+      switch (slot) {
+        case "right": return dashPieRightDim;
+        case "left2": return dashPieLeft2Dim;
+        case "right2": return dashPieRight2Dim;
+        default: return dashPieLeftDim;
+      }
+    }
+
+    function setDashPieDimState(slot, value) {
+      if (slot === "right") dashPieRightDim = value;
+      else if (slot === "left2") dashPieLeft2Dim = value;
+      else if (slot === "right2") dashPieRight2Dim = value;
+      else dashPieLeftDim = value;
+    }
+
+    function dashPieSlotEls(slot) {
+      const cap = DASH_PIE_SLOT_CAP[slot] || "Left";
+      return {
+        card: els[`dashPieCard${cap}`],
+        title: els[`dashPie${cap}Title`],
+        kicker: els[`dashPie${cap}Kicker`],
+        dimField: els[`dashPie${cap}DimField`],
+        dimSelect: els[`dashPie${cap}Dim`],
+        note: els[`dashPie${cap}Note`],
+        chart: els[`dashPie${cap}`]
+      };
+    }
+
+    function dashPieColumn(slot) {
+      return (slot === "left" || slot === "left2") ? "left" : "right";
+    }
+
+    function dashPieRowDim(slot) {
+      return (slot === "left" || slot === "right") ? dashCompareDim : dashCompareDim2;
+    }
+
+    function preferredDashPieDims() {
+      return dashMode === "overall"
+        ? ["category", "tenure", "education", "jobGrade"]
+        : ["education", "tenure", "jobGrade", "age"];
+    }
+
+    function ensureDashPieDimsDistinct(dims) {
+      const preferred = preferredDashPieDims();
+      const used = new Set();
+      DASH_PIE_SLOTS.forEach((slot, index) => {
+        let current = getDashPieDimState(slot);
+        if (!dims.some(item => item.id === current) || used.has(current)) {
+          const available = dims.filter(item => !used.has(item.id));
+          current = complementaryDimId(
+            [preferred[index], ...preferred, "age", "gender", "status", "workYears"],
+            available.length ? available : dims
+          );
+          setDashPieDimState(slot, current);
+        }
+        used.add(getDashPieDimState(slot));
+      });
+    }
+
     function fillDashDimensionSelects() {
       const dims = availableDashDimensions();
-      const overallPair = ["category", "tenure"];
-      const singlePair = ["education", "tenure"];
-      const preferred = dashMode === "overall" ? overallPair : singlePair;
-
-      if (!dims.some(item => item.id === dashPieLeftDim)) {
-        dashPieLeftDim = complementaryDimId(preferred, dims);
-      }
-      if (!dims.some(item => item.id === dashPieRightDim) || dashPieRightDim === dashPieLeftDim) {
-        dashPieRightDim = complementaryDimId(
-          [...preferred.slice().reverse(), "jobGrade", "education", "age"],
-          dims,
-          dashPieLeftDim
-        );
-      }
+      ensureDashPieDimsDistinct(dims);
       if (!dims.some(item => item.id === dashCompareDim)) {
         dashCompareDim = complementaryDimId(["education", "tenure", "jobGrade"], dims);
       }
+      if (!dims.some(item => item.id === dashCompareDim2) || dashCompareDim2 === dashCompareDim) {
+        dashCompareDim2 = complementaryDimId(
+          ["jobGrade", "tenure", "age", "education", "workYears"],
+          dims,
+          dashCompareDim
+        );
+      }
       const options = dims.map(item => ({ value: item.id, label: item.label }));
-      fillSelectWithOptions(els.dashPieLeftDim, options, dashPieLeftDim);
-      fillSelectWithOptions(els.dashPieRightDim, options, dashPieRightDim);
+      DASH_PIE_SLOTS.forEach(slot => {
+        const { dimSelect } = dashPieSlotEls(slot);
+        fillSelectWithOptions(dimSelect, options, getDashPieDimState(slot));
+      });
       fillSelectWithOptions(els.dashCompareDim, options, dashCompareDim);
+      fillSelectWithOptions(els.dashCompareDim2, options, dashCompareDim2);
+    }
+
+    function setDashPieCardChrome(slot, title, kicker) {
+      const { title: titleEl, kicker: kickerEl } = dashPieSlotEls(slot);
+      if (titleEl) titleEl.textContent = title;
+      if (kickerEl) kickerEl.textContent = kicker;
     }
 
     function syncDashModeChrome() {
@@ -6128,54 +6250,68 @@
       if (els.dashCompareRightField) els.dashCompareRightField.hidden = !showPair;
       if (els.dashCompareVs) els.dashCompareVs.hidden = !showPair;
       if (els.dashCompareDimField) els.dashCompareDimField.hidden = !showPair;
-      if (els.dashPieLeftDimField) els.dashPieLeftDimField.hidden = showPair;
-      if (els.dashPieRightDimField) els.dashPieRightDimField.hidden = showPair;
+      if (els.dashCompareDim2Field) els.dashCompareDim2Field.hidden = !showPair;
       if (els.dashboardPies) els.dashboardPies.classList.toggle("is-compare", showPair);
-      if (els.dashPieCardLeft) {
-        els.dashPieCardLeft.classList.toggle("is-compare-left", showPair);
-      }
-      if (els.dashPieCardRight) {
-        els.dashPieCardRight.classList.toggle("is-compare-right", showPair);
-      }
+
+      DASH_PIE_SLOTS.forEach(slot => {
+        const { card, dimField } = dashPieSlotEls(slot);
+        if (dimField) dimField.hidden = showPair;
+        if (card) {
+          card.classList.toggle("is-compare-left", showPair && dashPieColumn(slot) === "left");
+          card.classList.toggle("is-compare-right", showPair && dashPieColumn(slot) === "right");
+        }
+      });
 
       const leftLabel = els.dashCompareLeftField?.querySelector("label");
       const rightLabel = els.dashCompareRightField?.querySelector("label");
       if (leftLabel) leftLabel.textContent = isSubCompare ? "子部门 A" : "部门 A";
       if (rightLabel) rightLabel.textContent = isSubCompare ? "子部门 B" : "部门 B";
 
-      const leftDimLabel = getDashDimension(dashPieLeftDim).label;
-      const rightDimLabel = getDashDimension(dashPieRightDim).label;
+      const dimLabels = {
+        left: getDashDimension(dashPieLeftDim).label,
+        right: getDashDimension(dashPieRightDim).label,
+        left2: getDashDimension(dashPieLeft2Dim).label,
+        right2: getDashDimension(dashPieRight2Dim).label
+      };
       const compareDimLabel = getDashDimension(dashCompareDim).label;
+      const compareDim2Label = getDashDimension(dashCompareDim2).label;
 
       if (dashMode === "overall") {
-        if (els.dashScopeHint) els.dashScopeHint.textContent = "查看全部可见人才的整体结构，左右可分别切换不同维度。";
-        if (els.dashPieLeftTitle) els.dashPieLeftTitle.textContent = leftDimLabel;
-        if (els.dashPieRightTitle) els.dashPieRightTitle.textContent = rightDimLabel;
-        if (els.dashPieLeftKicker) els.dashPieLeftKicker.textContent = "整体";
-        if (els.dashPieRightKicker) els.dashPieRightKicker.textContent = "整体";
+        if (els.dashScopeHint) {
+          els.dashScopeHint.textContent = "查看全部可见人才的整体结构，四张图可分别切换不同维度。";
+        }
+        DASH_PIE_SLOTS.forEach(slot => setDashPieCardChrome(slot, dimLabels[slot], "整体"));
       } else if (dashMode === "single") {
         if (isSubCompare) {
           if (els.dashScopeHint) {
-            els.dashScopeHint.textContent = `在「${dashSingleDept || "未选择"}」内对比子部门（仅本部门下属），统一维度（${compareDimLabel}）看结构差异。`;
+            els.dashScopeHint.textContent = `在「${dashSingleDept || "未选择"}」内对比子部门（仅本部门下属）；上行 ${compareDimLabel}，下行 ${compareDim2Label}。`;
           }
-          if (els.dashPieLeftTitle) els.dashPieLeftTitle.textContent = dashCompareLeft || "子部门 A";
-          if (els.dashPieRightTitle) els.dashPieRightTitle.textContent = dashCompareRight || "子部门 B";
-          if (els.dashPieLeftKicker) els.dashPieLeftKicker.textContent = `${dashSingleDept || "单部门"} · ${compareDimLabel}`;
-          if (els.dashPieRightKicker) els.dashPieRightKicker.textContent = `${dashSingleDept || "单部门"} · ${compareDimLabel}`;
+          const leftName = dashCompareLeft || "子部门 A";
+          const rightName = dashCompareRight || "子部门 B";
+          const scopeTag = dashSingleDept || "单部门";
+          setDashPieCardChrome("left", leftName, `${scopeTag} · ${compareDimLabel}`);
+          setDashPieCardChrome("right", rightName, `${scopeTag} · ${compareDimLabel}`);
+          setDashPieCardChrome("left2", leftName, `${scopeTag} · ${compareDim2Label}`);
+          setDashPieCardChrome("right2", rightName, `${scopeTag} · ${compareDim2Label}`);
         } else {
           const dept = dashSingleDept || "单部门";
-          if (els.dashScopeHint) els.dashScopeHint.textContent = `聚焦「${dept}」内部结构，左右切换不同维度交叉观察。${getDashSubDepartments(dashSingleDept).length ? "" : "（当前部门暂无子部门，可先在侧栏配置）"}`;
-          if (els.dashPieLeftTitle) els.dashPieLeftTitle.textContent = `${dept} · ${leftDimLabel}`;
-          if (els.dashPieRightTitle) els.dashPieRightTitle.textContent = `${dept} · ${rightDimLabel}`;
-          if (els.dashPieLeftKicker) els.dashPieLeftKicker.textContent = "单部门";
-          if (els.dashPieRightKicker) els.dashPieRightKicker.textContent = "单部门";
+          if (els.dashScopeHint) {
+            els.dashScopeHint.textContent = `聚焦「${dept}」内部结构，四张图切换不同维度交叉观察。${getDashSubDepartments(dashSingleDept).length ? "" : "（当前部门暂无子部门，可先在侧栏配置）"}`;
+          }
+          DASH_PIE_SLOTS.forEach(slot => {
+            setDashPieCardChrome(slot, `${dept} · ${dimLabels[slot]}`, "单部门");
+          });
         }
       } else {
-        if (els.dashScopeHint) els.dashScopeHint.textContent = `同一维度（${compareDimLabel}）下对比两个一级部门差异，便于横向看结构。`;
-        if (els.dashPieLeftTitle) els.dashPieLeftTitle.textContent = dashCompareLeft || "部门 A";
-        if (els.dashPieRightTitle) els.dashPieRightTitle.textContent = dashCompareRight || "部门 B";
-        if (els.dashPieLeftKicker) els.dashPieLeftKicker.textContent = `对比 · ${compareDimLabel}`;
-        if (els.dashPieRightKicker) els.dashPieRightKicker.textContent = `对比 · ${compareDimLabel}`;
+        if (els.dashScopeHint) {
+          els.dashScopeHint.textContent = `左列为部门 A、右列为部门 B；上行按「${compareDimLabel}」、下行按「${compareDim2Label}」对比结构。`;
+        }
+        const leftName = dashCompareLeft || "部门 A";
+        const rightName = dashCompareRight || "部门 B";
+        setDashPieCardChrome("left", leftName, `对比 · ${compareDimLabel}`);
+        setDashPieCardChrome("right", rightName, `对比 · ${compareDimLabel}`);
+        setDashPieCardChrome("left2", leftName, `对比 · ${compareDim2Label}`);
+        setDashPieCardChrome("right2", rightName, `对比 · ${compareDim2Label}`);
       }
     }
 
@@ -6572,24 +6708,24 @@
       return buildPieChartHtml(distribution, chartTitle);
     }
 
-    function renderDashPie(side) {
+    function renderDashPie(slot) {
       const isCompare = dashMode === "compare";
       const isSubCompare = isDashSubCompareMode();
+      const column = dashPieColumn(slot);
       const list = isCompare
-        ? filterTalentsByDept(talents, side === "left" ? dashCompareLeft : dashCompareRight)
+        ? filterTalentsByDept(talents, column === "left" ? dashCompareLeft : dashCompareRight)
         : isSubCompare
-          ? filterTalentsByCategorySub(talents, dashSingleDept, side === "left" ? dashCompareLeft : dashCompareRight)
+          ? filterTalentsByCategorySub(talents, dashSingleDept, column === "left" ? dashCompareLeft : dashCompareRight)
           : getDashboardScopeList();
       const dimId = (isCompare || isSubCompare)
-        ? dashCompareDim
-        : (side === "left" ? dashPieLeftDim : dashPieRightDim);
-      const noteEl = side === "left" ? els.dashPieLeftNote : els.dashPieRightNote;
-      const chartEl = side === "left" ? els.dashPieLeft : els.dashPieRight;
+        ? dashPieRowDim(slot)
+        : getDashPieDimState(slot);
+      const { note: noteEl, chart: chartEl } = dashPieSlotEls(slot);
       const distribution = computeDistribution(list, dimId);
       const scopeLabel = isCompare
-        ? (side === "left" ? dashCompareLeft : dashCompareRight)
+        ? (column === "left" ? dashCompareLeft : dashCompareRight)
         : isSubCompare
-          ? `${dashSingleDept || ""} · ${side === "left" ? dashCompareLeft : dashCompareRight}`
+          ? `${dashSingleDept || ""} · ${column === "left" ? dashCompareLeft : dashCompareRight}`
           : (dashMode === "single" ? dashSingleDept : "全部可见人才");
       if (noteEl) {
         noteEl.textContent = list.length
@@ -6600,6 +6736,10 @@
         chartEl.innerHTML = buildDashChartHtml(distribution, `${scopeLabel || "分布"} · ${distribution.dim.label}`);
         bindPieChartInteractions(chartEl);
       }
+    }
+
+    function renderAllDashPies() {
+      DASH_PIE_SLOTS.forEach(renderDashPie);
     }
 
     function renderDashboard() {
@@ -6678,8 +6818,7 @@
           : "暂无档案";
       }
 
-      renderDashPie("left");
-      renderDashPie("right");
+      renderAllDashPies();
     }
 
     function statusPillClass(status) {
@@ -7861,35 +8000,53 @@
 
     els.dashCompareDim?.addEventListener("change", () => {
       dashCompareDim = els.dashCompareDim.value || "education";
+      if (dashCompareDim2 === dashCompareDim) {
+        const dims = availableDashDimensions();
+        dashCompareDim2 = complementaryDimId(["jobGrade", "tenure", "age", "education"], dims, dashCompareDim);
+        if (els.dashCompareDim2) els.dashCompareDim2.value = dashCompareDim2;
+      }
       renderDashboard();
     });
 
-    els.dashPieLeftDim?.addEventListener("change", () => {
-      dashPieLeftDim = els.dashPieLeftDim.value || "category";
-      if (dashPieRightDim === dashPieLeftDim) {
+    els.dashCompareDim2?.addEventListener("change", () => {
+      dashCompareDim2 = els.dashCompareDim2.value || "jobGrade";
+      if (dashCompareDim === dashCompareDim2) {
         const dims = availableDashDimensions();
-        dashPieRightDim = complementaryDimId(["tenure", "jobGrade", "education", "age"], dims, dashPieLeftDim);
-        if (els.dashPieRightDim) els.dashPieRightDim.value = dashPieRightDim;
+        dashCompareDim = complementaryDimId(["education", "tenure", "age", "jobGrade"], dims, dashCompareDim2);
+        if (els.dashCompareDim) els.dashCompareDim.value = dashCompareDim;
       }
-      syncDashModeChrome();
-      renderDashPie("left");
-      renderDashPie("right");
+      renderDashboard();
     });
 
-    els.dashPieRightDim?.addEventListener("change", () => {
-      dashPieRightDim = els.dashPieRightDim.value || "tenure";
-      if (dashPieLeftDim === dashPieRightDim) {
-        const dims = availableDashDimensions();
-        dashPieLeftDim = complementaryDimId(["category", "education", "jobGrade", "age"], dims, dashPieRightDim);
-        if (els.dashPieLeftDim) els.dashPieLeftDim.value = dashPieLeftDim;
-      }
+    function onDashPieDimChange(slot) {
+      const { dimSelect } = dashPieSlotEls(slot);
+      const fallback = preferredDashPieDims()[DASH_PIE_SLOTS.indexOf(slot)] || "education";
+      setDashPieDimState(slot, dimSelect?.value || fallback);
+      const dims = availableDashDimensions();
+      DASH_PIE_SLOTS.forEach((other, index) => {
+        if (other === slot) return;
+        if (getDashPieDimState(other) !== getDashPieDimState(slot)) return;
+        const exclude = new Set(
+          DASH_PIE_SLOTS.filter(s => s !== other).map(getDashPieDimState)
+        );
+        const available = dims.filter(item => !exclude.has(item.id));
+        const next = complementaryDimId(
+          [preferredDashPieDims()[index], ...preferredDashPieDims(), "age", "gender", "status"],
+          available.length ? available : dims
+        );
+        setDashPieDimState(other, next);
+        const otherEls = dashPieSlotEls(other);
+        if (otherEls.dimSelect) otherEls.dimSelect.value = next;
+      });
       syncDashModeChrome();
-      renderDashPie("left");
-      renderDashPie("right");
-    });
+      renderAllDashPies();
+    }
 
-    bindPieChartInteractions(els.dashPieLeft);
-    bindPieChartInteractions(els.dashPieRight);
+    DASH_PIE_SLOTS.forEach(slot => {
+      const { dimSelect, chart } = dashPieSlotEls(slot);
+      dimSelect?.addEventListener("change", () => onDashPieDimChange(slot));
+      bindPieChartInteractions(chart);
+    });
 
     els.categoryNav.addEventListener("click", event => {
       hideContextMenu();
