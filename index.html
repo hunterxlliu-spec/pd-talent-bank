@@ -7,7 +7,8 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-smart-import -->
+  <!-- deploy-bust: 20260724-hwte-roster-import -->
+  <script src="assets/vendor/xlsx.full.min.js"></script>
   <!-- Apple-like system typography -->
   <style>
     :root {
@@ -4157,7 +4158,7 @@
     <div class="modal-body">
       <p class="import-hint">
         支持 <strong>Excel（.xlsx / .xls）</strong>、<strong>CSV / TSV</strong>、<strong>JSON</strong>。
-        系统会自动识别表头并映射到人才字段；确认后按工号合并生成个人档案。
+        自动识别表头（含 HWTE 花名册多列表头），映射后按<strong>工号</strong>合并生成档案。
         Apple Numbers（.numbers）请先导出为 Excel 或 CSV 再导入。
       </p>
       <div class="import-dropzone" id="importDropzone" tabindex="0" role="button" aria-label="选择或拖入导入文件">
@@ -5101,12 +5102,23 @@
     function ensureCategoriesFromTalents(list = talents) {
       if (!isSuperAdmin()) return;
       const next = normalizeCategories(categories);
-      const seen = new Set(next.map(entry => entry.name));
+      const byName = new Map(next.map(entry => [entry.name, entry]));
       list.forEach(person => {
         const name = String(person.category || "").trim();
-        if (name && !seen.has(name)) {
-          next.push({ name, subs: [] });
-          seen.add(name);
+        if (!name) return;
+        if (!byName.has(name)) {
+          const entry = { name, subs: [] };
+          next.push(entry);
+          byName.set(name, entry);
+        }
+        const dept = String(person.department || "").trim();
+        const entry = byName.get(name);
+        if (dept && entry) {
+          const subs = Array.isArray(entry.subs) ? entry.subs.slice() : [];
+          if (!subs.includes(dept)) {
+            subs.push(dept);
+            entry.subs = subs;
+          }
         }
       });
       categories = next;
@@ -7552,14 +7564,26 @@
 
     function loadScriptOnce(src) {
       return new Promise((resolve, reject) => {
-        const existing = [...document.scripts].find(item => item.src === src);
+        let absolute = src;
+        try {
+          absolute = new URL(src, window.location.href).href;
+        } catch {
+          absolute = src;
+        }
+        const existing = [...document.scripts].find(item =>
+          item.src === absolute || item.getAttribute("src") === src
+        );
         if (existing) {
-          if (existing.dataset.loaded === "1") {
+          if (existing.dataset.loaded === "1" || (src.includes("xlsx") && window.XLSX?.read)) {
+            existing.dataset.loaded = "1";
             resolve();
             return;
           }
-          existing.addEventListener("load", () => resolve(), { once: true });
-          existing.addEventListener("error", () => reject(new Error("脚本加载失败")), { once: true });
+          existing.addEventListener("load", () => {
+            existing.dataset.loaded = "1";
+            resolve();
+          }, { once: true });
+          existing.addEventListener("error", () => reject(new Error(`脚本加载失败: ${src}`)), { once: true });
           return;
         }
         const script = document.createElement("script");
@@ -7569,7 +7593,7 @@
           script.dataset.loaded = "1";
           resolve();
         };
-        script.onerror = () => reject(new Error("脚本加载失败"));
+        script.onerror = () => reject(new Error(`脚本加载失败: ${src}`));
         document.head.appendChild(script);
       });
     }
@@ -7907,41 +7931,66 @@
     ];
 
     const IMPORT_HEADER_ALIASES = {
-      name: ["姓名", "名字", "员工姓名", "人员姓名", "name", "fullname", "员工", "人员"],
-      employeeNo: ["工号", "员工编号", "员工号", "编号", "employeeno", "employee_no", "empno", "emp_no", "staffid", "staff_id", "工号id"],
-      englishName: ["英文名", "英语名", "englishname", "english name", "english", "enname"],
+      name: ["姓名", "名字", "员工姓名", "人员姓名", "name", "fullname"],
+      employeeNo: ["工号", "员工编号", "员工号", "人员编号", "employeeno", "employee_no", "empno", "emp_no", "staffid", "staff_id", "工号id"],
+      englishName: ["英文名", "英语名", "englishname", "english name", "enname"],
       gender: ["性别", "gender", "sex"],
-      status: ["状态", "在职状态", "人员状态", "status", "employment status"],
-      birthDate: ["出生日期", "生日", "出生年月", "出生", "birthdate", "birthday", "dob", "date of birth"],
+      status: ["状态", "在职状态", "人员状态", "员工状态", "雇佣状态", "status", "employment status"],
+      birthDate: ["出生日期", "生日", "出生年月", "birthdate", "birthday", "dob", "date of birth"],
       age: ["年龄", "age"],
-      hometown: ["籍贯", "籍貫", "hometown", "native place", "户口"],
-      education: ["学历", "學位", "学位", "education", "degree", "学历层次"],
-      englishLevel: ["英语水平", "英语", "englishlevel", "english level", "english"],
-      jobGrade: ["职级", "级别", "等级", "jobgrade", "job grade", "grade", "level", "职等"],
-      joinDate: ["入职时间", "入职日期", "入职", "到岗日期", "joindate", "join date", "hiredate", "hire date", "入司时间", "入司日期"],
-      baseLocation: ["常驻基地", "基地", "工作地点", "驻地", "baselocation", "base location", "location", "办公地点"],
-      school: ["毕业学校", "毕业院校", "学校", "院校", "school", "university", "college"],
-      graduationDate: ["毕业时间", "毕业日期", "graduationdate", "graduation date", "毕业"],
-      major: ["专业", "major", "所学专业"],
+      hometown: ["籍贯", "籍貫", "hometown", "native place"],
+      education: [
+        "最高学历", "全日制最高学历", "学历", "學位", "学位", "education", "degree", "学历层次", "文化程度"
+      ],
+      englishLevel: ["英语水平", "英语能力", "englishlevel", "english level"],
+      jobGrade: ["职等", "职级", "职级档", "级别", "等级", "jobgrade", "job grade", "grade"],
+      joinDate: ["入职日期", "入职时间", "入司日期", "入司时间", "到岗日期", "joindate", "join date", "hiredate", "hire date"],
+      baseLocation: [
+        "常驻基地", "基地", "工作地点", "驻地", "办公地点", "考勤刷卡地", "公司注册地",
+        "baselocation", "base location", "location"
+      ],
+      school: [
+        "最高学历毕业院校", "全日制最高学历毕业院校", "毕业学校", "毕业院校",
+        "学校", "院校", "school", "university", "college"
+      ],
+      graduationDate: [
+        "最高学历毕业时间", "全日制最高学历毕业时间", "毕业时间", "毕业日期",
+        "graduationdate", "graduation date"
+      ],
+      major: ["最高学历专业", "全日制最高学历专业", "专业", "所学专业", "major"],
       firstWorkDate: ["工作时间", "首次工作", "参加工作时间", "参加工作日期", "firstworkdate", "first work date", "工作开始"],
-      appleStartDate: ["产品经验开始", "产品经验开始时间", "产品经验开始日期", "applestartdate", "apple start date", "产品经验"],
+      appleStartDate: ["产品经验开始", "产品经验开始时间", "产品经验开始日期", "applestartdate", "apple start date"],
       category: ["所属分类", "分类", "研发分类", "部门分类", "category", "大类", "一级部门"],
-      department: ["子部门", "部门", "科室", "department", "dept", "二级部门"],
+      department: ["子部门", "部门", "科室", "department", "dept", "二级部门", "组织单位"],
       position: ["岗位", "职位", "职务", "position", "title", "job title", "角色"],
       currentProject: ["当前项目", "项目", "currentproject", "current project", "project"],
       skills: ["技能标签", "技能", "skills", "skill", "能力标签"],
       certificates: ["证书/资质", "证书", "资质", "certificates", "certificate", "资格证书"],
-      phone: ["电话", "手机", "手机号", "联系电话", "phone", "mobile", "tel", "cellphone"],
+      phone: ["联系电话", "电话", "手机", "手机号", "phone", "mobile", "tel", "cellphone"],
       email: ["邮箱", "电子邮箱", "邮件", "email", "mail", "e-mail"],
-      products: ["产品经验", "产品", "products", "product", "产品线"],
+      products: ["产品经验", "产品线", "products", "product"],
       remark: ["备注", "说明", "备注信息", "remark", "note", "notes", "comment", "comments"]
     };
+
+    const IMPORT_HEADER_BLOCKLIST = new Set([
+      "籍贯类别", "户口类别", "证照类别", "证照号码", "证照有效开始日期", "证照有效截止日期",
+      "证照签发机关", "家庭地址", "照片", "民族", "婚姻状况", "政治面貌", "国籍",
+      "是否重入司", "是否参保", "公司性质", "所属地区组", "基准部门", "业务单位",
+      "基准序列", "一级序列", "二级序列", "三级序列", "操作类岗位属性", "入职年限",
+      "最高学历学习类型"
+    ].map(item => item.replace(/[\s_\-]/g, "").toLowerCase()));
+
+    const HWTE_HEADER_MARKERS = [
+      "工号", "姓名", "英文名", "入职日期", "基准部门", "业务单位", "职等", "职级",
+      "全日制最高学历", "最高学历", "考勤刷卡地", "一级序列", "二级序列"
+    ];
 
     let importState = {
       fileName: "",
       headers: [],
       rows: [],
-      mapping: {}
+      mapping: {},
+      profile: "generic"
     };
 
     function normalizeImportHeader(value) {
@@ -7952,44 +8001,196 @@
         .replace(/的/g, "");
     }
 
-    function guessImportField(header) {
-      const raw = String(header ?? "").trim();
-      if (!raw) return "";
-      const norm = normalizeImportHeader(raw);
-      if (!norm) return "";
-      for (const def of IMPORT_FIELD_DEFS) {
-        if (normalizeImportHeader(def.key) === norm || normalizeImportHeader(def.label) === norm) {
-          return def.key;
-        }
-      }
-      let best = { key: "", score: 0 };
-      for (const [key, aliases] of Object.entries(IMPORT_HEADER_ALIASES)) {
-        for (const alias of aliases) {
-          const a = normalizeImportHeader(alias);
-          if (!a) continue;
-          if (norm === a) return key;
-          if (norm.includes(a) || a.includes(norm)) {
-            const score = Math.min(norm.length, a.length) / Math.max(norm.length, a.length);
-            if (score > best.score) best = { key, score };
-          }
-        }
-      }
-      return best.score >= 0.55 ? best.key : "";
+    function isImportHeaderBlocked(header) {
+      const norm = normalizeImportHeader(header);
+      return Boolean(norm && IMPORT_HEADER_BLOCKLIST.has(norm));
     }
 
-    function autoMapImportHeaders(headers) {
-      const mapping = {};
-      const used = new Set();
+    function scoreImportAlias(norm, aliasNorm) {
+      if (!norm || !aliasNorm) return 0;
+      if (norm === aliasNorm) return 1.5 + aliasNorm.length / 100;
+      if (norm.endsWith(aliasNorm) || norm.startsWith(aliasNorm)) {
+        return 1.05 + (aliasNorm.length / Math.max(norm.length, 1)) * 0.4;
+      }
+      if (norm.includes(aliasNorm)) {
+        return 0.72 + (aliasNorm.length / Math.max(norm.length, 1)) * 0.35;
+      }
+      if (aliasNorm.includes(norm) && norm.length >= 2) {
+        return 0.45 * (norm.length / aliasNorm.length);
+      }
+      return 0;
+    }
+
+    function scoreImportHeaderField(header, fieldKey) {
+      const raw = String(header ?? "").trim();
+      if (!raw || isImportHeaderBlocked(raw)) return 0;
+      const norm = normalizeImportHeader(raw);
+      if (!norm) return 0;
+      const def = IMPORT_FIELD_DEFS.find(item => item.key === fieldKey);
+      if (!def) return 0;
+      let best = 0;
+      if (normalizeImportHeader(def.key) === norm) best = Math.max(best, 2);
+      // UI labels can collide with HR columns (e.g. label「职级」vs Excel「职等」)
+      const labelNorm = normalizeImportHeader(String(def.label || "").replace(/\*$/, ""));
+      if (labelNorm && labelNorm === norm) best = Math.max(best, 1.15);
+      for (const alias of (IMPORT_HEADER_ALIASES[fieldKey] || [])) {
+        best = Math.max(best, scoreImportAlias(norm, normalizeImportHeader(alias)));
+      }
+      // Prefer non-「全日制」学历列 when both exist
+      if (best > 0 && /全日制/.test(raw) && ["education", "school", "graduationDate", "major"].includes(fieldKey)) {
+        best -= 0.08;
+      }
+      // Prefer 职等 (numeric band) over 职级 (P/T letter) for this app's numeric jobGrade
+      if (fieldKey === "jobGrade") {
+        if (/^职等$/.test(raw)) best += 0.35;
+        if (/^职级$/.test(raw)) best -= 0.25;
+      }
+      // Prefer 岗位 over 职位
+      if (fieldKey === "position") {
+        if (/^岗位$/.test(raw)) best += 0.15;
+        if (/^职位$/.test(raw)) best -= 0.05;
+      }
+      return best;
+    }
+
+    function guessImportField(header) {
+      let best = { key: "", score: 0 };
+      for (const def of IMPORT_FIELD_DEFS) {
+        const score = scoreImportHeaderField(header, def.key);
+        if (score > best.score) best = { key: def.key, score };
+      }
+      return best.score >= 0.7 ? best.key : "";
+    }
+
+    function headerFillRate(header, rows) {
+      if (!rows?.length) return 0;
+      let filled = 0;
+      rows.forEach(row => {
+        if (!isBlankImportValue(row?.[header])) filled += 1;
+      });
+      return filled / rows.length;
+    }
+
+    function autoMapImportHeaders(headers, rows = []) {
+      const candidates = [];
       headers.forEach(header => {
-        const guessed = guessImportField(header);
-        if (guessed && !used.has(guessed)) {
-          mapping[header] = guessed;
-          used.add(guessed);
-        } else {
-          mapping[header] = "";
-        }
+        IMPORT_FIELD_DEFS.forEach(def => {
+          const score = scoreImportHeaderField(header, def.key);
+          if (score < 0.7) return;
+          const fill = headerFillRate(header, rows);
+          candidates.push({
+            header,
+            field: def.key,
+            score: score + fill * 0.05
+          });
+        });
+      });
+      candidates.sort((a, b) => b.score - a.score || a.header.localeCompare(b.header, "zh"));
+      const mapping = Object.fromEntries(headers.map(header => [header, ""]));
+      const usedFields = new Set();
+      const usedHeaders = new Set();
+      candidates.forEach(item => {
+        if (usedFields.has(item.field) || usedHeaders.has(item.header)) return;
+        mapping[item.header] = item.field;
+        usedFields.add(item.field);
+        usedHeaders.add(item.header);
       });
       return mapping;
+    }
+
+    function detectImportProfile(headers = []) {
+      const set = new Set(headers.map(item => String(item || "").trim()));
+      const hits = HWTE_HEADER_MARKERS.filter(marker => set.has(marker)).length;
+      if (hits >= 4 || (set.has("工号") && set.has("姓名") && (set.has("基准部门") || set.has("业务单位") || set.has("职等")))) {
+        return "hwte";
+      }
+      return "generic";
+    }
+
+    function isBlankImportValue(value) {
+      const text = String(value ?? "").trim();
+      if (!text) return true;
+      return /^(待完善|待填写|待补充|待定|无|暂无|不影响|null|undefined|n\/?a|-|—|－|\/|\\)$/i.test(text);
+    }
+
+    function cleanImportCell(value) {
+      if (value == null) return "";
+      if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        return value.toISOString().slice(0, 10);
+      }
+      const text = String(value).trim();
+      if (isBlankImportValue(text)) return "";
+      return text;
+    }
+
+    function splitOrgPath(value) {
+      return String(value || "")
+        .split(/[-—–\/|>＞→]+/)
+        .map(part => part.trim())
+        .filter(Boolean);
+    }
+
+    function deriveCategoryFromHwte(row = {}) {
+      const blobs = [
+        row["二级序列"],
+        row["三级序列"],
+        row["一级序列"],
+        row["岗位"],
+        row["职位"],
+        row["部门"],
+        row["业务单位"],
+        row["基准部门"]
+      ].map(item => String(item || "").trim()).filter(Boolean);
+      const text = blobs.join(" ");
+      const rules = [
+        [/射频|\brf\b/i, "射频研发"],
+        [/结构/, "结构研发"],
+        [/硬件|电子|电路|电气/, "硬件研发"],
+        [/声学|电声/, "声学研发"],
+        [/软件|算法|固件|嵌入式|app\b|android|ios/i, "软件研发"],
+        [/npi|质量|qe\b|qc\b|可靠性/i, "NPI/质量"],
+        [/检测|测试|试验|验证/, "测试研发"]
+      ];
+      for (const [re, name] of rules) {
+        if (re.test(text)) return name;
+      }
+      const deptParts = splitOrgPath(row["部门"]);
+      if (deptParts.length >= 2) {
+        const center = deptParts.find(part => /中心|部$/.test(part) && !/事业群|平台|资源/.test(part));
+        if (center) return center.replace(/中心$/, "").trim() || center;
+        return deptParts[deptParts.length - 2];
+      }
+      const bu = String(row["业务单位"] || "").trim();
+      if (bu) {
+        const tail = bu.includes("-") ? bu.split("-").pop().trim() : bu;
+        if (tail) return tail;
+      }
+      return "";
+    }
+
+    function deriveDepartmentFromHwte(row = {}, fallback = "") {
+      const parts = splitOrgPath(row["部门"] || fallback);
+      if (parts.length) return parts[parts.length - 1];
+      return String(fallback || "").trim();
+    }
+
+    function collectHwteRemarkExtras(row = {}, mapping = {}) {
+      const mappedHeaders = new Set(
+        Object.entries(mapping).filter(([, field]) => field).map(([header]) => header)
+      );
+      const bits = [];
+      const maybe = (label, key) => {
+        if (mappedHeaders.has(key)) return;
+        const value = cleanImportCell(row[key]);
+        if (value) bits.push(`${label}${value}`);
+      };
+      maybe("职级", "职级");
+      maybe("国籍", "国籍");
+      maybe("公司", "公司");
+      maybe("业务单位", "业务单位");
+      maybe("序列", "三级序列");
+      maybe("二级序列", "二级序列");
+      return bits.join("；");
     }
 
     async function ensureXlsxLib() {
@@ -7998,6 +8199,7 @@
         ? ["vendor/xlsx.full.min.js", "assets/vendor/xlsx.full.min.js"]
         : [
           "assets/vendor/xlsx.full.min.js",
+          "./assets/vendor/xlsx.full.min.js",
           "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js",
           "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
         ];
@@ -8010,7 +8212,7 @@
           lastError = error;
         }
       }
-      throw lastError || new Error("无法加载 Excel 解析库");
+      throw lastError || new Error("无法加载 Excel 解析库（SheetJS）。请检查网络或确认站点已包含 assets/vendor/xlsx.full.min.js");
     }
 
     function detectDelimiter(text) {
@@ -8069,6 +8271,57 @@
       return rows.filter(item => item.some(value => String(value ?? "").trim() !== ""));
     }
 
+    function scoreHeaderRow(cells = []) {
+      let score = 0;
+      let nonEmpty = 0;
+      cells.forEach(cell => {
+        const text = String(cell || "").trim();
+        if (!text) return;
+        nonEmpty += 1;
+        if (guessImportField(text) || HWTE_HEADER_MARKERS.includes(text)) score += 3;
+        else if (/姓名|工号|部门|岗位|学历|入职|邮箱|电话|职级|职等/.test(text)) score += 2;
+        else if (/[\u4e00-\u9fff]/.test(text) && text.length <= 16) score += 0.4;
+        // Penalize obvious data cells
+        if (/^\d{6,}$/.test(text) || /@/.test(text) || /^\d{4}-\d{1,2}-\d{1,2}/.test(text)) score -= 2;
+      });
+      if (nonEmpty < 2) return -1;
+      return score + Math.min(nonEmpty, 12) * 0.15;
+    }
+
+    function mergeHeaderRows(matrix, startIndex, depth = 2) {
+      const width = matrix[startIndex]?.length || 0;
+      const layers = [];
+      for (let offset = 0; offset < depth; offset += 1) {
+        const row = matrix[startIndex + offset];
+        if (!row) break;
+        // Stop merging when the next row looks like data (has employee-no-like cells) and current already scored as header
+        if (offset > 0) {
+          const nextScore = scoreHeaderRow(row);
+          const dataish = row.filter(cell => /^\d{5,}$/.test(String(cell || "").trim()) || /@/.test(String(cell || ""))).length;
+          if (dataish >= 2 || nextScore < 2) break;
+        }
+        layers.push(row);
+      }
+      if (layers.length <= 1) {
+        return {
+          headers: (matrix[startIndex] || []).map((cell, index) => {
+            const text = cleanImportCell(cell);
+            return text || `列${index + 1}`;
+          }),
+          headerDepth: 1
+        };
+      }
+      const headers = Array.from({ length: width }, (_, index) => {
+        const parts = [];
+        layers.forEach(row => {
+          const text = cleanImportCell(row[index]);
+          if (text && parts[parts.length - 1] !== text) parts.push(text);
+        });
+        return parts.join("") || `列${index + 1}`;
+      });
+      return { headers, headerDepth: layers.length };
+    }
+
     function sheetMatrixToTable(matrix) {
       if (!Array.isArray(matrix) || !matrix.length) {
         throw new Error("文件没有可用数据行");
@@ -8078,18 +8331,24 @@
       const normalized = matrix.map(row => {
         const cells = Array.isArray(row) ? row.slice(0, width) : [];
         while (cells.length < width) cells.push("");
-        return cells.map(cell => {
-          if (cell == null) return "";
-          if (cell instanceof Date) return cell.toISOString().slice(0, 10);
-          return String(cell).trim();
-        });
+        return cells.map(cell => cleanImportCell(cell));
       });
-      let headerRowIndex = normalized.findIndex(row => row.some(cell => String(cell).trim()));
-      if (headerRowIndex < 0) throw new Error("未找到表头");
-      const headers = normalized[headerRowIndex].map((cell, index) => {
-        const text = String(cell || "").trim();
-        return text || `列${index + 1}`;
-      });
+      const scanLimit = Math.min(normalized.length, 12);
+      let headerRowIndex = 0;
+      let bestScore = -Infinity;
+      for (let i = 0; i < scanLimit; i += 1) {
+        const score = scoreHeaderRow(normalized[i]);
+        if (score > bestScore) {
+          bestScore = score;
+          headerRowIndex = i;
+        }
+      }
+      if (bestScore < 1) {
+        headerRowIndex = normalized.findIndex(row => row.some(cell => String(cell).trim()));
+        if (headerRowIndex < 0) throw new Error("未找到表头");
+      }
+      const merged = mergeHeaderRows(normalized, headerRowIndex, 3);
+      const headers = merged.headers;
       const uniqueHeaders = [];
       const seen = {};
       headers.forEach(header => {
@@ -8102,7 +8361,7 @@
         seen[base] += 1;
         uniqueHeaders.push(`${base}_${seen[base]}`);
       });
-      const rows = normalized.slice(headerRowIndex + 1)
+      const rows = normalized.slice(headerRowIndex + merged.headerDepth)
         .filter(row => row.some(cell => String(cell || "").trim()))
         .map(row => {
           const obj = {};
@@ -8110,8 +8369,14 @@
             obj[header] = row[index] ?? "";
           });
           return obj;
+        })
+        .filter(row => {
+          // Skip total/summary rows
+          const name = String(row["姓名"] || row[uniqueHeaders[1]] || "").trim();
+          return !/^(合计|小计|总计|汇总)$/.test(name);
         });
-      return { headers: uniqueHeaders, rows };
+      if (!rows.length) throw new Error("未解析到数据行，请确认表头与内容是否完整");
+      return { headers: uniqueHeaders, rows, headerRowIndex, headerDepth: merged.headerDepth };
     }
 
     function parseJsonImport(text) {
@@ -8320,8 +8585,8 @@
       const draft = {};
       Object.entries(mapping).forEach(([header, field]) => {
         if (!field) return;
-        const value = row[header];
-        if (value == null || String(value).trim() === "") return;
+        const value = cleanImportCell(row[header]);
+        if (!value) return;
         draft[field] = value;
       });
       const name = String(draft.name || "").trim();
@@ -8330,9 +8595,51 @@
       if (!employeeNo) {
         const seq = Number(options.seq) || 0;
         employeeNo = `IMP-${Date.now().toString(36).toUpperCase()}-${String(seq).padStart(3, "0")}`;
+      } else {
+        employeeNo = employeeNo.replace(/\.0$/, "");
       }
       const birthDate = coerceImportDate(draft.birthDate);
       const products = draft.products ? normalizeImportProducts(draft.products) : [];
+      let category = String(draft.category || "").trim();
+      let department = String(draft.department || "").trim();
+      let position = String(draft.position || "").trim();
+      let baseLocation = String(draft.baseLocation || "").trim();
+      let remark = String(draft.remark || "").trim();
+      let jobGradeRaw = draft.jobGrade;
+
+      const profile = options.profile || importState.profile || detectImportProfile(Object.keys(row || {}));
+      if (profile === "hwte") {
+        if (!category) category = deriveCategoryFromHwte(row);
+        department = deriveDepartmentFromHwte(row, department);
+        if (!position) position = cleanImportCell(row["职位"]) || cleanImportCell(row["岗位"]);
+        if (!baseLocation) {
+          baseLocation = cleanImportCell(row["考勤刷卡地"])
+            || cleanImportCell(row["公司注册地"])
+            || cleanImportCell(row["所属地区组"]);
+        }
+        if (!draft.education) {
+          draft.education = cleanImportCell(row["最高学历"]) || cleanImportCell(row["全日制最高学历"]);
+        }
+        if (!draft.school) {
+          draft.school = cleanImportCell(row["最高学历毕业院校"]) || cleanImportCell(row["全日制最高学历毕业院校"]);
+        }
+        if (!draft.major) {
+          draft.major = cleanImportCell(row["最高学历专业"]) || cleanImportCell(row["全日制最高学历专业"]);
+        }
+        if (!draft.graduationDate) {
+          draft.graduationDate = cleanImportCell(row["最高学历毕业时间"]) || cleanImportCell(row["全日制最高学历毕业时间"]);
+        }
+        if (!jobGradeRaw) jobGradeRaw = cleanImportCell(row["职等"]) || cleanImportCell(row["职级"]);
+        const extras = collectHwteRemarkExtras(row, mapping);
+        if (extras) remark = remark ? `${remark}；${extras}` : extras;
+      }
+
+      // Fallback: if jobGrade is like P1/T3, keep numeric band from 职等 when present
+      let jobGrade = normalizeJobGrade(jobGradeRaw);
+      if (!jobGrade && profile === "hwte") {
+        jobGrade = normalizeJobGrade(cleanImportCell(row["职等"]));
+      }
+
       return {
         employeeNo,
         name,
@@ -8345,22 +8652,22 @@
         hometown: normalizeImportHometown(draft.hometown),
         education: normalizeImportEducation(draft.education),
         englishLevel: normalizeImportEnglishLevel(draft.englishLevel),
-        jobGrade: normalizeJobGrade(draft.jobGrade),
+        jobGrade,
         joinDate: coerceImportDate(draft.joinDate),
-        baseLocation: String(draft.baseLocation || "").trim(),
+        baseLocation,
         school: String(draft.school || "").trim(),
         graduationDate: coerceImportDate(draft.graduationDate),
         major: String(draft.major || "").trim(),
         firstWorkDate: coerceImportDate(draft.firstWorkDate),
         appleStartDate: coerceImportDate(draft.appleStartDate),
-        category: String(draft.category || "").trim(),
-        department: String(draft.department || "").trim(),
-        position: String(draft.position || "").trim(),
+        category,
+        department,
+        position,
         skills: draft.skills ? normalizeImportSkills(draft.skills) : [],
         certificates: String(draft.certificates || "").trim(),
         phone: String(draft.phone || "").trim(),
         email: String(draft.email || "").trim(),
-        remark: String(draft.remark || "").trim(),
+        remark,
         products,
         customFields: []
       };
@@ -8368,7 +8675,10 @@
 
     function buildImportPreviewRows(limit = 5) {
       return importState.rows.slice(0, limit)
-        .map((row, index) => rowToTalentDraft(row, importState.mapping, { seq: index + 1 }))
+        .map((row, index) => rowToTalentDraft(row, importState.mapping, {
+          seq: index + 1,
+          profile: importState.profile
+        }))
         .filter(Boolean);
     }
 
@@ -8380,7 +8690,10 @@
       let denied = 0;
       const seenNos = new Set();
       importState.rows.forEach((row, index) => {
-        const draft = rowToTalentDraft(row, importState.mapping, { seq: index + 1 });
+        const draft = rowToTalentDraft(row, importState.mapping, {
+          seq: index + 1,
+          profile: importState.profile
+        });
         if (!draft) {
           skip += 1;
           return;
@@ -8472,9 +8785,13 @@
       }
       if (els.importMeta) {
         els.importMeta.hidden = false;
+        const profileLabel = importState.profile === "hwte" ? "HWTE 花名册" : "通用表";
+        const mappedCount = Object.values(importState.mapping).filter(Boolean).length;
         els.importMeta.innerHTML = `
           <span>文件：<strong>${escapeHtml(importState.fileName || "-")}</strong></span>
+          <span>模板：<strong>${escapeHtml(profileLabel)}</strong></span>
           <span>列数：<strong>${importState.headers.length}</strong></span>
+          <span>已映射：<strong>${mappedCount}</strong></span>
           <span>数据行：<strong>${importState.rows.length}</strong></span>
           <span>已识别姓名列：<strong>${hasMappedName ? "是" : "否"}</strong></span>
         `;
@@ -8484,7 +8801,10 @@
     }
 
     function resetImportUi() {
-      importState = { fileName: "", headers: [], rows: [], mapping: {} };
+      importState = { fileName: "", headers: [], rows: [], mapping: {}, profile: "generic" };
+      if (els.importDropzone) {
+        els.importDropzone.textContent = "点击选择文件，或拖入 Excel / CSV / JSON";
+      }
       if (els.importMeta) els.importMeta.hidden = true;
       if (els.importMappingSection) els.importMappingSection.hidden = true;
       if (els.importMappingRows) els.importMappingRows.innerHTML = "";
@@ -8519,15 +8839,22 @@
       }
       try {
         const parsed = await parseImportFile(file);
+        const profile = detectImportProfile(parsed.headers);
+        const mapping = autoMapImportHeaders(parsed.headers, parsed.rows);
         importState = {
           fileName: parsed.fileName,
           headers: parsed.headers,
           rows: parsed.rows,
-          mapping: autoMapImportHeaders(parsed.headers)
+          mapping,
+          profile
         };
         renderImportPreviewUi();
         if (!els.importDialog?.open) els.importDialog?.showModal();
+        if (profile === "hwte" && els.importDropzone) {
+          els.importDropzone.textContent = "已识别 HWTE 花名册模板 · 可重新选择文件";
+        }
       } catch (error) {
+        console.error(error);
         resetImportUi();
         setImportError(error?.message || "导入解析失败");
         if (!els.importDialog?.open) els.importDialog?.showModal();
@@ -8610,7 +8937,10 @@
         return;
       }
       const drafts = importState.rows
-        .map((row, index) => rowToTalentDraft(row, importState.mapping, { seq: index + 1 }))
+        .map((row, index) => rowToTalentDraft(row, importState.mapping, {
+          seq: index + 1,
+          profile: importState.profile
+        }))
         .filter(Boolean);
       if (!drafts.length) {
         setImportError("没有可生成的有效行（姓名必填）。");
@@ -8627,7 +8957,11 @@
       }
       try {
         await saveTalents(normalizeTalentList(next));
-        selectedId = talents[0]?.id || selectedId;
+        // Prefer first newly added / updated person in view
+        const focusNo = drafts[0]?.employeeNo;
+        const focused = talents.find(person => String(person.employeeNo || "").trim() === String(focusNo || "").trim());
+        selectedId = focused?.id || talents[0]?.id || selectedId;
+        if (focused?.category) activeCategory = focused.category;
         render();
         closeImportDialog();
         const parts = [`新增 ${added} 人`, `更新 ${updated} 人`];
@@ -8635,7 +8969,8 @@
         if (denied) parts.push(`无权限 ${denied} 行`);
         alert(`档案生成完成：${parts.join("，")}`);
       } catch (error) {
-        setImportError(error?.message || "保存失败");
+        console.error(error);
+        setImportError(error?.message || "保存失败，请检查网络后重试。本地预览已保留，可再次点击生成档案。");
       } finally {
         if (els.confirmImportBtn) {
           els.confirmImportBtn.textContent = "生成档案";
