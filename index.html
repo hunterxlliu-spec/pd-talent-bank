@@ -7,7 +7,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>U01-A BG 研发人才库管理系统</title>
-  <!-- deploy-bust: 20260724-hwte-roster-import -->
+  <!-- deploy-bust: 20260724-list-pills-scroll -->
   <script src="assets/vendor/xlsx.full.min.js"></script>
   <!-- Apple-like system typography -->
   <style>
@@ -1562,15 +1562,20 @@
       font-weight: 700;
     }
 
+    .person-cell-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 5px;
+      max-width: 280px;
+    }
+
     .person-pill {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
       max-width: 100%;
-      min-width: 28px;
-      min-height: 22px;
-      padding: 2px 8px;
-      border-radius: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
       font-size: 11px;
       font-weight: 650;
       line-height: 1.35;
@@ -1579,10 +1584,24 @@
       text-overflow: ellipsis;
     }
 
+    .person-pill--role {
+      background: var(--pill-role-bg);
+      color: var(--pill-role);
+    }
+
     .person-pill--grade {
       background: var(--pill-grade-bg);
       color: var(--pill-grade);
-      font-variant-numeric: tabular-nums;
+    }
+
+    .person-pill--dept {
+      background: var(--pill-dept-bg);
+      color: var(--pill-dept);
+    }
+
+    .person-pill--edu {
+      background: var(--pill-edu-bg);
+      color: var(--pill-edu);
     }
 
     .person-pill--soft {
@@ -1611,30 +1630,9 @@
       color: var(--pill-status-left);
     }
 
-    .cell-stack {
-      display: grid;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .cell-primary {
-      color: var(--ink);
-      font-weight: 600;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .cell-meta {
-      color: var(--muted);
-      font-size: var(--fs-xs);
-      font-weight: 500;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .cell-empty {
-      color: #94a3b8;
-      font-weight: 500;
+    .person-pill--muted {
+      background: #f1f5f9;
+      color: #64748b;
     }
 
     .filters {
@@ -1688,7 +1686,8 @@
     }
 
     .table-wrap {
-      overflow: auto;
+      overflow-x: auto;
+      overflow-y: visible;
       background: #fff;
       border: 1px solid var(--line);
       border-radius: var(--radius);
@@ -1696,7 +1695,6 @@
       position: relative;
       max-width: 100%;
       min-width: 0;
-      max-height: min(68vh, calc(100dvh - 260px));
       -webkit-overflow-scrolling: touch;
       scrollbar-gutter: stable;
     }
@@ -1722,137 +1720,80 @@
     }
 
     .talent-table {
-      width: 100%;
-      min-width: 1080px;
-      table-layout: fixed;
-      border-collapse: separate;
-      border-spacing: 0;
+      width: max-content;
+      min-width: 100%;
+      table-layout: auto;
+      border-collapse: collapse;
     }
 
     .talent-table th,
     .talent-table td {
-      padding: 11px 12px;
+      padding: 12px 12px;
       border-bottom: 1px solid #eef1f5;
       text-align: left;
       vertical-align: middle;
       font-size: var(--fs-sm);
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      box-sizing: border-box;
     }
 
     .talent-table th {
       position: sticky;
       top: 0;
-      background: #f4f7fa;
-      color: #64748b;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      text-transform: none;
-      z-index: 3;
-      border-bottom: 1px solid #e2e8f0;
-      box-shadow: 0 1px 0 #e2e8f0;
+      background: #fbfbfd;
+      color: var(--muted);
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      letter-spacing: 0;
+      z-index: 1;
     }
 
-    .talent-table .col-person {
-      width: 200px;
-      min-width: 180px;
-    }
-
-    .talent-table .col-role {
-      width: 168px;
-      min-width: 140px;
-    }
-
-    .talent-table .col-grade {
-      width: 72px;
-      min-width: 64px;
-      text-align: center;
-    }
-
-    .talent-table .col-education {
-      width: 72px;
-      min-width: 64px;
-      text-align: center;
-    }
-
-    .talent-table .col-tenure {
-      width: 120px;
-      min-width: 104px;
-    }
-
-    .talent-table .col-status {
-      width: 84px;
-      min-width: 72px;
-      text-align: center;
-    }
-
-    .talent-table .col-project {
-      width: auto;
-      min-width: 220px;
-      white-space: normal;
-    }
-
-    .talent-table .col-project .cell-stack {
-      white-space: normal;
-    }
-
-    .talent-table .col-project .cell-primary,
-    .talent-table .col-project .cell-meta {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    th.col-person,
-    td.col-person {
+    .talent-table th.col-person,
+    .talent-table td.col-person {
       position: sticky;
       left: 0;
       z-index: 2;
       background: #fff;
+      min-width: 220px;
       white-space: normal;
-      overflow: visible;
-      box-shadow: 6px 0 10px rgba(15, 23, 42, .03);
+      box-shadow: 8px 0 12px rgba(15, 23, 42, .04);
     }
 
-    th.col-person {
-      background: #f4f7fa;
-      z-index: 5;
+    .talent-table th.col-person {
+      background: #f9fafc;
+      z-index: 4;
     }
 
-    th.col-actions,
-    td.col-actions {
+    .talent-table th.col-actions,
+    .talent-table td.col-actions {
       position: sticky;
       right: 0;
       z-index: 2;
       background: #fff;
-      box-shadow: -6px 0 10px rgba(15, 23, 42, .03);
+      box-shadow: -8px 0 12px rgba(15, 23, 42, .04);
       white-space: nowrap;
-      width: 64px;
-      min-width: 56px;
-      max-width: 72px;
-      padding-left: 6px;
+      width: 88px;
+      min-width: 76px;
+      max-width: 96px;
+      padding-left: 8px;
       padding-right: 8px;
       text-align: center;
       overflow: visible;
     }
 
-    th.col-actions {
-      background: #f4f7fa;
-      z-index: 4;
+    .talent-table th.col-actions {
+      background: #f9fafc;
+      z-index: 3;
     }
 
-    td.col-actions .row-ops {
+    .talent-table td.col-actions .row-ops {
       display: inline-flex;
       flex-wrap: nowrap;
       gap: 6px;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-end;
     }
 
-    td.col-actions .action-more {
+    .talent-table td.col-actions .action-more {
       min-width: 30px;
       min-height: 30px;
       padding: 0;
@@ -1865,13 +1806,13 @@
       border-radius: 8px;
     }
 
-    td.col-actions .action-more:hover {
+    .talent-table td.col-actions .action-more:hover {
       background: #f1f5f9;
       border-color: #e2e8f0;
       color: var(--ink);
     }
 
-    td.col-actions .action-hint {
+    .talent-table td.col-actions .action-hint {
       display: none;
     }
 
@@ -1884,11 +1825,11 @@
       justify-content: flex-end;
     }
 
-    td.col-actions .btn-pdf:hover {
+    .talent-table td.col-actions .btn-pdf:hover {
       background: #d6fcf4;
     }
 
-    td .cell-sub {
+    .talent-table td .cell-sub {
       color: var(--muted);
       font-size: var(--fs-xs);
       margin-top: 2px;
@@ -1900,16 +1841,16 @@
       cursor: pointer;
     }
 
-    .talent-table tbody tr.talent-row:hover td,
-    .talent-table tbody tr.talent-row.active td {
-      background: #f3fbf9;
+    .talent-table tbody tr.talent-row:hover,
+    .talent-table tbody tr.talent-row.active {
+      background: #f1fdfa;
     }
 
     .talent-table tbody tr.talent-row:hover td.col-person,
     .talent-table tbody tr.talent-row:hover td.col-actions,
     .talent-table tbody tr.talent-row.active td.col-person,
     .talent-table tbody tr.talent-row.active td.col-actions {
-      background: #f3fbf9;
+      background: #f1fdfa;
     }
 
     .talent-table tbody tr.talent-row:last-child td {
@@ -1920,11 +1861,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      min-width: 0;
-    }
-
-    .person-cell > div {
-      min-width: 0;
+      min-width: 190px;
     }
 
     .avatar {
@@ -3206,6 +3143,53 @@
       font-size: 12px;
     }
 
+    .app-toast-host {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      transform: translateX(-50%);
+      z-index: 12000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      width: min(920px, calc(100vw - 32px));
+      align-items: center;
+    }
+
+    .app-toast {
+      pointer-events: auto;
+      max-width: 100%;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: rgba(28, 35, 45, 0.92);
+      color: #f5f7fa;
+      font-size: 13px;
+      line-height: 1.45;
+      box-shadow: 0 12px 40px rgba(15, 23, 42, 0.28);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      animation: app-toast-in .22s ease;
+    }
+
+    .app-toast.is-success {
+      background: rgba(15, 118, 110, 0.95);
+    }
+
+    .app-toast.is-error {
+      background: rgba(185, 28, 28, 0.95);
+    }
+
+    .app-toast.is-leaving {
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    @keyframes app-toast-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     .login-submit {
       min-height: 44px;
       border-radius: 980px;
@@ -3673,6 +3657,7 @@
     </aside>
 
     <div id="contextMenu" class="ctx-menu" role="menu" hidden></div>
+    <div class="app-toast-host" id="appToastHost" aria-live="polite" aria-relevant="additions"></div>
 
     <main class="main">
       <header class="topbar">
@@ -3866,18 +3851,27 @@
               </div>
             </section>
 
-            <p class="table-scroll-hint">窄屏时可左右滑动；人员与操作列固定在两侧</p>
+            <p class="table-scroll-hint">表格较宽时可左右滑动查看更多字段；人才列与操作列会固定在两侧</p>
             <section class="table-wrap" aria-label="人才列表">
               <table class="talent-table">
                 <thead>
                   <tr>
-                    <th class="col-person" scope="col">人员</th>
-                    <th class="col-role" scope="col">部门 / 岗位</th>
+                    <th class="col-person" scope="col">人才</th>
+                    <th class="col-gender" scope="col">性别</th>
+                    <th class="col-age" scope="col">年龄</th>
                     <th class="col-grade" scope="col">职级</th>
+                    <th class="col-secondary" scope="col">籍贯</th>
                     <th class="col-education" scope="col">学历</th>
-                    <th class="col-tenure" scope="col">司龄 / 年龄</th>
+                    <th class="col-secondary" scope="col">英语水平</th>
+                    <th class="col-project" scope="col">当前项目</th>
+                    <th class="col-secondary" scope="col">毕业学校 / 专业</th>
+                    <th class="col-secondary" scope="col">入职时间</th>
+                    <th class="col-secondary" scope="col">司龄</th>
+                    <th class="col-secondary" scope="col">常驻基地</th>
+                    <th class="col-secondary" scope="col">工作年限</th>
+                    <th class="col-secondary" scope="col">产品经验年限</th>
+                    <th class="col-secondary" scope="col">产品经验</th>
                     <th class="col-status" scope="col">状态</th>
-                    <th class="col-project" scope="col">项目 / 学校</th>
                     <th class="col-actions" scope="col">操作</th>
                   </tr>
                 </thead>
@@ -4325,7 +4319,7 @@
     }
     const SYNC_INTERVAL_MS = 6000; // visible tab
     const SYNC_INTERVAL_HIDDEN_MS = 30000; // background tab — slower, not paused entirely
-    const DEFAULT_CATEGORIES = ["结构研发", "硬件研发", "声学研发", "软件研发", "NPI/质量"];
+    const DEFAULT_CATEGORIES = ["结构研发", "硬件研发", "声学研发", "软件研发", "测试研发", "射频研发", "NPI/质量"];
     const ALL_CATEGORY = "__all__";
     const UNCATEGORIZED = "__uncategorized__";
     const CHINA_REGIONS = [
@@ -7269,8 +7263,13 @@
         case "候选": return "person-pill--status-candidate";
         case "储备": return "person-pill--status-reserve";
         case "离职": return "person-pill--status-left";
-        default: return "person-pill--soft";
+        default: return "person-pill--muted";
       }
+    }
+
+    function softPill(text) {
+      if (!text || text === "-") return "-";
+      return `<span class="person-pill person-pill--soft">${escapeHtml(text)}</span>`;
     }
 
     function profileStatusChipClass(status) {
@@ -7294,12 +7293,6 @@
       return `<span class="${classes}">${strongPrefix}</span>`;
     }
 
-    function cellText(text, empty = "-") {
-      const raw = String(text == null ? "" : text).trim();
-      if (!raw || raw === "-") return `<span class="cell-empty">${escapeHtml(empty)}</span>`;
-      return escapeHtml(raw);
-    }
-
     function renderTable() {
       const list = filteredTalents();
       if (!list.some(person => person.id === selectedId)) selectedId = list[0]?.id || talents[0]?.id || null;
@@ -7307,58 +7300,73 @@
       if (els.peopleCount) els.peopleCount.textContent = `${list.length}人`;
 
       els.rows.innerHTML = list.map(person => {
+        const productTags = (person.products || []).map(item => {
+          const label = productDisplayName(item);
+          if (!label) return null;
+          return `<span class="tag ${isPresetAppleProduct(item) ? "apple" : ""}">${escapeHtml(label)}</span>`;
+        }).filter(Boolean);
+        const visibleProductTags = productTags.slice(0, 3);
+        const extraProductCount = productTags.length - visibleProductTags.length;
+        const products = [
+          ...visibleProductTags,
+          extraProductCount > 0 ? `<span class="tag more-tag" title="共 ${productTags.length} 项，详见档案">+${extraProductCount}</span>` : ""
+        ].filter(Boolean).join("");
+
         const age = person.age || calcAgeFromBirth(person.birthDate) || "";
         const deptLabel = person.department || person.category || "";
-        const position = String(person.position || "").trim();
-        const tenureText = formatTenureYears(person.joinDate);
-        const tenureParts = [];
-        if (tenureText && tenureText !== "-") tenureParts.push(tenureText);
-        if (age) tenureParts.push(`${age}岁`);
-        const genderBit = String(person.gender || "").trim();
+        const namePills = [];
+        if (person.position) {
+          namePills.push(`<span class="person-pill person-pill--role">${escapeHtml(person.position)}</span>`);
+        }
+        if (deptLabel) {
+          namePills.push(`<span class="person-pill person-pill--dept">${escapeHtml(deptLabel)}</span>`);
+        }
 
         const gradeHtml = person.jobGrade
           ? `<span class="person-pill person-pill--grade">${escapeHtml(person.jobGrade)}</span>`
-          : `<span class="cell-empty">-</span>`;
+          : "-";
+        const eduHtml = person.education
+          ? `<span class="person-pill person-pill--edu">${escapeHtml(person.education)}</span>`
+          : "-";
         const statusHtml = person.status
           ? `<span class="person-pill ${statusPillClass(person.status)}">${escapeHtml(person.status)}</span>`
-          : `<span class="cell-empty">-</span>`;
-
-        const project = String(person.currentProject || "").trim();
-        const school = String(person.school || "").trim();
-        const major = String(person.major || "").trim();
-        const schoolLine = [school || "-", major].filter(Boolean).join(" · ");
+          : "-";
+        const tenureText = formatTenureYears(person.joinDate);
+        const tenureHtml = tenureText && tenureText !== "-"
+          ? softPill(tenureText)
+          : "-";
 
         return `
           <tr class="talent-row ${person.id === selectedId ? "active" : ""}" data-id="${person.id}">
             <td class="col-person">
               <div class="person-cell">
                 ${avatarHtml(person)}
-                <div class="cell-stack">
+                <div>
                   <div class="person-name">${escapeHtml(person.name || "-")}${person.englishName ? `<span class="person-name-en">${escapeHtml(person.englishName)}</span>` : ""}</div>
+                  <div class="person-cell-pills">${namePills.join("") || `<span class="person-pill person-pill--muted">未填岗位</span>`}</div>
                 </div>
               </div>
             </td>
-            <td class="col-role">
-              <div class="cell-stack">
-                <div class="cell-primary">${position ? escapeHtml(position) : `<span class="cell-empty">未填岗位</span>`}</div>
-                <div class="cell-meta">${deptLabel ? escapeHtml(deptLabel) : `<span class="cell-empty">-</span>`}</div>
-              </div>
-            </td>
+            <td class="col-gender">${softPill(person.gender)}</td>
+            <td class="col-age">${age ? softPill(`${age}岁`) : "-"}</td>
             <td class="col-grade">${gradeHtml}</td>
-            <td class="col-education">${cellText(person.education)}</td>
-            <td class="col-tenure">
-              <div class="cell-stack">
-                <div class="cell-primary">${tenureParts.length ? escapeHtml(tenureParts.join(" · ")) : `<span class="cell-empty">-</span>`}</div>
-                ${genderBit ? `<div class="cell-meta">${escapeHtml(genderBit)}</div>` : ""}
-              </div>
+            <td class="col-secondary">${escapeHtml(person.hometown || "-")}</td>
+            <td class="col-education">${eduHtml}</td>
+            <td class="col-secondary">
+              <div>${softPill(englishLevelNumber(person.englishLevel) || "")}</div>
             </td>
+            <td class="col-project">${escapeHtml(person.currentProject || "-")}</td>
+            <td class="col-secondary">
+              <strong>${escapeHtml(person.school || "-")}</strong>
+              <div class="cell-sub">${escapeHtml(person.major || "-")} · ${formatDate(person.graduationDate)}</div>
+            </td>
+            <td class="col-secondary">${formatDate(person.joinDate)}</td>
+            <td class="col-secondary">${tenureHtml}</td>
+            <td class="col-secondary">${escapeHtml(person.baseLocation || "-")}</td>
+            <td class="col-secondary">${softPill(formatYears(person.firstWorkDate))}</td>
+            <td class="col-secondary"><span class="tag apple">${formatYears(person.appleStartDate)}</span></td>
+            <td class="col-secondary"><div class="tag-list">${products || "<span class='subtext'>-</span>"}</div></td>
             <td class="col-status">${statusHtml}</td>
-            <td class="col-project">
-              <div class="cell-stack">
-                <div class="cell-primary" title="${escapeHtml(project || "-")}">${project ? escapeHtml(project) : `<span class="cell-empty">-</span>`}</div>
-                <div class="cell-meta" title="${escapeHtml(schoolLine)}">${escapeHtml(schoolLine)}</div>
-              </div>
-            </td>
             <td class="col-actions">
               <div class="row-ops">
                 <button class="btn action-more" type="button" data-action="talent-more" data-id="${person.id}" title="更多操作（也可右键）" aria-haspopup="menu">⋯</button>
